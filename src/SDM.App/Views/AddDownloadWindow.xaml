@@ -142,6 +142,11 @@
                 </StackPanel>
             </Grid>
 
+            <DockPanel Margin="0,14,0,0" Visibility="{Binding HasQueues, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding [Queue], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <ComboBox Width="220" HorizontalAlignment="Left" ItemsSource="{Binding QueueOptions}" DisplayMemberPath="Name"
+                          SelectedValuePath="Id" SelectedValue="{Binding QueueId}" />
+            </DockPanel>
             <CheckBox Margin="0,14,0,0" Content="{Binding RememberText}" IsChecked="{Binding RememberRule}"
                       Visibility="{Binding CanRemember, Converter={StaticResource BoolToVis}}" />
         </StackPanel>

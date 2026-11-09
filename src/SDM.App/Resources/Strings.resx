@@ -205,4 +205,70 @@
   <data name="InstallStep3" xml:space="preserve"><value>3. Click the extension icon: it should say “Connected to the app”.</value></data>
   <data name="CopyPath" xml:space="preserve"><value>Copy path</value></data>
   <data name="ExtraIds" xml:space="preserve"><value>Other extension IDs allowed (e.g. a Chrome Web Store build), comma separated</value></data>
+  <data name="TrayOpen" xml:space="preserve"><value>Open Smart Download Manager</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>Exit</value></data>
+  <data name="TrayActive" xml:space="preserve"><value>{0} active</value></data>
+  <data name="TrayHint" xml:space="preserve"><value>Still running in the notification area. Right-click the icon to exit.</value></data>
+  <data name="DownloadFailed" xml:space="preserve"><value>Download failed</value></data>
+  <data name="ClipboardTitle" xml:space="preserve"><value>Link copied</value></data>
+  <data name="ClipboardOne" xml:space="preserve"><value>Download this link?</value></data>
+  <data name="ClipboardMany" xml:space="preserve"><value>{0} download links copied</value></data>
+  <data name="ClipDownload" xml:space="preserve"><value>Download</value></data>
+  <data name="ClipBatch" xml:space="preserve"><value>Add all</value></data>
+  <data name="Ignore" xml:space="preserve"><value>Ignore</value></data>
+  <data name="Subtitles" xml:space="preserve"><value>Find subtitles</value></data>
+  <data name="SubtitleSearchTip" xml:space="preserve"><value>Opens the subtitle site in your browser — nothing is downloaded automatically</value></data>
+  <data name="ClearCompleted" xml:space="preserve"><value>Clear completed from the list (files stay on disk)</value></data>
+  <data name="BackgroundSection" xml:space="preserve"><value>Background &amp; list</value></data>
+  <data name="CloseToTray" xml:space="preserve"><value>Closing the window keeps the app running in the notification area</value></data>
+  <data name="ShowNotifications" xml:space="preserve"><value>Windows notifications when a download finishes or fails (window hidden)</value></data>
+  <data name="WatchClipboard" xml:space="preserve"><value>Offer to download when I copy a download link</value></data>
+  <data name="KeepHistory" xml:space="preserve"><value>Keep the download list after restart</value></data>
+  <data name="ResumeOnStart" xml:space="preserve"><value>Continue unfinished downloads when the app starts</value></data>
+  <data name="SubtitleSite" xml:space="preserve"><value>Subtitle search site</value></data>
+  <data name="SubtitleHint" xml:space="preserve"><value>{query} is replaced by e.g. "Dark S01E03". The page only opens in your browser; you choose and download the subtitle yourself.</value></data>
+  <data name="SubtitleUrlInvalid" xml:space="preserve"><value>Must start with https:// (the default site will be used)</value></data>
+  <data name="AddQueue" xml:space="preserve"><value>Add queue</value></data>
+  <data name="DeleteQueue" xml:space="preserve"><value>Delete queue</value></data>
+  <data name="ArchivesSection" xml:space="preserve"><value>Archives</value></data>
+  <data name="AutoExtract" xml:space="preserve"><value>Extract archives automatically when the download finishes</value></data>
+  <data name="DeleteArchive" xml:space="preserve"><value>Delete the archive after extracting</value></data>
+  <data name="SevenZipFound" xml:space="preserve"><value>.zip is built in; .rar/.7z via 7-Zip ({0})</value></data>
+  <data name="SevenZipMissing" xml:space="preserve"><value>.zip is built in. Install 7-Zip (7-zip.org) to extract .rar and .7z too.</value></data>
+  <data name="ExtractHere" xml:space="preserve"><value>Extract here</value></data>
+  <data name="ExtractedTo" xml:space="preserve"><value>Extracted to {0}</value></data>
+  <data name="ExtractFailed" xml:space="preserve"><value>Could not extract: {0}</value></data>
+  <data name="CheckForUpdates" xml:space="preserve"><value>Check for new versions on GitHub at start</value></data>
+  <data name="VerifyChecksum" xml:space="preserve"><value>Verify checksum</value></data>
+  <data name="CopyHash" xml:space="preserve"><value>Copy hash</value></data>
+  <data name="HashAlgorithm" xml:space="preserve"><value>Algorithm</value></data>
+  <data name="HashComputed" xml:space="preserve"><value>Checksum of the downloaded file</value></data>
+  <data name="HashExpected" xml:space="preserve"><value>Checksum from the website (paste)</value></data>
+  <data name="HashMatch" xml:space="preserve"><value>✔ Checksums match — the file is intact.</value></data>
+  <data name="HashMismatch" xml:space="preserve"><value>✖ Checksums differ — the file is damaged or not the published one. Download it again.</value></data>
+  <data name="HashNotRecognized" xml:space="preserve"><value>No MD5 / SHA-1 / SHA-256 / SHA-512 checksum found in the text.</value></data>
+  <data name="HashPasteHint" xml:space="preserve"><value>Paste the checksum shown on the download page to compare.</value></data>
+  <data name="MainQueue" xml:space="preserve"><value>Main queue</value></data>
+  <data name="ManageQueues" xml:space="preserve"><value>Manage queues</value></data>
+  <data name="MoveToQueue" xml:space="preserve"><value>Move to queue</value></data>
+  <data name="StartQueue" xml:space="preserve"><value>Start queue</value></data>
+  <data name="PauseQueue" xml:space="preserve"><value>Pause queue</value></data>
+  <data name="Queue" xml:space="preserve"><value>Queue</value></data>
+  <data name="Queues" xml:space="preserve"><value>Queues</value></data>
+  <data name="QueueDefaultName" xml:space="preserve"><value>Queue {0}</value></data>
+  <data name="QueueName" xml:space="preserve"><value>Name</value></data>
+  <data name="QueueParallel" xml:space="preserve"><value>{0} at a time</value></data>
+  <data name="QueueSpeed" xml:space="preserve"><value>Speed limit (KB/s, 0 = none)</value></data>
+  <data name="QueuesHint" xml:space="preserve"><value>Besides the main queue, each queue runs its own number of downloads at once and can have its own speed limit (e.g. "Night": 1 at a time). Choose the queue in the Add window or with right-click → Move to queue.</value></data>
+  <data name="SpeedChart" xml:space="preserve"><value>Speed (last minute)</value></data>
+  <data name="SpeedPeak" xml:space="preserve"><value>peak {0} · avg {1}</value></data>
+  <data name="PortableEdition" xml:space="preserve"><value>portable</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>Version {0} is available.</value></data>
+  <data name="UpdateInstall" xml:space="preserve"><value>Install update</value></data>
+  <data name="UpdateDownload" xml:space="preserve"><value>Download</value></data>
+  <data name="UpdateDownloading" xml:space="preserve"><value>Downloading update… {0}%</value></data>
+  <data name="UpdateReady" xml:space="preserve"><value>Version {0} is downloaded and verified.</value></data>
+  <data name="UpdateConfirm" xml:space="preserve"><value>Install version {0} now? Smart Download Manager closes and opens again; running downloads continue afterwards.</value></data>
+  <data name="UpdateFailed" xml:space="preserve"><value>Update failed: {0}</value></data>
+  <data name="WhatsNew" xml:space="preserve"><value>What's new</value></data>
 </root>

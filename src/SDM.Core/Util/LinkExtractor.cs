@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using SDM.Core.Classification;
 
 namespace SDM.Core.Util;
 
@@ -24,6 +25,39 @@ public static partial class LinkExtractor
         }
         return new Result(links, duplicates);
     }
+
+    private static readonly HashSet<string> DownloadableExtensions = BuildDownloadable();
+
+    private static HashSet<string> BuildDownloadable()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (category, exts) in TypeClassifier.DefaultExtensions)
+        {
+            // Copying an image or a page link is everyday work, not a download wish.
+            if (category is "Images") continue;
+            foreach (var e in exts) set.Add(e);
+        }
+        set.Remove(".txt");
+        set.Remove(".csv");
+        foreach (var e in new[] { ".dmg", ".pkg", ".deb", ".rpm", ".img", ".bin", ".zst", ".tgz", ".cab", ".jar" }) set.Add(e);
+        return set;
+    }
+
+    /// <summary>
+    /// True when the link's path ends in a file type people download (video, archive, installer, document …).
+    /// Used by the clipboard watcher so copying ordinary page links stays quiet.
+    /// </summary>
+    public static bool LooksDownloadable(Uri uri)
+    {
+        if (uri.Scheme == Uri.UriSchemeFtp) return !uri.AbsolutePath.EndsWith('/');
+        string path = Uri.UnescapeDataString(uri.AbsolutePath);
+        string ext = Path.GetExtension(path);
+        return ext.Length > 1 && DownloadableExtensions.Contains(ext);
+    }
+
+    /// <summary>The links in <paramref name="text"/> that look like downloads (see <see cref="LooksDownloadable"/>).</summary>
+    public static IReadOnlyList<Uri> ExtractDownloadable(string? text) =>
+        Extract(text).Links.Where(LooksDownloadable).ToList();
 
     [GeneratedRegex(@"(?:https?|ftp)://[^\s<>""']+", RegexOptions.IgnoreCase)]
     private static partial Regex UrlRegex();

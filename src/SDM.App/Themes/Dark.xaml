@@ -39,6 +39,8 @@
     <SolidColorBrush x:Key="WarningBgBrush" Color="{StaticResource WarningBgColor}" />
     <Color x:Key="DangerColor">#FF7B72</Color>
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+    <Color x:Key="DangerBgColor">#3A1D1D</Color>
+    <SolidColorBrush x:Key="DangerBgBrush" Color="{StaticResource DangerBgColor}" />
     <Color x:Key="SeriesBgColor">#13263F</Color>
     <SolidColorBrush x:Key="SeriesBgBrush" Color="{StaticResource SeriesBgColor}" />
     <Color x:Key="SeriesFgColor">#7CB7FF</Color>

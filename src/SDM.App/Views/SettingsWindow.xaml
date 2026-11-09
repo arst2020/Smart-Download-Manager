@@ -48,7 +48,7 @@
             </StackPanel>
         </Border>
 
-        <TabControl Style="{StaticResource SideTabs}" Tag="{Binding [Settings], Source={x:Static loc:Loc.Instance}}">
+        <TabControl Style="{StaticResource SideTabs}" SelectedIndex="{Binding SelectedTab}" Tag="{Binding [Settings], Source={x:Static loc:Loc.Instance}}">
             <!-- ============ General ============ -->
             <TabItem Style="{StaticResource SideTab}" Header="{Binding [TabGeneral], Source={x:Static loc:Loc.Instance}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -96,6 +96,35 @@
                                 <CheckBox Style="{StaticResource Switch}" Content="{Binding [ShowCompletion], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding ShowCompletionDialog}" />
                             </StackPanel>
                         </Border>
+
+                        <TextBlock Text="{Binding [ArchivesSection], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,18,0,6" />
+                        <Border Style="{StaticResource InsetCard}">
+                            <StackPanel>
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [AutoExtract], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding AutoExtract}" />
+                                <TextBlock Text="{Binding SevenZipStatus}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
+                                <Separator Margin="0,10" Background="{DynamicResource LineBrush}" />
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [DeleteArchive], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding DeleteArchiveAfterExtract}"
+                                          IsEnabled="{Binding AutoExtract}" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding [BackgroundSection], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,18,0,6" />
+                        <Border Style="{StaticResource InsetCard}">
+                            <StackPanel>
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [CloseToTray], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding CloseToTray}" />
+                                <Separator Margin="0,10" Background="{DynamicResource LineBrush}" />
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [ShowNotifications], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding ShowNotifications}" />
+                                <Separator Margin="0,10" Background="{DynamicResource LineBrush}" />
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [WatchClipboard], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding WatchClipboard}" />
+                                <Separator Margin="0,10" Background="{DynamicResource LineBrush}" />
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [KeepHistory], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding KeepHistory}" />
+                                <Separator Margin="0,10" Background="{DynamicResource LineBrush}" />
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [ResumeOnStart], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding ResumeOnStart}" />
+                                <Separator Margin="0,10" Background="{DynamicResource LineBrush}" />
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [CheckForUpdates], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding CheckForUpdates}" />
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{Binding VersionText}" Style="{StaticResource Muted}" Margin="0,18,0,0" TextWrapping="Wrap" />
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -223,6 +252,17 @@
                             <Button Content="{Binding [TestConnection], Source={x:Static loc:Loc.Instance}}" Command="{Binding TestTmdbCommand}" Margin="0,0,12,0" />
                             <TextBlock Text="{Binding TmdbTestResult}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="520" />
                         </StackPanel>
+
+                        <Separator Margin="0,20" Background="{DynamicResource LineBrush}" />
+
+                        <TextBlock Text="{Binding [SubtitleSite], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                        <DockPanel>
+                            <ComboBox DockPanel.Dock="Right" Width="150" Margin="8,0,0,0" ItemsSource="{Binding SubtitlePresets}"
+                                      DisplayMemberPath="Name" SelectedItem="{Binding SelectedSubtitlePreset}" />
+                            <TextBox Text="{Binding SubtitleSearchUrl, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding SubtitleExample}" Style="{StaticResource Muted}" FlowDirection="LeftToRight" HorizontalAlignment="Left" Margin="0,6,0,0" />
+                        <TextBlock Text="{Binding [SubtitleHint], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="0,4,0,0" />
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -307,6 +347,25 @@
                             <DataGridTextColumn Binding="{Binding TargetFolder}" Width="2*" Header="{Binding [RuleTarget], Source={x:Static loc:Loc.Instance}}" />
                             <DataGridCheckBoxColumn Binding="{Binding SeasonSubfolders, UpdateSourceTrigger=PropertyChanged}" Width="90"
                                                     Header="{Binding [RuleSeason], Source={x:Static loc:Loc.Instance}}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- Queues -->
+            <TabItem Style="{StaticResource SideTab}" Header="{Binding [Queues], Source={x:Static loc:Loc.Instance}}">
+                <DockPanel Margin="26,22">
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding [Queues], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Heading}" />
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding [QueuesHint], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="0,4,0,12" />
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="{Binding [AddQueue], Source={x:Static loc:Loc.Instance}}" Command="{Binding AddQueueCommand}" Margin="0,0,8,0" />
+                        <Button Content="{Binding [DeleteQueue], Source={x:Static loc:Loc.Instance}}" Command="{Binding DeleteQueueCommand}" />
+                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding QueueRows}" SelectedItem="{Binding SelectedQueueRow}" AutoGenerateColumns="False" CanUserAddRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Binding="{Binding Name}" Width="2*" Header="{Binding [QueueName], Source={x:Static loc:Loc.Instance}}" />
+                            <DataGridTextColumn Binding="{Binding MaxConcurrent}" Width="*" Header="{Binding [Simultaneous], Source={x:Static loc:Loc.Instance}}" />
+                            <DataGridTextColumn Binding="{Binding SpeedLimitKBps}" Width="*" Header="{Binding [QueueSpeed], Source={x:Static loc:Loc.Instance}}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>

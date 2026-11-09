@@ -34,6 +34,7 @@ public sealed class CompletionViewModel : ObservableObject
             Close();
         });
         CloseCommand = new RelayCommand(Close);
+        SubtitleCommand = new RelayCommand(() => SubtitleLauncher.Open(_service.Settings, _job));
     }
 
     public event Action? CloseRequested;
@@ -41,6 +42,11 @@ public sealed class CompletionViewModel : ObservableObject
     public RelayCommand RunCommand { get; }
     public RelayCommand OpenFolderCommand { get; }
     public RelayCommand CloseCommand { get; }
+
+    /// <summary>Opens the subtitle site's search page in the browser (nothing is downloaded).</summary>
+    public RelayCommand SubtitleCommand { get; }
+
+    public bool CanSearchSubtitles => SubtitleLauncher.CanSearch(_job);
 
     public string FilePath => _job.FilePath ?? "";
     public string FileName => Path.GetFileName(FilePath);
@@ -70,6 +76,11 @@ public sealed class CompletionViewModel : ObservableObject
         ? string.Format(_service.Settings.MediaServer.RefreshAfterDownload ? Loc.Get("LibraryScanned") : Loc.Get("SavedInLibrary"),
             $"{lib.Server} · {lib.Name}")
         : null;
+
+    /// <summary>"Extracted to …" or the extraction error, when auto-extract ran.</summary>
+    public string? ExtractNote => _job.ExtractedTo is { } d
+        ? string.Format(Loc.Get("ExtractedTo"), d)
+        : _job.ExtractError is { } e ? string.Format(Loc.Get("ExtractFailed"), e) : null;
 
     public bool DontShowAgain
     {

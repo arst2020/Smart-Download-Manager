@@ -88,6 +88,11 @@ public sealed class AddDownloadViewModel : ObservableObject
 
     public int Connections { get => _connections; set => Set(ref _connections, value); }
 
+    private IReadOnlyList<QueueOption>? _queues;
+    public IReadOnlyList<QueueOption> QueueOptions => _queues ??= QueueOption.From(_service);
+    public bool HasQueues => QueueOptions.Count > 1;
+    public string QueueId { get; set; } = SDM.Core.Engine.DownloadQueue.MainQueueId;
+
     public string Url
     {
         get => _url;
@@ -95,7 +100,7 @@ public sealed class AddDownloadViewModel : ObservableObject
     }
 
     public bool IsValidUrl =>
-        Uri.TryCreate(Url.Trim(), UriKind.Absolute, out var u) && (u.Scheme == "http" || u.Scheme == "https");
+        Uri.TryCreate(Url.Trim(), UriKind.Absolute, out var u) && (u.Scheme is "http" or "https" or "ftp");
 
     public string FileName { get => _fileName; set => Set(ref _fileName, value); }
 
@@ -201,6 +206,7 @@ public sealed class AddDownloadViewModel : ObservableObject
             FileName = name,
             Connections = Connections,
             Scheduled = Scheduled,
+            QueueId = QueueId,
             Headers = Headers,
             PageTitle = PageTitle,
         };

@@ -205,4 +205,70 @@
   <data name="InstallStep3" xml:space="preserve"><value>3. Auf das Erweiterungssymbol klicken: Es sollte „Mit der App verbunden“ anzeigen.</value></data>
   <data name="CopyPath" xml:space="preserve"><value>Pfad kopieren</value></data>
   <data name="ExtraIds" xml:space="preserve"><value>Weitere erlaubte Erweiterungs-IDs (z. B. Web-Store-Version), kommagetrennt</value></data>
+  <data name="TrayOpen" xml:space="preserve"><value>Smart Download Manager öffnen</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>Beenden</value></data>
+  <data name="TrayActive" xml:space="preserve"><value>{0} aktiv</value></data>
+  <data name="TrayHint" xml:space="preserve"><value>Läuft weiter im Infobereich. Zum Beenden mit der rechten Maustaste auf das Symbol klicken.</value></data>
+  <data name="DownloadFailed" xml:space="preserve"><value>Download fehlgeschlagen</value></data>
+  <data name="ClipboardTitle" xml:space="preserve"><value>Link kopiert</value></data>
+  <data name="ClipboardOne" xml:space="preserve"><value>Diesen Link herunterladen?</value></data>
+  <data name="ClipboardMany" xml:space="preserve"><value>{0} Download-Links kopiert</value></data>
+  <data name="ClipDownload" xml:space="preserve"><value>Herunterladen</value></data>
+  <data name="ClipBatch" xml:space="preserve"><value>Alle hinzufügen</value></data>
+  <data name="Ignore" xml:space="preserve"><value>Ignorieren</value></data>
+  <data name="Subtitles" xml:space="preserve"><value>Untertitel suchen</value></data>
+  <data name="SubtitleSearchTip" xml:space="preserve"><value>Öffnet die Untertitel-Seite im Browser — es wird nichts automatisch heruntergeladen</value></data>
+  <data name="ClearCompleted" xml:space="preserve"><value>Fertige aus der Liste entfernen (Dateien bleiben erhalten)</value></data>
+  <data name="BackgroundSection" xml:space="preserve"><value>Hintergrund &amp; Liste</value></data>
+  <data name="CloseToTray" xml:space="preserve"><value>Beim Schließen im Infobereich weiterlaufen</value></data>
+  <data name="ShowNotifications" xml:space="preserve"><value>Windows-Benachrichtigung bei fertigem oder fehlgeschlagenem Download (Fenster ausgeblendet)</value></data>
+  <data name="WatchClipboard" xml:space="preserve"><value>Download anbieten, wenn ich einen Download-Link kopiere</value></data>
+  <data name="KeepHistory" xml:space="preserve"><value>Download-Liste nach Neustart behalten</value></data>
+  <data name="ResumeOnStart" xml:space="preserve"><value>Unfertige Downloads beim Start fortsetzen</value></data>
+  <data name="SubtitleSite" xml:space="preserve"><value>Untertitel-Suchseite</value></data>
+  <data name="SubtitleHint" xml:space="preserve"><value>{query} wird z. B. durch „Dark S01E03“ ersetzt. Die Seite öffnet sich nur im Browser; Untertitel wählen und laden Sie selbst.</value></data>
+  <data name="SubtitleUrlInvalid" xml:space="preserve"><value>Muss mit https:// beginnen (Standardseite wird verwendet)</value></data>
+  <data name="AddQueue" xml:space="preserve"><value>Warteschlange hinzufügen</value></data>
+  <data name="DeleteQueue" xml:space="preserve"><value>Warteschlange löschen</value></data>
+  <data name="ArchivesSection" xml:space="preserve"><value>Archive</value></data>
+  <data name="AutoExtract" xml:space="preserve"><value>Archive nach dem Download automatisch entpacken</value></data>
+  <data name="DeleteArchive" xml:space="preserve"><value>Archiv nach dem Entpacken löschen</value></data>
+  <data name="SevenZipFound" xml:space="preserve"><value>.zip ist eingebaut; .rar/.7z über 7-Zip ({0})</value></data>
+  <data name="SevenZipMissing" xml:space="preserve"><value>.zip ist eingebaut. Für .rar und .7z bitte 7-Zip installieren (7-zip.org).</value></data>
+  <data name="ExtractHere" xml:space="preserve"><value>Hier entpacken</value></data>
+  <data name="ExtractedTo" xml:space="preserve"><value>Entpackt nach {0}</value></data>
+  <data name="ExtractFailed" xml:space="preserve"><value>Entpacken fehlgeschlagen: {0}</value></data>
+  <data name="CheckForUpdates" xml:space="preserve"><value>Beim Start auf GitHub nach neuen Versionen suchen</value></data>
+  <data name="VerifyChecksum" xml:space="preserve"><value>Prüfsumme prüfen</value></data>
+  <data name="CopyHash" xml:space="preserve"><value>Hash kopieren</value></data>
+  <data name="HashAlgorithm" xml:space="preserve"><value>Algorithmus</value></data>
+  <data name="HashComputed" xml:space="preserve"><value>Prüfsumme der heruntergeladenen Datei</value></data>
+  <data name="HashExpected" xml:space="preserve"><value>Prüfsumme von der Website (einfügen)</value></data>
+  <data name="HashMatch" xml:space="preserve"><value>✔ Prüfsummen stimmen überein — die Datei ist intakt.</value></data>
+  <data name="HashMismatch" xml:space="preserve"><value>✖ Prüfsummen unterscheiden sich — die Datei ist beschädigt oder nicht die veröffentlichte. Bitte neu herunterladen.</value></data>
+  <data name="HashNotRecognized" xml:space="preserve"><value>Keine MD5- / SHA-1- / SHA-256- / SHA-512-Prüfsumme im Text gefunden.</value></data>
+  <data name="HashPasteHint" xml:space="preserve"><value>Fügen Sie die Prüfsumme von der Download-Seite ein, um zu vergleichen.</value></data>
+  <data name="MainQueue" xml:space="preserve"><value>Haupt-Warteschlange</value></data>
+  <data name="ManageQueues" xml:space="preserve"><value>Warteschlangen verwalten</value></data>
+  <data name="MoveToQueue" xml:space="preserve"><value>In Warteschlange verschieben</value></data>
+  <data name="StartQueue" xml:space="preserve"><value>Warteschlange starten</value></data>
+  <data name="PauseQueue" xml:space="preserve"><value>Warteschlange anhalten</value></data>
+  <data name="Queue" xml:space="preserve"><value>Warteschlange</value></data>
+  <data name="Queues" xml:space="preserve"><value>Warteschlangen</value></data>
+  <data name="QueueDefaultName" xml:space="preserve"><value>Warteschlange {0}</value></data>
+  <data name="QueueName" xml:space="preserve"><value>Name</value></data>
+  <data name="QueueParallel" xml:space="preserve"><value>{0} gleichzeitig</value></data>
+  <data name="QueueSpeed" xml:space="preserve"><value>Tempolimit (KB/s, 0 = keins)</value></data>
+  <data name="QueuesHint" xml:space="preserve"><value>Neben der Haupt-Warteschlange hat jede Warteschlange eigene parallele Downloads und ein eigenes Tempolimit (z. B. „Nacht“: einer nach dem anderen). Wählen Sie sie im Hinzufügen-Fenster oder per Rechtsklick → In Warteschlange verschieben.</value></data>
+  <data name="SpeedChart" xml:space="preserve"><value>Geschwindigkeit (letzte Minute)</value></data>
+  <data name="SpeedPeak" xml:space="preserve"><value>Spitze {0} · Ø {1}</value></data>
+  <data name="PortableEdition" xml:space="preserve"><value>portabel</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>Version {0} ist verfügbar.</value></data>
+  <data name="UpdateInstall" xml:space="preserve"><value>Update installieren</value></data>
+  <data name="UpdateDownload" xml:space="preserve"><value>Herunterladen</value></data>
+  <data name="UpdateDownloading" xml:space="preserve"><value>Update wird heruntergeladen … {0} %</value></data>
+  <data name="UpdateReady" xml:space="preserve"><value>Version {0} ist heruntergeladen und geprüft.</value></data>
+  <data name="UpdateConfirm" xml:space="preserve"><value>Version {0} jetzt installieren? Das Programm schließt sich und startet neu; laufende Downloads werden danach fortgesetzt.</value></data>
+  <data name="UpdateFailed" xml:space="preserve"><value>Update fehlgeschlagen: {0}</value></data>
+  <data name="WhatsNew" xml:space="preserve"><value>Neuigkeiten</value></data>
 </root>

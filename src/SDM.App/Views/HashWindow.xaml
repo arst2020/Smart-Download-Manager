@@ -1,0 +1,53 @@
+<Window x:Class="SDM.App.Views.HashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:SDM.App.Localization"
+        Style="{StaticResource AppWindow}"
+        Background="{DynamicResource SurfaceBrush}"
+        Title="{Binding [VerifyChecksum], Source={x:Static loc:Loc.Instance}}"
+        FlowDirection="{Binding FlowDirection, Source={x:Static loc:Loc.Instance}}"
+        Width="560" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="22,12">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource Ghost}" Content="{Binding [Close], Source={x:Static loc:Loc.Instance}}" Command="{Binding CloseCommand}" IsCancel="True" />
+                <Button HorizontalAlignment="Left" Content="{Binding [CopyHash], Source={x:Static loc:Loc.Instance}}" Command="{Binding CopyCommand}" />
+            </DockPanel>
+        </Border>
+        <StackPanel Margin="22,20">
+            <TextBlock Text="{Binding [VerifyChecksum], Source={x:Static loc:Loc.Instance}}" FontSize="17" FontWeight="Bold" />
+            <TextBlock Text="{Binding FileName}" Style="{StaticResource Muted}" FlowDirection="LeftToRight" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis" />
+
+            <TextBlock Text="{Binding [HashAlgorithm], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+            <ComboBox Width="160" HorizontalAlignment="Left" ItemsSource="{Binding Algorithms}" SelectedItem="{Binding Algorithm}" />
+
+            <TextBlock Text="{Binding [HashComputed], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,14,0,6" />
+            <Grid>
+                <TextBox Text="{Binding Computed, Mode=OneWay}" IsReadOnly="True" FlowDirection="LeftToRight" FontFamily="Consolas" TextWrapping="Wrap" />
+                <ProgressBar Height="4" VerticalAlignment="Bottom" Margin="2,0" Maximum="1" Value="{Binding Progress}"
+                             Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}" />
+            </Grid>
+
+            <TextBlock Text="{Binding [HashExpected], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,14,0,6" />
+            <TextBox Text="{Binding Expected, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" FontFamily="Consolas" TextWrapping="Wrap" />
+
+            <Border Margin="0,14,0,0" Padding="12,8" CornerRadius="8" Background="{DynamicResource OtherBgBrush}">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ResultKey}" Value="Match">
+                                <Setter Property="Background" Value="{DynamicResource SuccessBgBrush}" />
+                                <Setter Property="TextElement.Foreground" Value="{DynamicResource SuccessBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding ResultKey}" Value="Mismatch">
+                                <Setter Property="Background" Value="{DynamicResource DangerBgBrush}" />
+                                <Setter Property="TextElement.Foreground" Value="{DynamicResource DangerBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding ResultText}" TextWrapping="Wrap" FontWeight="SemiBold" />
+            </Border>
+        </StackPanel>
+    </DockPanel>
+</Window>

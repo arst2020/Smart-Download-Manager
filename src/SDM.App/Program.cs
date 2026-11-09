@@ -12,6 +12,13 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Run by the uninstaller: remove the browser registration, nothing else.
+        if (args.Contains("--unregister-browser", StringComparer.OrdinalIgnoreCase))
+        {
+            try { BrowserIntegration.Unregister(); } catch { /* best effort */ }
+            return 0;
+        }
+
         using var mutex = new Mutex(initiallyOwned: true, "SmartDownloadManager-" + Environment.UserName, out bool firstInstance);
         if (!firstInstance)
         {

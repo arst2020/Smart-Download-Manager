@@ -24,6 +24,42 @@ public sealed class AppSettings
 
     public ScheduleSettings Schedule { get; set; } = new();
 
+    /// <summary>Remember the download list between runs.</summary>
+    /// <summary>Extra queues besides the main one (each with its own parallel-download and speed limit).</summary>
+    public List<QueueDefinition> Queues { get; set; } = new();
+
+    /// <summary>Extract finished archives (.zip always; .rar/.7z/… when 7-Zip is installed) into a folder next to them.</summary>
+    public bool AutoExtract { get; set; }
+
+    /// <summary>Delete the archive after a successful extraction.</summary>
+    public bool DeleteArchiveAfterExtract { get; set; }
+
+    /// <summary>Check for a new version on GitHub at start (only reads the release list; nothing is sent).</summary>
+    public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>The window's close button hides the app to the notification area instead of quitting.</summary>
+    public bool CloseToTray { get; set; } = true;
+
+    /// <summary>The "still running in the notification area" hint was shown once.</summary>
+    public bool TrayHintShown { get; set; }
+
+    /// <summary>Windows notifications for finished / failed downloads while the window is hidden.</summary>
+    public bool ShowNotifications { get; set; } = true;
+
+    /// <summary>Offer to download when a download link is copied in another program.</summary>
+    public bool WatchClipboard { get; set; } = true;
+
+    /// <summary>
+    /// Subtitle search page opened in the browser ({query} is replaced). The app only opens the page;
+    /// it never downloads subtitles itself.
+    /// </summary>
+    public string SubtitleSearchUrl { get; set; } = SubtitleSearch.DefaultTemplate;
+
+    public bool KeepHistory { get; set; } = true;
+
+    /// <summary>On start, continue downloads that were running when the app closed.</summary>
+    public bool ResumeOnStart { get; set; } = true;
+
     /// <summary>Capture downloads from the browser extension (the extension has its own switch too).</summary>
     public bool BrowserIntegration { get; set; } = true;
 
@@ -105,7 +141,7 @@ public static class SettingsStore
     };
 
     public static string DefaultPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SDM", "settings.json");
+        Path.Combine(AppPaths.DataDirectory, "settings.json");
 
     public static AppSettings Load(string? path = null)
     {
@@ -177,4 +213,17 @@ public static class HttpClientFactory
         client.DefaultRequestHeaders.UserAgent.ParseAdd(settings.UserAgent);
         return client;
     }
+}
+
+/// <summary>A user queue, e.g. "Night" with 1 download at a time, or "Work" limited to 500 KB/s.</summary>
+public sealed class QueueDefinition
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N")[..8];
+    public string Name { get; set; } = "";
+
+    /// <summary>Downloads of this queue that run at the same time.</summary>
+    public int MaxConcurrent { get; set; } = 1;
+
+    /// <summary>Speed limit for this queue in KB/s; 0 = only the global limit.</summary>
+    public long SpeedLimitKBps { get; set; }
 }

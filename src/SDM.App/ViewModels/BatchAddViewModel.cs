@@ -118,6 +118,11 @@ public sealed class BatchAddViewModel : ObservableObject
     public IReadOnlyList<int> ConcurrentChoices { get; } = new[] { 1, 3, 5 };
 
     public int Connections { get => _connections; set => Set(ref _connections, value); }
+
+    private IReadOnlyList<QueueOption>? _queues;
+    public IReadOnlyList<QueueOption> QueueOptions => _queues ??= QueueOption.From(_service);
+    public bool HasQueues => QueueOptions.Count > 1;
+    public string QueueId { get; set; } = SDM.Core.Engine.DownloadQueue.MainQueueId;
     public int Concurrent { get => _concurrent; set => Set(ref _concurrent, value); }
     public bool RenameToStandard { get => _renameToStandard; set => Set(ref _renameToStandard, value); }
 
@@ -197,7 +202,7 @@ public sealed class BatchAddViewModel : ObservableObject
             string? folder = s is null ? null : Path.GetFullPath(Path.Combine(_service.Settings.DownloadDirectory, s.Folder));
             return (i.Url, new AddOptions
             {
-                Folder = folder, FileName = name, Connections = Connections, Scheduled = Scheduled, StartPaused = AddPaused,
+                Folder = folder, FileName = name, Connections = Connections, Scheduled = Scheduled, StartPaused = AddPaused, QueueId = QueueId,
                 Headers = _headers, PageTitle = _pageTitle
             });
         }).ToList();

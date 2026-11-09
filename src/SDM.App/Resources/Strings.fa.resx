@@ -205,4 +205,70 @@
   <data name="InstallStep3" xml:space="preserve"><value>۳. روی آیکون افزونه بزنید؛ باید «به برنامه متصل است» را ببینید.</value></data>
   <data name="CopyPath" xml:space="preserve"><value>کپی مسیر</value></data>
   <data name="ExtraIds" xml:space="preserve"><value>شناسه‌های دیگر افزونه که مجازند (مثلاً نسخهٔ Chrome Web Store)، با ویرگول</value></data>
+  <data name="TrayOpen" xml:space="preserve"><value>باز کردن Smart Download Manager</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>خروج</value></data>
+  <data name="TrayActive" xml:space="preserve"><value>{0} فعال</value></data>
+  <data name="TrayHint" xml:space="preserve"><value>برنامه در ناحیهٔ اعلان‌ها (کنار ساعت) فعال است. برای خروج روی آیکون راست‌کلیک کنید.</value></data>
+  <data name="DownloadFailed" xml:space="preserve"><value>دانلود ناموفق بود</value></data>
+  <data name="ClipboardTitle" xml:space="preserve"><value>لینک کپی شد</value></data>
+  <data name="ClipboardOne" xml:space="preserve"><value>این لینک دانلود شود؟</value></data>
+  <data name="ClipboardMany" xml:space="preserve"><value>{0} لینک دانلود کپی شد</value></data>
+  <data name="ClipDownload" xml:space="preserve"><value>دانلود</value></data>
+  <data name="ClipBatch" xml:space="preserve"><value>افزودن همه</value></data>
+  <data name="Ignore" xml:space="preserve"><value>نادیده بگیر</value></data>
+  <data name="Subtitles" xml:space="preserve"><value>جستجوی زیرنویس</value></data>
+  <data name="SubtitleSearchTip" xml:space="preserve"><value>سایت زیرنویس را در مرورگر باز می‌کند — چیزی خودکار دانلود نمی‌شود</value></data>
+  <data name="ClearCompleted" xml:space="preserve"><value>پاک کردن دانلودهای تمام‌شده از لیست (فایل‌ها حذف نمی‌شوند)</value></data>
+  <data name="BackgroundSection" xml:space="preserve"><value>پس‌زمینه و لیست</value></data>
+  <data name="CloseToTray" xml:space="preserve"><value>با بستن پنجره، برنامه در ناحیهٔ اعلان‌ها فعال بماند</value></data>
+  <data name="ShowNotifications" xml:space="preserve"><value>اعلان ویندوز هنگام پایان یا خطای دانلود (وقتی پنجره پنهان است)</value></data>
+  <data name="WatchClipboard" xml:space="preserve"><value>وقتی لینک دانلود کپی می‌کنم، پیشنهاد دانلود بده</value></data>
+  <data name="KeepHistory" xml:space="preserve"><value>لیست دانلودها بعد از بستن برنامه حفظ شود</value></data>
+  <data name="ResumeOnStart" xml:space="preserve"><value>دانلودهای نیمه‌کاره هنگام اجرای برنامه ادامه پیدا کنند</value></data>
+  <data name="SubtitleSite" xml:space="preserve"><value>سایت جستجوی زیرنویس</value></data>
+  <data name="SubtitleHint" xml:space="preserve"><value>{query} با نام فیلم/قسمت (مثلاً «Dark S01E03») جایگزین می‌شود. فقط صفحه در مرورگر باز می‌شود؛ انتخاب و دانلود زیرنویس با خودتان است.</value></data>
+  <data name="SubtitleUrlInvalid" xml:space="preserve"><value>باید با https:// شروع شود (سایت پیش‌فرض استفاده می‌شود)</value></data>
+  <data name="AddQueue" xml:space="preserve"><value>افزودن صف</value></data>
+  <data name="DeleteQueue" xml:space="preserve"><value>حذف صف</value></data>
+  <data name="ArchivesSection" xml:space="preserve"><value>فایل‌های فشرده</value></data>
+  <data name="AutoExtract" xml:space="preserve"><value>فایل‌های فشرده بعد از دانلود خودکار استخراج شوند</value></data>
+  <data name="DeleteArchive" xml:space="preserve"><value>بعد از استخراج، فایل فشرده حذف شود</value></data>
+  <data name="SevenZipFound" xml:space="preserve"><value>.zip داخلی است؛ ‎.rar/.7z با 7-Zip ({0})</value></data>
+  <data name="SevenZipMissing" xml:space="preserve"><value>.zip داخلی است. برای ‎.rar و ‎.7z برنامهٔ 7-Zip را نصب کنید (7-zip.org).</value></data>
+  <data name="ExtractHere" xml:space="preserve"><value>استخراج در همین‌جا</value></data>
+  <data name="ExtractedTo" xml:space="preserve"><value>استخراج شد در {0}</value></data>
+  <data name="ExtractFailed" xml:space="preserve"><value>استخراج نشد: {0}</value></data>
+  <data name="CheckForUpdates" xml:space="preserve"><value>هنگام اجرا، نسخهٔ جدید را از GitHub بررسی کن</value></data>
+  <data name="VerifyChecksum" xml:space="preserve"><value>بررسی هش (Checksum)</value></data>
+  <data name="CopyHash" xml:space="preserve"><value>کپی هش</value></data>
+  <data name="HashAlgorithm" xml:space="preserve"><value>الگوریتم</value></data>
+  <data name="HashComputed" xml:space="preserve"><value>هش فایل دانلودشده</value></data>
+  <data name="HashExpected" xml:space="preserve"><value>هش اعلام‌شده در سایت (Paste کنید)</value></data>
+  <data name="HashMatch" xml:space="preserve"><value>✔ هش‌ها یکسان است — فایل سالم است.</value></data>
+  <data name="HashMismatch" xml:space="preserve"><value>✖ هش‌ها فرق دارد — فایل خراب است یا همان فایل منتشرشده نیست. دوباره دانلود کنید.</value></data>
+  <data name="HashNotRecognized" xml:space="preserve"><value>هش MD5 / SHA-1 / SHA-256 / SHA-512 در متن پیدا نشد.</value></data>
+  <data name="HashPasteHint" xml:space="preserve"><value>هشی را که در صفحهٔ دانلود نوشته شده Paste کنید تا مقایسه شود.</value></data>
+  <data name="MainQueue" xml:space="preserve"><value>صف اصلی</value></data>
+  <data name="ManageQueues" xml:space="preserve"><value>مدیریت صف‌ها</value></data>
+  <data name="MoveToQueue" xml:space="preserve"><value>انتقال به صف</value></data>
+  <data name="StartQueue" xml:space="preserve"><value>شروع صف</value></data>
+  <data name="PauseQueue" xml:space="preserve"><value>توقف صف</value></data>
+  <data name="Queue" xml:space="preserve"><value>صف</value></data>
+  <data name="Queues" xml:space="preserve"><value>صف‌ها</value></data>
+  <data name="QueueDefaultName" xml:space="preserve"><value>صف {0}</value></data>
+  <data name="QueueName" xml:space="preserve"><value>نام</value></data>
+  <data name="QueueParallel" xml:space="preserve"><value>{0} همزمان</value></data>
+  <data name="QueueSpeed" xml:space="preserve"><value>محدودیت سرعت (KB/s، صفر = بدون محدودیت)</value></data>
+  <data name="QueuesHint" xml:space="preserve"><value>علاوه بر صف اصلی، هر صف تعداد دانلود همزمان و محدودیت سرعت جداگانه دارد (مثلاً «شب»: یکی‌یکی). صف را در پنجرهٔ افزودن یا با راست‌کلیک ← انتقال به صف انتخاب کنید.</value></data>
+  <data name="SpeedChart" xml:space="preserve"><value>سرعت (یک دقیقهٔ اخیر)</value></data>
+  <data name="SpeedPeak" xml:space="preserve"><value>بیشینه {0} · میانگین {1}</value></data>
+  <data name="PortableEdition" xml:space="preserve"><value>نسخهٔ پرتابل</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>نسخهٔ {0} منتشر شده است.</value></data>
+  <data name="UpdateInstall" xml:space="preserve"><value>نصب به‌روزرسانی</value></data>
+  <data name="UpdateDownload" xml:space="preserve"><value>دانلود</value></data>
+  <data name="UpdateDownloading" xml:space="preserve"><value>در حال دانلود به‌روزرسانی… {0}٪</value></data>
+  <data name="UpdateReady" xml:space="preserve"><value>نسخهٔ {0} دانلود و بررسی شد.</value></data>
+  <data name="UpdateConfirm" xml:space="preserve"><value>نسخهٔ {0} الان نصب شود؟ برنامه بسته و دوباره باز می‌شود و دانلودهای در حال اجرا بعد از آن ادامه پیدا می‌کنند.</value></data>
+  <data name="UpdateFailed" xml:space="preserve"><value>به‌روزرسانی انجام نشد: {0}</value></data>
+  <data name="WhatsNew" xml:space="preserve"><value>تغییرات</value></data>
 </root>

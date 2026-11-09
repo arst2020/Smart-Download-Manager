@@ -5,6 +5,7 @@ using SDM.Core.Media.Ai;
 using SDM.Core.Models;
 using SDM.Core.Scheduling;
 using SDM.Core.Settings;
+using SDM.Core.Util;
 
 namespace SDM.Core;
 
@@ -26,6 +27,9 @@ public sealed record AddOptions
     /// <summary>Wait for the scheduler's time window instead of starting now.</summary>
     public bool Scheduled { get; init; }
 
+    /// <summary>Queue id (<see cref="DownloadQueue.MainQueueId"/> when null).</summary>
+    public string? QueueId { get; init; }
+
     /// <summary>Add to the list paused ("add to queue"); the user starts it later.</summary>
     public bool StartPaused { get; init; }
 }
@@ -38,10 +42,15 @@ public sealed class SmartDownloadService : IDisposable
     private readonly HttpClient _http;
     private readonly HttpClient _apiHttp;
     private readonly RateLimiter _globalLimiter = new();
+    private Dictionary<string, RateLimiter> _queueLimiters = new();
     private readonly Timer _schedulerTimer;
     private readonly object _scheduleLock = new();
     private bool _windowOpen;
     private bool _finishedRaised;
+    private string? _historyPath;
+    private Timer? _historyTimer;
+    private int _historyDirty;
+    private readonly object _historyLock = new();
 
     public AppSettings Settings { get; private set; }
     public DownloadQueue Queue { get; }
@@ -64,12 +73,88 @@ public sealed class SmartDownloadService : IDisposable
         });
         Advisor = new MediaAdvisor(() => Settings, _apiHttp, llmFactory);
         Queue = new DownloadQueue(RunJobAsync, settings.MaxConcurrentDownloads);
+        ApplyQueues();
         Queue.JobCompleted += _ => SchedulerTick(DateTime.Now);
         _schedulerTimer = new Timer(_ => SchedulerTick(DateTime.Now), null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(20));
     }
 
     /// <summary>The scheduled queue finished inside the window; the UI performs the action (sleep, shutdown...).</summary>
     public event Action<AfterQueueAction>? ScheduledQueueFinished;
+
+    // ---------------------------------------------------------------- history
+
+    /// <summary>Loads the saved list (if any) and keeps saving it while the app runs.</summary>
+    public bool HistoryEnabled => _historyPath is not null;
+
+    /// <param name="restore">False when the option is switched on while the app runs: start saving, keep the current list.</param>
+    public void EnableHistory(string? path = null, bool restore = true)
+    {
+        if (_historyPath is not null) return;
+        _historyPath = path ?? DownloadHistory.DefaultPath;
+        if (restore) RestoreHistory(DownloadHistory.Load(_historyPath), Settings.ResumeOnStart);
+
+        Queue.JobAdded += job => { job.Changed += _ => MarkHistoryDirty(); MarkHistoryDirty(); };
+        Queue.JobRemoved += _ => MarkHistoryDirty();
+        foreach (var job in Queue.Jobs) job.Changed += _ => MarkHistoryDirty();
+        _historyTimer = new Timer(_ => SaveHistoryIfDirty(), null, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
+    }
+
+    /// <summary>Puts saved downloads back in the list. Ones that were running continue (or wait paused).</summary>
+    public void RestoreHistory(IEnumerable<DownloadRecord> records, bool resumeUnfinished)
+    {
+        foreach (var record in records.OrderBy(r => r.Added))
+        {
+            DownloadJob job;
+            try { job = DownloadJob.FromRecord(record, Settings.MaxRetries); }
+            catch (UriFormatException) { continue; }
+
+            job.Status = record.Status switch
+            {
+                DownloadStatus.Queued or DownloadStatus.Probing or DownloadStatus.Downloading or DownloadStatus.Organizing =>
+                    job.IsScheduled ? DownloadStatus.Scheduled : resumeUnfinished ? DownloadStatus.Queued : DownloadStatus.Paused,
+                DownloadStatus.Scheduled when IsScheduleWindowOpen => DownloadStatus.Queued,
+                var s => s
+            };
+            Queue.Enqueue(job);
+        }
+    }
+
+    public void SaveHistory()
+    {
+        if (_historyPath is null || !Settings.KeepHistory) return;
+        lock (_historyLock)
+        {
+            Interlocked.Exchange(ref _historyDirty, 0);
+            try { DownloadHistory.Save(_historyPath, Queue.Jobs.Select(j => j.ToRecord())); }
+            catch (IOException) { Interlocked.Exchange(ref _historyDirty, 1); } // retry next tick
+        }
+    }
+
+    /// <summary>
+    /// Closing the app: save the list as it is (running downloads stay "running" so they continue next
+    /// start), then stop them so each writes its .sdmstate, and wait briefly for that.
+    /// </summary>
+    public void Shutdown(TimeSpan? wait = null)
+    {
+        _historyTimer?.Dispose();
+        SaveHistory();
+        _historyPath = null; // the stops below must not overwrite the saved statuses
+
+        var running = Queue.Jobs.Where(j => j.Status is DownloadStatus.Probing or DownloadStatus.Downloading
+            or DownloadStatus.Organizing).ToList();
+        foreach (var job in running) Queue.Pause(job);
+        var deadline = DateTime.UtcNow + (wait ?? TimeSpan.FromSeconds(3));
+        while (DateTime.UtcNow < deadline && running.Any(j => j.Status is DownloadStatus.Probing or DownloadStatus.Downloading
+                   or DownloadStatus.Organizing))
+            Thread.Sleep(50);
+    }
+
+    private void MarkHistoryDirty() => Interlocked.Exchange(ref _historyDirty, 1);
+
+    private void SaveHistoryIfDirty()
+    {
+        if (Volatile.Read(ref _historyDirty) == 1) SaveHistory();
+    }
 
     /// <summary>Tests drive the scheduler with their own clock.</summary>
     internal void StopSchedulerTimer() => _schedulerTimer.Change(Timeout.Infinite, Timeout.Infinite);
@@ -132,6 +217,7 @@ public sealed class SmartDownloadService : IDisposable
         Settings = settings;
         ApplySpeedLimit();
         Queue.MaxConcurrent = settings.MaxConcurrentDownloads;
+        ApplyQueues();
         SchedulerTick(DateTime.Now);
     }
 
@@ -153,6 +239,7 @@ public sealed class SmartDownloadService : IDisposable
             PageTitle = options.PageTitle,
         };
         var job = new DownloadJob(request) { ForcedFolder = options.Folder };
+        if (!string.IsNullOrWhiteSpace(options.QueueId)) job.QueueId = options.QueueId;
         if (options.Scheduled)
         {
             job.IsScheduled = true;
@@ -177,7 +264,15 @@ public sealed class SmartDownloadService : IDisposable
         string? probeWarning = null;
         try
         {
-            probe = await HttpProbe.ProbeAsync(_http, url, headers, ct).ConfigureAwait(false);
+            probe = url.Scheme == Uri.UriSchemeFtp
+                ? await new FtpDownloader { Timeout = TimeSpan.FromSeconds(15) }.ProbeAsync(url, ct).ConfigureAwait(false)
+                : await HttpProbe.ProbeAsync(_http, url, headers, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or System.Net.Sockets.SocketException or TimeoutException
+                                       && url.Scheme == Uri.UriSchemeFtp && ex is not FtpException { Code: 550 })
+        {
+            probe = HttpProbe.FromUrlOnly(url);
+            probeWarning = ex.Message;
         }
         catch (HttpRequestException ex) when (ex.StatusCode is not System.Net.HttpStatusCode.NotFound)
         {
@@ -209,8 +304,14 @@ public sealed class SmartDownloadService : IDisposable
 
     private async Task RunJobAsync(DownloadJob job, IProgress<DownloadProgress> progress, CancellationToken ct)
     {
-        var downloader = new SegmentedDownloader(_http, new[] { _globalLimiter });
-        DownloadResult result = await downloader.DownloadAsync(job.Request, progress, ct).ConfigureAwait(false);
+        var limiters = _queueLimiters.TryGetValue(Queue.EffectiveQueue(job), out var ql)
+            ? new[] { _globalLimiter, ql }
+            : new[] { _globalLimiter };
+        DownloadResult result = job.Request.Url.Scheme == Uri.UriSchemeFtp
+            ? await new FtpDownloader(limiters) { Timeout = job.Request.IdleTimeout }
+                .DownloadAsync(job.Request, progress, ct).ConfigureAwait(false)
+            : await new SegmentedDownloader(_http, limiters)
+                .DownloadAsync(job.Request, progress, ct).ConfigureAwait(false);
         job.FilePath = result.FilePath;
         job.FileName = Path.GetFileName(result.FilePath);
 
@@ -246,10 +347,58 @@ public sealed class SmartDownloadService : IDisposable
             try { await Advisor.NotifyFileSavedAsync(job.FilePath!, ct).ConfigureAwait(false); }
             catch (Exception) when (!ct.IsCancellationRequested) { /* a library scan is best effort */ }
         }
+
+        if (Settings.AutoExtract && job.FilePath is { } file && ArchiveExtractor.CanExtract(file))
+            await ExtractCoreAsync(job, Settings.DeleteArchiveAfterExtract, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>"Extract here" from the card menu. Returns false (and sets <see cref="DownloadJob.ExtractError"/>) on failure.</summary>
+    public async Task<bool> ExtractAsync(DownloadJob job, CancellationToken ct = default)
+    {
+        if (job.FilePath is not { } file || !File.Exists(file) || !ArchiveExtractor.CanExtract(file)) return false;
+        await ExtractCoreAsync(job, false, ct).ConfigureAwait(false);
+        job.Raise();
+        return job.ExtractError is null;
+    }
+
+    private static async Task ExtractCoreAsync(DownloadJob job, bool deleteArchive, CancellationToken ct)
+    {
+        try
+        {
+            job.ExtractError = null;
+            job.ExtractedTo = await ArchiveExtractor.ExtractAsync(job.FilePath!, deleteArchive, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or NotSupportedException
+                                       or System.ComponentModel.Win32Exception)
+        {
+            // The download itself is fine; only the extraction failed (damaged, password, no 7-Zip …).
+            job.ExtractError = ex.Message;
+        }
+    }
+
+    /// <summary>Main queue plus the user queues from the settings (names, limits, speed caps).</summary>
+    public IReadOnlyList<QueueDefinition> AllQueues =>
+        new[] { new QueueDefinition { Id = DownloadQueue.MainQueueId, Name = "", MaxConcurrent = Settings.MaxConcurrentDownloads } }
+            .Concat(Settings.Queues).ToList();
+
+    private void ApplyQueues()
+    {
+        var limiters = new Dictionary<string, RateLimiter>();
+        foreach (var q in Settings.Queues)
+        {
+            // Keep the existing limiter object: running downloads hold a reference to it.
+            var limiter = _queueLimiters.TryGetValue(q.Id, out var old) ? old : new RateLimiter();
+            limiter.BytesPerSecond = Math.Max(0, q.SpeedLimitKBps) * 1024;
+            limiters[q.Id] = limiter;
+        }
+        _queueLimiters = limiters;
+        Queue.SetQueues(Settings.Queues.Select(q => (q.Id, q.MaxConcurrent)));
     }
 
     public void Dispose()
     {
+        _historyTimer?.Dispose();
+        SaveHistory();
         _schedulerTimer.Dispose();
         _http.Dispose();
         _apiHttp.Dispose();

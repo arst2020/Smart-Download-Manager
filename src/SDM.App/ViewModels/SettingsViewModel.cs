@@ -94,6 +94,15 @@ public sealed class SettingsViewModel : ObservableObject
         ProxyUrl = settings.ProxyUrl;
         Theme = settings.Theme;
         ShowCompletionDialog = settings.ShowCompletionDialog;
+        CloseToTray = settings.CloseToTray;
+        AutoExtract = settings.AutoExtract;
+        DeleteArchiveAfterExtract = settings.DeleteArchiveAfterExtract;
+        CheckForUpdates = settings.CheckForUpdates;
+        ShowNotifications = settings.ShowNotifications;
+        WatchClipboard = settings.WatchClipboard;
+        KeepHistory = settings.KeepHistory;
+        ResumeOnStart = settings.ResumeOnStart;
+        _subtitleSearchUrl = settings.SubtitleSearchUrl;
         ScheduleSummary = settings.Schedule.Enabled
             ? $"{settings.Schedule.Start} – {settings.Schedule.Stop}"
             : Loc.Get("ScheduleOff");
@@ -111,6 +120,14 @@ public sealed class SettingsViewModel : ObservableObject
         ServerRefresh = settings.MediaServer.RefreshAfterDownload;
 
         foreach (var r in settings.Rules) Rules.Add(RuleRow.From(r));
+        foreach (var q in settings.Queues) QueueRows.Add(QueueRow.From(q));
+        AddQueueCommand = new RelayCommand(() =>
+        {
+            var row = new QueueRow { Name = string.Format(Loc.Get("QueueDefaultName"), QueueRows.Count + 1) };
+            QueueRows.Add(row);
+            SelectedQueueRow = row;
+        });
+        DeleteQueueCommand = new RelayCommand(() => QueueRows.Remove(SelectedQueueRow!), () => SelectedQueueRow is not null);
 
         BrowseDownloadCommand = new RelayCommand(() => DownloadDirectory = PickFolder(DownloadDirectory) ?? DownloadDirectory);
         BrowseSeriesCommand = new RelayCommand(() => SeriesDirectory = PickFolder(SeriesDirectory) ?? SeriesDirectory);
@@ -174,6 +191,45 @@ public sealed class SettingsViewModel : ObservableObject
 
     public AppTheme Theme { get; set; }
     public bool ShowCompletionDialog { get; set; }
+    public bool CloseToTray { get; set; }
+    public bool AutoExtract { get; set; }
+
+    public string VersionText => $"{Loc.Get("AppTitle")} {SDM.Core.Util.UpdateChecker.CurrentVersion}" +
+        (AppPaths.IsPortable ? $" · {Loc.Get("PortableEdition")}" : "") + $" · {AppPaths.DataDirectory}";
+    public bool DeleteArchiveAfterExtract { get; set; }
+    public bool CheckForUpdates { get; set; }
+
+    /// <summary>Whether .rar/.7z can be extracted (7-Zip found) — shown under the switch.</summary>
+    public string SevenZipStatus => SDM.Core.Util.ArchiveExtractor.SevenZipPath is { } p
+        ? string.Format(Loc.Get("SevenZipFound"), p)
+        : Loc.Get("SevenZipMissing");
+    public bool ShowNotifications { get; set; }
+    public bool WatchClipboard { get; set; }
+    public bool KeepHistory { get; set; }
+    public bool ResumeOnStart { get; set; }
+
+    private string _subtitleSearchUrl;
+
+    /// <summary>Search page opened by "Subtitles" ({query} = "Show S01E03" / "Movie 2024"). Only opened, never downloaded.</summary>
+    public string SubtitleSearchUrl
+    {
+        get => _subtitleSearchUrl;
+        set { if (Set(ref _subtitleSearchUrl, value)) { OnPropertyChanged(nameof(SubtitleExample)); OnPropertyChanged(nameof(SelectedSubtitlePreset)); } }
+    }
+
+    public IReadOnlyList<SubtitlePreset> SubtitlePresets { get; } =
+        SubtitleSearch.Presets.Select(p => new SubtitlePreset(p.Name, p.Template)).ToList();
+
+    /// <summary>Picking a preset fills the address box.</summary>
+    public SubtitlePreset? SelectedSubtitlePreset
+    {
+        get => SubtitlePresets.FirstOrDefault(p => string.Equals(p.Template, SubtitleSearchUrl, StringComparison.OrdinalIgnoreCase));
+        set { if (value is not null) SubtitleSearchUrl = value.Template; }
+    }
+
+    /// <summary>Preview of the link for a sample episode (or a warning when the address is not http/https).</summary>
+    public string SubtitleExample =>
+        SubtitleSearch.BuildUrl(SubtitleSearchUrl, "Dark S01E03")?.AbsoluteUri ?? Loc.Get("SubtitleUrlInvalid");
     public string ScheduleSummary { get; }
 
     public IReadOnlyList<LanguageOption> Languages { get; } =
@@ -242,6 +298,17 @@ public sealed class SettingsViewModel : ObservableObject
 
     public ObservableCollection<RuleRow> Rules { get; } = new();
 
+    public const int QueuesTab = 6;
+    private int _selectedTab;
+    public int SelectedTab { get => _selectedTab; set => Set(ref _selectedTab, value); }
+
+    public ObservableCollection<QueueRow> QueueRows { get; } = new();
+    private QueueRow? _selectedQueueRow;
+    public QueueRow? SelectedQueueRow { get => _selectedQueueRow; set => Set(ref _selectedQueueRow, value); }
+    public RelayCommand AddQueueCommand { get; }
+    public RelayCommand DeleteQueueCommand { get; }
+    public IReadOnlyList<int> ParallelChoices { get; } = new[] { 1, 2, 3, 4, 5, 6, 8, 10 };
+
     public RuleRow? SelectedRule { get => _selectedRule; set => Set(ref _selectedRule, value); }
 
     public RelayCommand BrowseDownloadCommand { get; }
@@ -269,6 +336,16 @@ public sealed class SettingsViewModel : ObservableObject
         ProxyUrl = ProxyUrl.Trim(),
         Theme = Theme,
         ShowCompletionDialog = ShowCompletionDialog,
+        CloseToTray = CloseToTray,
+        AutoExtract = AutoExtract,
+        DeleteArchiveAfterExtract = DeleteArchiveAfterExtract,
+        CheckForUpdates = CheckForUpdates,
+        ShowNotifications = ShowNotifications,
+        WatchClipboard = WatchClipboard,
+        KeepHistory = KeepHistory,
+        ResumeOnStart = ResumeOnStart,
+        TrayHintShown = _original.TrayHintShown,
+        SubtitleSearchUrl = SubtitleSearch.BuildUrl(SubtitleSearchUrl, "x") is null ? SubtitleSearch.DefaultTemplate : SubtitleSearchUrl.Trim(),
         BrowserIntegration = BrowserIntegration,
         ExtraExtensionIds = ParseIds(ExtraExtensionIds),
         Schedule = _original.Schedule,
@@ -282,6 +359,7 @@ public sealed class SettingsViewModel : ObservableObject
         {
             Type = ServerType, Url = ServerUrl.Trim(), ApiKey = ServerApiKey.Trim(), RefreshAfterDownload = ServerRefresh
         },
+        Queues = QueueRows.Where(q => !string.IsNullOrWhiteSpace(q.Name)).Select(q => q.ToDefinition()).ToList(),
         Rules = Rules.Where(r => !string.IsNullOrWhiteSpace(r.Keywords) || !string.IsNullOrWhiteSpace(r.Domains))
                      .Select(r => r.ToRule()).ToList(),
     };
@@ -338,3 +416,5 @@ public sealed class SettingsViewModel : ObservableObject
         return dialog.ShowDialog() == true ? dialog.FolderName : null;
     }
 }
+
+public sealed record SubtitlePreset(string Name, string Template);
