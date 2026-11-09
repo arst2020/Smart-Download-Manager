@@ -50,6 +50,16 @@ public sealed class MediaAdvisor
         MediaLibrary? library = libraries.FirstOrDefault(l =>
             l.Kind == media.Kind && media.Kind != MediaKind.Unknown && LocalRoot(l) is not null);
 
+        if (library is null && settings.MediaServer.IsConfigured && media.Kind is MediaKind.Series or MediaKind.Movie or MediaKind.Music
+            && LastWarning is null)
+        {
+            // Explain why the server's library was not used, instead of silently falling back.
+            var sameKind = libraries.Where(l => l.Kind == media.Kind).ToList();
+            LastWarning = sameKind.Count > 0
+                ? $"{settings.MediaServer.Type}: {sameKind[0].Name} → {string.Join(", ", sameKind[0].Locations)} — folder not found on this PC"
+                : $"{settings.MediaServer.Type}: no {media.Kind} library ({(libraries.Count == 0 ? "no libraries returned" : string.Join(", ", libraries.Select(l => $"{l.Name} [{l.CollectionType}]")))})";
+        }
+
         string folder = FolderFor(media, settings, library, req.FileName, req.ContentType);
         string? ruleName = null;
 

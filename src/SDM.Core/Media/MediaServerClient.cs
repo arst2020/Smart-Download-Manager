@@ -44,14 +44,30 @@ public sealed class MediaServerClient(HttpClient http, MediaServerSettings setti
             if (item is null) continue;
             var locations = item["Locations"]?.AsArray().Select(l => (string?)l).OfType<string>().ToList() ?? new();
             if (locations.Count == 0) continue; // e.g. Collections
-            list.Add(new MediaLibrary(
-                (string?)item["Name"] ?? "?",
-                (string?)item["CollectionType"] ?? "mixed",
-                locations,
-                settings.Type.ToString()));
+            string name = (string?)item["Name"] ?? "?";
+            list.Add(new MediaLibrary(name, ContentTypeOf(item, name), locations, settings.Type.ToString()));
         }
         return list;
     }
+
+    /// <summary>
+    /// Emby 4.8+ keeps the type in LibraryOptions.ContentType and may omit CollectionType;
+    /// Jellyfin and older Emby use CollectionType. As a last resort the library name is used.
+    /// </summary>
+    internal static string ContentTypeOf(JsonNode item, string name)
+    {
+        string? type = NonEmpty((string?)item["CollectionType"]) ?? NonEmpty((string?)item["LibraryOptions"]?["ContentType"]);
+        if (type is not null) return type;
+
+        string n = name.ToLowerInvariant();
+        if (n.Contains("tv") || n.Contains("series") || n.Contains("serie") || n.Contains("show") || n.Contains("سریال"))
+            return "tvshows";
+        if (n.Contains("movie") || n.Contains("film") || n.Contains("فیلم")) return "movies";
+        if (n.Contains("music") || n.Contains("musik") || n.Contains("موسیقی")) return "music";
+        return "mixed";
+    }
+
+    private static string? NonEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
     public async Task RefreshAsync(CancellationToken ct)
     {

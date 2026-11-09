@@ -268,7 +268,7 @@ public sealed class SettingsViewModel : ObservableObject
         {
             var libs = await new MediaServerClient(http, settings.MediaServer).GetLibrariesAsync(CancellationToken.None);
             ServerTestResult = $"✔ {Loc.Get("TestOk")}: " + string.Join("  ·  ", libs.Select(l =>
-                $"{l.Name} → {string.Join(", ", l.Locations)}{(l.Locations.Any(Directory.Exists) ? "" : " (?)")}"));
+                $"{l.Name} [{l.Kind}] → {string.Join(", ", l.Locations)}{(l.Locations.Any(Directory.Exists) ? "" : " (not found on this PC)")}"));
         }
         catch (Exception ex) { ServerTestResult = "✖ " + ex.Message; }
     }
