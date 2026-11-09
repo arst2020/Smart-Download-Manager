@@ -1,0 +1,47 @@
+{
+  "extName": {
+    "message": "Smart Download Manager"
+  },
+  "extDesc": {
+    "message": "Send downloads to Smart Download Manager: 32 connections, resume, smart folders."
+  },
+  "menuLink": {
+    "message": "Download with Smart Download Manager"
+  },
+  "menuPage": {
+    "message": "Download all links on this page…"
+  },
+  "menuSelection": {
+    "message": "Download links in selection"
+  },
+  "popupEnabled": {
+    "message": "Capture browser downloads"
+  },
+  "popupMinSize": {
+    "message": "Leave files smaller than (MB) to the browser"
+  },
+  "popupExcluded": {
+    "message": "Sites to ignore (comma separated)"
+  },
+  "popupTypes": {
+    "message": "File types for “all links on this page”"
+  },
+  "popupConnected": {
+    "message": "Connected to the app"
+  },
+  "popupHostOnly": {
+    "message": "Ready — the app starts automatically with the next download"
+  },
+  "popupNotConnected": {
+    "message": "Not connected"
+  },
+  "popupHelp": {
+    "message": "Open Smart Download Manager once (Settings → Browser) to register the extension."
+  },
+  "popupSaved": {
+    "message": "Saved"
+  },
+  "noLinks": {
+    "message": "No matching links on this page"
+  }
+}

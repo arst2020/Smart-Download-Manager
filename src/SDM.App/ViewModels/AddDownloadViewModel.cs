@@ -49,6 +49,12 @@ public sealed class AddDownloadViewModel : ObservableObject
     /// <summary>The user clicked "Schedule…" instead of "Start".</summary>
     public bool Scheduled { get; set; }
 
+    /// <summary>Cookie / Referer / User-Agent from the browser extension, replayed on every request.</summary>
+    public IReadOnlyDictionary<string, string>? Headers { get; init; }
+
+    /// <summary>Title of the page the link came from (helps detection).</summary>
+    public string? PageTitle { get; init; }
+
     public string? PosterUrl => _suggestion?.Media.PosterUrl;
 
     public bool HasPoster => PosterUrl is not null;
@@ -155,7 +161,7 @@ public sealed class AddDownloadViewModel : ObservableObject
         Warning = "";
         try
         {
-            var (probe, s) = await _service.SuggestAsync(new Uri(Url.Trim()), null, _cts.Token);
+            var (probe, s) = await _service.SuggestAsync(new Uri(Url.Trim()), PageTitle, _cts.Token, Headers);
             _suggestion = s;
             _analyzed = true;
 
@@ -195,6 +201,8 @@ public sealed class AddDownloadViewModel : ObservableObject
             FileName = name,
             Connections = Connections,
             Scheduled = Scheduled,
+            Headers = Headers,
+            PageTitle = PageTitle,
         };
     }
 

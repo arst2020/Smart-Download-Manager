@@ -192,4 +192,17 @@
   <data name="TotalSize" xml:space="preserve"><value>حجم کل</value></data>
   <data name="WaitingForSchedule" xml:space="preserve"><value>منتظر زمان‌بندی</value></data>
   <data name="WaitingInQueue" xml:space="preserve"><value>منتظر نوبت</value></data>
+  <data name="TabBrowser" xml:space="preserve"><value>مرورگر</value></data>
+  <data name="BrowserHint" xml:space="preserve"><value>افزونه دانلودهای مرورگر را همراه با کوکی‌ها و Referer صفحه به این برنامه می‌فرستد؛ بنابراین سایت‌هایی که ورود لازم دارند یا برنامه‌های ناشناس را رد می‌کنند هم کار می‌کنند.</value></data>
+  <data name="BrowserCapture" xml:space="preserve"><value>پذیرفتن دانلودها از افزونهٔ مرورگر</value></data>
+  <data name="RegisterAgain" xml:space="preserve"><value>ثبت برای Chrome، Edge و Firefox</value></data>
+  <data name="BrowserRegistered" xml:space="preserve"><value>ثبت شده است</value></data>
+  <data name="BrowserNotRegistered" xml:space="preserve"><value>هنوز ثبت نشده</value></data>
+  <data name="HostMissing" xml:space="preserve"><value>فایل SmartDownloadManager.Host.exe کنار برنامه پیدا نشد</value></data>
+  <data name="InstallSteps" xml:space="preserve"><value>نصب افزونه</value></data>
+  <data name="InstallStep1" xml:space="preserve"><value>۱. صفحهٔ chrome://extensions (کروم) یا edge://extensions (اج) را باز کنید و Developer mode را روشن کنید.</value></data>
+  <data name="InstallStep2" xml:space="preserve"><value>۲. روی «Load unpacked» بزنید و پوشهٔ زیر را انتخاب کنید.</value></data>
+  <data name="InstallStep3" xml:space="preserve"><value>۳. روی آیکون افزونه بزنید؛ باید «به برنامه متصل است» را ببینید.</value></data>
+  <data name="CopyPath" xml:space="preserve"><value>کپی مسیر</value></data>
+  <data name="ExtraIds" xml:space="preserve"><value>شناسه‌های دیگر افزونه که مجازند (مثلاً نسخهٔ Chrome Web Store)، با ویرگول</value></data>
 </root>

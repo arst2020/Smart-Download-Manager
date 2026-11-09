@@ -192,4 +192,17 @@
   <data name="TotalSize" xml:space="preserve"><value>Total size</value></data>
   <data name="WaitingForSchedule" xml:space="preserve"><value>Waiting for the schedule</value></data>
   <data name="WaitingInQueue" xml:space="preserve"><value>Waiting in queue</value></data>
+  <data name="TabBrowser" xml:space="preserve"><value>Browser</value></data>
+  <data name="BrowserHint" xml:space="preserve"><value>The extension hands browser downloads to this app, with the page's cookies and referrer, so sites that need a login or reject unknown programs still work.</value></data>
+  <data name="BrowserCapture" xml:space="preserve"><value>Accept downloads from the browser extension</value></data>
+  <data name="RegisterAgain" xml:space="preserve"><value>Register for Chrome, Edge and Firefox</value></data>
+  <data name="BrowserRegistered" xml:space="preserve"><value>Registered</value></data>
+  <data name="BrowserNotRegistered" xml:space="preserve"><value>Not registered yet</value></data>
+  <data name="HostMissing" xml:space="preserve"><value>SmartDownloadManager.Host.exe is missing next to the app</value></data>
+  <data name="InstallSteps" xml:space="preserve"><value>Install the extension</value></data>
+  <data name="InstallStep1" xml:space="preserve"><value>1. Open chrome://extensions (Chrome) or edge://extensions (Edge) and turn on Developer mode.</value></data>
+  <data name="InstallStep2" xml:space="preserve"><value>2. Click “Load unpacked” and choose the folder below.</value></data>
+  <data name="InstallStep3" xml:space="preserve"><value>3. Click the extension icon: it should say “Connected to the app”.</value></data>
+  <data name="CopyPath" xml:space="preserve"><value>Copy path</value></data>
+  <data name="ExtraIds" xml:space="preserve"><value>Other extension IDs allowed (e.g. a Chrome Web Store build), comma separated</value></data>
 </root>

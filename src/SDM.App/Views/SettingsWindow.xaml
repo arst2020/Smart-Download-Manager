@@ -248,6 +248,45 @@
                 </StackPanel>
             </TabItem>
 
+            <!-- ============ Browser ============ -->
+            <TabItem Style="{StaticResource SideTab}" Header="{Binding [TabBrowser], Source={x:Static loc:Loc.Instance}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Style="{StaticResource Section}">
+                        <TextBlock Text="{Binding [TabBrowser], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Heading}" />
+                        <TextBlock Text="{Binding [BrowserHint], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="0,4,0,16" />
+
+                        <Border Style="{StaticResource InsetCard}">
+                            <CheckBox Style="{StaticResource Switch}" Content="{Binding [BrowserCapture], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding BrowserIntegration}" />
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Button Content="{Binding [RegisterAgain], Source={x:Static loc:Loc.Instance}}" Command="{Binding RegisterBrowserCommand}" Margin="0,0,12,0" />
+                            <TextBlock Text="{Binding BrowserStatus}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="520" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding [InstallSteps], Source={x:Static loc:Loc.Instance}}" FontWeight="SemiBold" Margin="0,22,0,8" />
+                        <Border Style="{StaticResource InsetCard}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding [InstallStep1], Source={x:Static loc:Loc.Instance}}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                <TextBlock Text="{Binding [InstallStep2], Source={x:Static loc:Loc.Instance}}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                <TextBlock Text="{Binding [InstallStep3], Source={x:Static loc:Loc.Instance}}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="{Binding [OpenFolder], Source={x:Static loc:Loc.Instance}}" Command="{Binding OpenExtensionFolderCommand}" Margin="8,0,0,0" />
+                                    <Button DockPanel.Dock="Right" Content="{Binding [CopyPath], Source={x:Static loc:Loc.Instance}}" Command="{Binding CopyExtensionPathCommand}" Margin="8,0,0,0" />
+                                    <TextBox Text="{Binding ExtensionFolder, Mode=OneWay}" IsReadOnly="True" FlowDirection="LeftToRight" />
+                                </DockPanel>
+                                <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0" FlowDirection="LeftToRight" HorizontalAlignment="Left">
+                                    <Run Text="Extension ID: " /><Run Text="{Binding ExtensionId, Mode=OneWay}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding [ExtraIds], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,18,0,6" />
+                        <TextBox Text="{Binding ExtraExtensionIds}" FlowDirection="LeftToRight" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <!-- ============ Topics / rules ============ -->
             <TabItem Style="{StaticResource SideTab}" Header="{Binding [TabRules], Source={x:Static loc:Loc.Instance}}">
                 <DockPanel Margin="26,22">

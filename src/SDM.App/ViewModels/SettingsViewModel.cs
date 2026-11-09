@@ -130,8 +130,41 @@ public sealed class SettingsViewModel : ObservableObject
         TestTmdbCommand = new RelayCommand(async () => await TestTmdbAsync(), () => !string.IsNullOrWhiteSpace(TmdbApiKey));
         TestServerCommand = new RelayCommand(async () => await TestServerAsync(), () => ServerType != MediaServerType.None);
         OpenSchedulerCommand = new RelayCommand(() => OpenScheduler?.Invoke());
+        BrowserIntegration = settings.BrowserIntegration;
+        ExtraExtensionIds = string.Join(", ", settings.ExtraExtensionIds);
+        RegisterBrowserCommand = new RelayCommand(() =>
+        {
+            string? error = SDM.App.BrowserIntegration.Register(ParseIds(ExtraExtensionIds));
+            BrowserStatus = error is null ? "✔ " + Loc.Get("BrowserRegistered") : "✖ " + error;
+        });
+        OpenExtensionFolderCommand = new RelayCommand(() =>
+        {
+            if (Directory.Exists(SDM.App.BrowserIntegration.ExtensionFolder))
+                System.Diagnostics.Process.Start("explorer.exe", $"\"{SDM.App.BrowserIntegration.ExtensionFolder}\"");
+        });
+        CopyExtensionPathCommand = new RelayCommand(() =>
+        {
+            try { System.Windows.Clipboard.SetText(SDM.App.BrowserIntegration.ExtensionFolder); } catch { /* clipboard busy */ }
+        });
+        BrowserStatus = !SDM.App.BrowserIntegration.HostExists
+            ? "✖ " + Loc.Get("HostMissing")
+            : SDM.App.BrowserIntegration.IsRegistered ? "✔ " + Loc.Get("BrowserRegistered") : Loc.Get("BrowserNotRegistered");
         PickProviderCommand = new RelayCommand(p => { if (p is ChoiceOption<AiProvider> o) AiProvider = o.Value; });
     }
+
+    private string _browserStatus = "";
+
+    public bool BrowserIntegration { get; set; }
+    public string ExtraExtensionIds { get; set; } = "";
+    public string ExtensionFolder => SDM.App.BrowserIntegration.ExtensionFolder;
+    public string ExtensionId => SDM.Core.Browser.NativeHostManifest.ChromeExtensionId;
+    public string BrowserStatus { get => _browserStatus; private set => Set(ref _browserStatus, value); }
+    public RelayCommand RegisterBrowserCommand { get; }
+    public RelayCommand OpenExtensionFolderCommand { get; }
+    public RelayCommand CopyExtensionPathCommand { get; }
+
+    private static List<string> ParseIds(string s) =>
+        s.Split(new[] { ',', ';', ' ', '،' }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
     /// <summary>Set by the main window: opens the scheduler window.</summary>
     public Action? OpenScheduler { get; set; }
@@ -236,6 +269,8 @@ public sealed class SettingsViewModel : ObservableObject
         ProxyUrl = ProxyUrl.Trim(),
         Theme = Theme,
         ShowCompletionDialog = ShowCompletionDialog,
+        BrowserIntegration = BrowserIntegration,
+        ExtraExtensionIds = ParseIds(ExtraExtensionIds),
         Schedule = _original.Schedule,
         UserAgent = _original.UserAgent,
         CategoryFolders = new(_original.CategoryFolders),

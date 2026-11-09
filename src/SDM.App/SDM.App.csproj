@@ -7,11 +7,38 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>SDM.App</RootNamespace>
     <AssemblyName>SmartDownloadManager</AssemblyName>
+    <!-- Our own Main: single instance + forwarding links to the running app. -->
+    <StartupObject>SDM.App.Program</StartupObject>
     <!-- Lets CI build the UI project on Linux/macOS too (it only runs on Windows). -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <SatelliteResourceLanguages>fa;de</SatelliteResourceLanguages>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SDM.Core\SDM.Core.csproj" />
+    <!-- Built first; its files are copied next to the app below (browsers start it directly). -->
+    <ProjectReference Include="..\SDM.NativeHost\SDM.NativeHost.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <!-- The unpacked browser extension ships with the app ("Load unpacked" points at this folder). -->
+  <ItemGroup>
+    <Content Include="..\..\extension\**\*" LinkBase="extension" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <NativeHostOutput>$(MSBuildThisFileDirectory)..\SDM.NativeHost\bin\$(Configuration)\net8.0\</NativeHostOutput>
+  </PropertyGroup>
+  <Target Name="CopyNativeHost" AfterTargets="Build">
+    <ItemGroup>
+      <NativeHostFiles Include="$(NativeHostOutput)SmartDownloadManager.Host.*" />
+      <NativeHostFiles Include="$(NativeHostOutput)$(RuntimeIdentifier)\SmartDownloadManager.Host.*" Condition="'$(RuntimeIdentifier)' != ''" />
+    </ItemGroup>
+    <Copy SourceFiles="@(NativeHostFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="PublishNativeHost" AfterTargets="Publish">
+    <ItemGroup>
+      <NativeHostPublishFiles Include="$(NativeHostOutput)SmartDownloadManager.Host.*" />
+      <NativeHostPublishFiles Include="$(NativeHostOutput)$(RuntimeIdentifier)\SmartDownloadManager.Host.*" Condition="'$(RuntimeIdentifier)' != ''" />
+    </ItemGroup>
+    <Copy SourceFiles="@(NativeHostPublishFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

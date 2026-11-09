@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Smart Download Manager</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon32.png" alt="" width="24" height="24">
+    <strong>Smart Download Manager</strong>
+  </header>
+
+  <div id="status" class="status"><span class="dot"></span><span id="statusText">…</span></div>
+  <p id="help" class="help" data-i18n="popupHelp" hidden></p>
+
+  <label class="row switch">
+    <span data-i18n="popupEnabled"></span>
+    <input type="checkbox" id="enabled">
+  </label>
+
+  <label class="field">
+    <span data-i18n="popupMinSize"></span>
+    <input type="number" id="minSizeMB" min="0" step="0.5" dir="ltr">
+  </label>
+
+  <label class="field">
+    <span data-i18n="popupExcluded"></span>
+    <input type="text" id="excludedSites" dir="ltr" placeholder="example.com, youtube.com">
+  </label>
+
+  <label class="field">
+    <span data-i18n="popupTypes"></span>
+    <textarea id="fileTypes" rows="2" dir="ltr"></textarea>
+  </label>
+
+  <p id="saved" class="saved" data-i18n="popupSaved" hidden></p>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -171,13 +171,13 @@ public sealed class SmartDownloadService : IDisposable
     /// link itself and <see cref="LastSuggestWarning"/> explains what happened; the download can still be tried.
     /// </remarks>
     public async Task<(ProbeResult Probe, SaveSuggestion Suggestion)> SuggestAsync(
-        Uri url, string? pageTitle = null, CancellationToken ct = default)
+        Uri url, string? pageTitle = null, CancellationToken ct = default, IReadOnlyDictionary<string, string>? headers = null)
     {
         ProbeResult probe;
         string? probeWarning = null;
         try
         {
-            probe = await HttpProbe.ProbeAsync(_http, url, null, ct).ConfigureAwait(false);
+            probe = await HttpProbe.ProbeAsync(_http, url, headers, ct).ConfigureAwait(false);
         }
         catch (HttpRequestException ex) when (ex.StatusCode is not System.Net.HttpStatusCode.NotFound)
         {

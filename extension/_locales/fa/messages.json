@@ -1,0 +1,47 @@
+{
+  "extName": {
+    "message": "Smart Download Manager"
+  },
+  "extDesc": {
+    "message": "دانلودها را به Smart Download Manager بفرست: ۳۲ کانکشن، ادامهٔ دانلود، پوشه‌بندی هوشمند."
+  },
+  "menuLink": {
+    "message": "دانلود با Smart Download Manager"
+  },
+  "menuPage": {
+    "message": "دانلود همهٔ لینک‌های این صفحه…"
+  },
+  "menuSelection": {
+    "message": "دانلود لینک‌های متن انتخاب‌شده"
+  },
+  "popupEnabled": {
+    "message": "گرفتن دانلودهای مرورگر"
+  },
+  "popupMinSize": {
+    "message": "فایل‌های کوچک‌تر از (مگابایت) را خود مرورگر دانلود کند"
+  },
+  "popupExcluded": {
+    "message": "سایت‌هایی که نادیده گرفته شوند (با ویرگول)"
+  },
+  "popupTypes": {
+    "message": "نوع فایل‌ها برای «همهٔ لینک‌های صفحه»"
+  },
+  "popupConnected": {
+    "message": "به برنامه متصل است"
+  },
+  "popupHostOnly": {
+    "message": "آماده — برنامه با دانلود بعدی خودکار باز می‌شود"
+  },
+  "popupNotConnected": {
+    "message": "متصل نیست"
+  },
+  "popupHelp": {
+    "message": "یک بار Smart Download Manager را باز کنید (تنظیمات ← مرورگر) تا افزونه ثبت شود."
+  },
+  "popupSaved": {
+    "message": "ذخیره شد"
+  },
+  "noLinks": {
+    "message": "لینک مناسبی در این صفحه پیدا نشد"
+  }
+}

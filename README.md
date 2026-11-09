@@ -34,12 +34,32 @@ and automatic sorting of finished files — TV episodes go to `Series\<Show>\Sea
 - پوستر فیلم و سریال از TMDB در پنجرهٔ افزودن
 - خط فرمان `sdm` برای تست و اسکریپت
 
+## افزونهٔ مرورگر
+
+افزونه دانلودهای Chrome، Edge (و Firefox) را همراه با کوکی‌ها، Referer و User-Agent مرورگر به برنامه می‌فرستد؛ بنابراین سایت‌هایی که ورود لازم دارند یا برنامه‌های ناشناس را رد می‌کنند هم کار می‌کنند.
+
+- گرفتن خودکار دانلودها (فایل‌های کوچک‌تر از حد تعیین‌شده در خود مرورگر می‌مانند؛ سایت‌ها را می‌توان مستثنا کرد)
+- منوی کلیک‌راست: «دانلود با Smart Download Manager»، «دانلود همهٔ لینک‌های این صفحه» و «دانلود لینک‌های متن انتخاب‌شده» (پنجرهٔ افزودن دسته‌ای)
+- اگر برنامه باز نباشد خودکار باز می‌شود؛ اگر در دسترس نباشد دانلود در مرورگر ادامه پیدا می‌کند
+
+**نصب (Chrome / Edge):**
+
+1. برنامه را یک بار اجرا کنید؛ افزونه خودکار ثبت می‌شود (تنظیمات ← مرورگر).
+2. `chrome://extensions` یا `edge://extensions` را باز کنید و **Developer mode** را روشن کنید.
+3. **Load unpacked** را بزنید و پوشهٔ `extension` کنار برنامه را انتخاب کنید (در تنظیمات ← مرورگر دکمهٔ «باز کردن پوشه» هست).
+
+**Firefox:** محتوای `extension/` را کپی کنید، `extension/firefox/manifest.json` را جایگزین `manifest.json` کنید و از `about:debugging` ← This Firefox ← Load Temporary Add-on بارگذاری کنید (یا با `web-ext` امضا کنید).
+
+ارتباط: افزونه ← `SmartDownloadManager.Host.exe` (Native Messaging، stdin/stdout) ← named pipe ← برنامه. شناسهٔ افزونهٔ unpacked ثابت است (`hlmploemhlgmkommeccngdhdpjggjcdi`)؛ نسخهٔ منتشرشده در Web Store را می‌توانید در تنظیمات ← مرورگر به‌عنوان شناسهٔ اضافه وارد کنید.
+
 ## ساختار پروژه
 
 ```
 src/SDM.Core     موتور دانلود، صف، تشخیص‌دهنده‌ها و انتقال فایل (بدون وابستگی به ویندوز)
 src/SDM.App      رابط کاربری WPF
 src/SDM.Cli      خط فرمان
+src/SDM.NativeHost  واسط افزونهٔ مرورگر (Native Messaging)
+extension/       افزونهٔ مرورگر (Manifest V3)
 tests/           تست‌های xUnit (شامل یک سرور HTTP محلی برای تست Range و Resume)
 ```
 
@@ -84,7 +104,7 @@ dotnet run --project src/SDM.Cli -- classify "Dark.S01E03.1080p.mkv" "Dune.Part.
 
 ## نقشهٔ راه
 
-- **فاز ۳:** اکستنشن مرورگر (Chrome / Edge / Firefox) با Native Messaging، ذخیرهٔ فهرست دانلودها (SQLite)، کلیپ‌بورد هوشمند، System Tray و اعلان ویندوز، دکمهٔ جستجوی زیرنویس (فقط باز کردن سایت)، FTP، نصاب‌کننده
+- **فاز ۳:** ~~اکستنشن مرورگر~~ (انجام شد)، ذخیرهٔ فهرست دانلودها (SQLite)، کلیپ‌بورد هوشمند، System Tray و اعلان ویندوز، دکمهٔ جستجوی زیرنویس (فقط باز کردن سایت)، FTP، نصاب‌کننده
 - **فاز ۴:** چند صف جدا، نمودار سرعت، چک هش، تمدید لینک منقضی، استخراج خودکار zip/rar، دنبال کردن سریال، استریم HLS/DASH بدون DRM، Plex، نسخهٔ Portable و به‌روزرسانی خودکار
 
 ## محدودیت‌ها

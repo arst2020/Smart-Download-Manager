@@ -9,6 +9,7 @@ using SDM.App.Localization;
 using SDM.App.Themes;
 using SDM.App.Views;
 using SDM.Core;
+using SDM.Core.Browser;
 using SDM.Core.Media.Ai;
 using SDM.Core.Settings;
 using SDM.Core.Util;
@@ -262,9 +263,36 @@ public sealed class MainViewModel : ObservableObject
         else if (links.Links.Count == 1) ShowAddDialog(links.Links[0].ToString());
     }
 
-    public void ShowAddDialog(string? url)
+    /// <summary>A link (or many) arrived from the browser extension or a second app instance.</summary>
+    public void HandleBrowserMessage(BrowserMessage message)
     {
-        var vm = new AddDownloadViewModel(_service) { Url = url ?? "" };
+        BringToFront();
+        var links = message.ValidLinks();
+        var headers = message.ToHeaders();
+        if (links.Count == 1 && message.Type == "download")
+            ShowAddDialog(links[0].ToString(), headers, message.PageTitle, message.FileName);
+        else
+            ShowBatchDialog(new LinkExtractor.Result(links, 0), headers, message.PageTitle);
+    }
+
+    public void BringToFront()
+    {
+        if (Owner is null) return;
+        if (Owner.WindowState == WindowState.Minimized) Owner.WindowState = WindowState.Normal;
+        Owner.Show();
+        Owner.Activate();
+        // Windows only lets the foreground app steal focus; a brief Topmost makes the window visible anyway.
+        Owner.Topmost = true;
+        Owner.Topmost = false;
+        Owner.Focus();
+    }
+
+    public void ShowAddDialog(string? url) => ShowAddDialog(url, null, null, null);
+
+    public void ShowAddDialog(string? url, IReadOnlyDictionary<string, string>? headers, string? pageTitle, string? browserFileName)
+    {
+        var vm = new AddDownloadViewModel(_service) { Url = url ?? "", Headers = headers, PageTitle = pageTitle };
+        if (!string.IsNullOrWhiteSpace(browserFileName)) vm.FileName = browserFileName;
         var window = new AddDownloadWindow { DataContext = vm, Owner = Owner };
         if (window.ShowDialog() != true || !Uri.TryCreate(vm.Url.Trim(), UriKind.Absolute, out var uri)) return;
 
@@ -277,9 +305,9 @@ public sealed class MainViewModel : ObservableObject
         if (vm.Scheduled) EnsureScheduleEnabled();
     }
 
-    private void ShowBatchDialog(LinkExtractor.Result links)
+    private void ShowBatchDialog(LinkExtractor.Result links, IReadOnlyDictionary<string, string>? headers = null, string? pageTitle = null)
     {
-        var vm = new BatchAddViewModel(_service, links);
+        var vm = new BatchAddViewModel(_service, links, headers, pageTitle);
         var window = new BatchAddWindow { DataContext = vm, Owner = Owner };
         if (window.ShowDialog() != true) return;
         vm.Commit();

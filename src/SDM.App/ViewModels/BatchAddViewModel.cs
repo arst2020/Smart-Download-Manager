@@ -82,9 +82,15 @@ public sealed class BatchAddViewModel : ObservableObject
     private bool _renameToStandard;
     private string _summary = "";
 
-    public BatchAddViewModel(SmartDownloadService service, LinkExtractor.Result links)
+    private readonly IReadOnlyDictionary<string, string>? _headers;
+    private readonly string? _pageTitle;
+
+    public BatchAddViewModel(SmartDownloadService service, LinkExtractor.Result links,
+        IReadOnlyDictionary<string, string>? headers = null, string? pageTitle = null)
     {
         _service = service;
+        _headers = headers;
+        _pageTitle = pageTitle;
         _connections = ConnectionGate.Choices.Contains(service.Settings.MaxSegments) ? service.Settings.MaxSegments : 16;
         _concurrent = service.Settings.MaxConcurrentDownloads;
         _renameToStandard = service.Settings.RenameToStandard;
@@ -146,7 +152,7 @@ public sealed class BatchAddViewModel : ObservableObject
             try
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(45));
-                var (probe, s) = await _service.SuggestAsync(item.Url, null, cts.Token);
+                var (probe, s) = await _service.SuggestAsync(item.Url, _pageTitle, cts.Token, _headers);
                 Application.Current?.Dispatcher.Invoke(() => item.Fill(probe, s, _service.Settings.DownloadDirectory));
             }
             catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or InvalidOperationException)
@@ -191,7 +197,8 @@ public sealed class BatchAddViewModel : ObservableObject
             string? folder = s is null ? null : Path.GetFullPath(Path.Combine(_service.Settings.DownloadDirectory, s.Folder));
             return (i.Url, new AddOptions
             {
-                Folder = folder, FileName = name, Connections = Connections, Scheduled = Scheduled, StartPaused = AddPaused
+                Folder = folder, FileName = name, Connections = Connections, Scheduled = Scheduled, StartPaused = AddPaused,
+                Headers = _headers, PageTitle = _pageTitle
             });
         }).ToList();
         _service.AddMany(batch);

@@ -24,6 +24,12 @@ public sealed class AppSettings
 
     public ScheduleSettings Schedule { get; set; } = new();
 
+    /// <summary>Capture downloads from the browser extension (the extension has its own switch too).</summary>
+    public bool BrowserIntegration { get; set; } = true;
+
+    /// <summary>Extra Chrome extension IDs allowed to talk to the app (e.g. a Web Store build).</summary>
+    public List<string> ExtraExtensionIds { get; set; } = new();
+
     public string DownloadDirectory { get; set; } =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "SDM");
 
