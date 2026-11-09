@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "short_name": "SDM",
+  "version": "0.2.0",
+  "description": "__MSG_extDesc__",
+  "default_locale": "en",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA09NoOAkoA3AK8Lr0y5WlmZNPtz8zwRogbqcT6HM40av2IYJ3iT+prmnR4rqWUvrjkpz0tnDGF0EEfq7yCoFP9tqMYtnDiKh0jM35ul6xkwtnihmciE0y9ta8BzckWGL88qG+4DAz1OE5LsPMkPWt3x3nLlRFcIr1fI2EDCVd6NFyxfkGLhU1/EW3JFsQyppRPvgZRFDZyHxL4wb2fqso2z+ufPEcG0Rgarjn3LRkF3qEQk9IVAVo9UelOnYzaYdI0KwGhGWnMP8LArKxNZPYHFxa+nX5zVvHaQ5++urBocPk4U0DESCp8C2BioXRo5fjTHmiuBuGPK08oqqBXSWQlQIDAQAB",
+  "minimum_chrome_version": "110",
+  "permissions": [
+    "downloads",
+    "nativeMessaging",
+    "contextMenus",
+    "cookies",
+    "storage",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Smart Download Manager",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -104,4 +104,105 @@
   <data name="Test" xml:space="preserve"><value>تست</value></data>
   <data name="Testing" xml:space="preserve"><value>در حال تست…</value></data>
   <data name="TestOk" xml:space="preserve"><value>کار می‌کند</value></data>
+  <data name="AddDownload" xml:space="preserve"><value>افزودن دانلود</value></data>
+  <data name="AddLink" xml:space="preserve"><value>افزودن لینک</value></data>
+  <data name="AddToQueue" xml:space="preserve"><value>افزودن به صف</value></data>
+  <data name="AfterExit" xml:space="preserve"><value>بستن برنامه</value></data>
+  <data name="AfterNothing" xml:space="preserve"><value>کاری نکن</value></data>
+  <data name="AfterQueue" xml:space="preserve"><value>بعد از تمام شدن صف</value></data>
+  <data name="AfterShutdown" xml:space="preserve"><value>خاموش کردن کامپیوتر</value></data>
+  <data name="AfterSleep" xml:space="preserve"><value>حالت خواب (Sleep)</value></data>
+  <data name="AiAlwaysHint" xml:space="preserve"><value>خاموش = فقط وقتی تشخیص محلی مطمئن نیست</value></data>
+  <data name="AiShort" xml:space="preserve"><value>هوش مصنوعی</value></data>
+  <data name="AutoFolderShort" xml:space="preserve"><value>خودکار</value></data>
+  <data name="Average" xml:space="preserve"><value>میانگین {0}</value></data>
+  <data name="BatchHeader" xml:space="preserve"><value>{0} لینک از کلیپ‌بورد · {1} لینک تکراری حذف شد</value></data>
+  <data name="BatchTitle" xml:space="preserve"><value>افزودن دسته‌ای</value></data>
+  <data name="CatDocs" xml:space="preserve"><value>اسناد</value></data>
+  <data name="CatMovies" xml:space="preserve"><value>فیلم‌ها</value></data>
+  <data name="CatMusic" xml:space="preserve"><value>موسیقی</value></data>
+  <data name="CatSeries" xml:space="preserve"><value>سریال‌ها</value></data>
+  <data name="CatSoftware" xml:space="preserve"><value>نرم‌افزار</value></data>
+  <data name="Categories" xml:space="preserve"><value>دسته‌ها</value></data>
+  <data name="Change" xml:space="preserve"><value>تغییر…</value></data>
+  <data name="Close" xml:space="preserve"><value>بستن</value></data>
+  <data name="ConnectionMap" xml:space="preserve"><value>نقشهٔ کانکشن‌ها</value></data>
+  <data name="ConnectionsActive" xml:space="preserve"><value>{0} از {1} فعال</value></data>
+  <data name="ConnectionsCount" xml:space="preserve"><value>{0} کانکشن</value></data>
+  <data name="ConnectionsPerFile" xml:space="preserve"><value>کانکشن برای هر فایل</value></data>
+  <data name="CopyLink" xml:space="preserve"><value>کپی لینک</value></data>
+  <data name="Days" xml:space="preserve"><value>روزها</value></data>
+  <data name="DetectedLine" xml:space="preserve"><value>تشخیص: {0} · اطمینان {1}٪</value></data>
+  <data name="DontShowAgain" xml:space="preserve"><value>دیگر این پنجره را نشان نده (در تنظیمات قابل برگشت است)</value></data>
+  <data name="DownloadFinished" xml:space="preserve"><value>دانلود تمام شد</value></data>
+  <data name="Downloads" xml:space="preserve"><value>دانلودها</value></data>
+  <data name="FilterQueued" xml:space="preserve"><value>در صف</value></data>
+  <data name="FilterScheduled" xml:space="preserve"><value>زمان‌بندی‌شده</value></data>
+  <data name="HeaderSummary" xml:space="preserve"><value>{0} فعال · {1} در صف · {2} زمان‌بندی‌شده · {3} تمام‌شده</value></data>
+  <data name="Libraries" xml:space="preserve"><value>کتابخانه</value></data>
+  <data name="LibraryOf" xml:space="preserve"><value>کتابخانهٔ {0}</value></data>
+  <data name="LibraryScanned" xml:space="preserve"><value>در {0} ذخیره شد و اسکن کتابخانه درخواست شد</value></data>
+  <data name="LocalFree" xml:space="preserve"><value>محلی و رایگان</value></data>
+  <data name="LocalOnly" xml:space="preserve"><value>فقط تشخیص محلی</value></data>
+  <data name="More" xml:space="preserve"><value>بیشتر</value></data>
+  <data name="NextStartLine" xml:space="preserve"><value>شروع بعدی: {0} · {1} دانلود در صف</value></data>
+  <data name="NoDaySelected" xml:space="preserve"><value>هیچ روزی انتخاب نشده</value></data>
+  <data name="NoLimit" xml:space="preserve"><value>بدون محدودیت</value></data>
+  <data name="None" xml:space="preserve"><value>ندارد</value></data>
+  <data name="NotYet" xml:space="preserve"><value>هنوز نه</value></data>
+  <data name="OpenAICompatible" xml:space="preserve"><value>سازگار با OpenAI</value></data>
+  <data name="OpenFile" xml:space="preserve"><value>باز کردن فایل</value></data>
+  <data name="Or" xml:space="preserve"><value>یا:</value></data>
+  <data name="PasteAgain" xml:space="preserve"><value>چسباندن دوباره</value></data>
+  <data name="PauseAll" xml:space="preserve"><value>توقف همه</value></data>
+  <data name="PauseAtEnd" xml:space="preserve"><value>در پایان بازه، دانلودهای ناتمام متوقف و ذخیره شوند و در بازهٔ بعد ادامه پیدا کنند</value></data>
+  <data name="PausedAt" xml:space="preserve"><value>{0} · قابل ادامه</value></data>
+  <data name="PickFolder" xml:space="preserve"><value>انتخاب پوشه…</value></data>
+  <data name="Remaining" xml:space="preserve"><value>{0} مانده</value></data>
+  <data name="RememberTitle" xml:space="preserve"><value>همیشه {0} را اینجا ذخیره کن</value></data>
+  <data name="Run" xml:space="preserve"><value>اجرا</value></data>
+  <data name="SavedInLibrary" xml:space="preserve"><value>در {0} ذخیره شد</value></data>
+  <data name="Schedule" xml:space="preserve"><value>زمان‌بندی</value></data>
+  <data name="ScheduleEllipsis" xml:space="preserve"><value>زمان‌بندی…</value></data>
+  <data name="ScheduleHint" xml:space="preserve"><value>دانلودهای زمان‌بندی‌شده فقط در این بازهٔ زمانی انجام می‌شوند</value></data>
+  <data name="ScheduleNext" xml:space="preserve"><value>زمان‌بندی: شروع بعدی {0}</value></data>
+  <data name="ScheduleOff" xml:space="preserve"><value>زمان‌بندی خاموش است</value></data>
+  <data name="ScheduleOpenNow" xml:space="preserve"><value>بازهٔ زمان‌بندی الان باز است</value></data>
+  <data name="ScheduleSpeed" xml:space="preserve"><value>محدودیت سرعت در این بازه</value></data>
+  <data name="Search" xml:space="preserve"><value>جستجو در دانلودها</value></data>
+  <data name="SelectAllN" xml:space="preserve"><value>انتخاب همه ({0})</value></data>
+  <data name="ShowCompletion" xml:space="preserve"><value>نمایش پنجره بعد از تمام شدن دانلود</value></data>
+  <data name="Simultaneous" xml:space="preserve"><value>همزمان</value></data>
+  <data name="Source" xml:space="preserve"><value>منبع</value></data>
+  <data name="SpeedLimitShort" xml:space="preserve"><value>محدودیت سرعت</value></data>
+  <data name="StandardName" xml:space="preserve"><value>نام استاندارد Emby / Jellyfin</value></data>
+  <data name="StandardNameHint" xml:space="preserve"><value>خاموش = نام فعلی فایل حفظ می‌شود</value></data>
+  <data name="StartN" xml:space="preserve"><value>شروع {0} دانلود</value></data>
+  <data name="StartTime" xml:space="preserve"><value>شروع</value></data>
+  <data name="Status_Scheduled" xml:space="preserve"><value>زمان‌بندی‌شده</value></data>
+  <data name="StopTime" xml:space="preserve"><value>پایان</value></data>
+  <data name="TabConnection" xml:space="preserve"><value>اتصال و سرعت</value></data>
+  <data name="TestConnection" xml:space="preserve"><value>تست اتصال</value></data>
+  <data name="Theme" xml:space="preserve"><value>تم</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>تیره</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>روشن</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>هماهنگ با ویندوز</value></data>
+  <data name="TimeFormat" xml:space="preserve"><value>زمان را به شکل HH:mm وارد کنید، مثلاً 02:00</value></data>
+  <data name="TmdbLanguageShort" xml:space="preserve"><value>زبان</value></data>
+  <data name="TotalSize" xml:space="preserve"><value>حجم کل</value></data>
+  <data name="WaitingForSchedule" xml:space="preserve"><value>منتظر زمان‌بندی</value></data>
+  <data name="WaitingInQueue" xml:space="preserve"><value>منتظر نوبت</value></data>
+  <data name="TabBrowser" xml:space="preserve"><value>مرورگر</value></data>
+  <data name="BrowserHint" xml:space="preserve"><value>افزونه دانلودهای مرورگر را همراه با کوکی‌ها و Referer صفحه به این برنامه می‌فرستد؛ بنابراین سایت‌هایی که ورود لازم دارند یا برنامه‌های ناشناس را رد می‌کنند هم کار می‌کنند.</value></data>
+  <data name="BrowserCapture" xml:space="preserve"><value>پذیرفتن دانلودها از افزونهٔ مرورگر</value></data>
+  <data name="RegisterAgain" xml:space="preserve"><value>ثبت برای Chrome، Edge و Firefox</value></data>
+  <data name="BrowserRegistered" xml:space="preserve"><value>ثبت شده است</value></data>
+  <data name="BrowserNotRegistered" xml:space="preserve"><value>هنوز ثبت نشده</value></data>
+  <data name="HostMissing" xml:space="preserve"><value>فایل SmartDownloadManager.Host.exe کنار برنامه پیدا نشد</value></data>
+  <data name="InstallSteps" xml:space="preserve"><value>نصب افزونه</value></data>
+  <data name="InstallStep1" xml:space="preserve"><value>۱. صفحهٔ chrome://extensions (کروم) یا edge://extensions (اج) را باز کنید و Developer mode را روشن کنید.</value></data>
+  <data name="InstallStep2" xml:space="preserve"><value>۲. روی «Load unpacked» بزنید و پوشهٔ زیر را انتخاب کنید.</value></data>
+  <data name="InstallStep3" xml:space="preserve"><value>۳. روی آیکون افزونه بزنید؛ باید «به برنامه متصل است» را ببینید.</value></data>
+  <data name="CopyPath" xml:space="preserve"><value>کپی مسیر</value></data>
+  <data name="ExtraIds" xml:space="preserve"><value>شناسه‌های دیگر افزونه که مجازند (مثلاً نسخهٔ Chrome Web Store)، با ویرگول</value></data>
 </root>

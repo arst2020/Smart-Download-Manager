@@ -44,14 +44,44 @@ public sealed class MediaServerClient(HttpClient http, MediaServerSettings setti
             if (item is null) continue;
             var locations = item["Locations"]?.AsArray().Select(l => (string?)l).OfType<string>().ToList() ?? new();
             if (locations.Count == 0) continue; // e.g. Collections
-            list.Add(new MediaLibrary(
-                (string?)item["Name"] ?? "?",
-                (string?)item["CollectionType"] ?? "mixed",
-                locations,
-                settings.Type.ToString()));
+            string name = (string?)item["Name"] ?? "?";
+            list.Add(new MediaLibrary(name, ContentTypeOf(item, name), locations, settings.Type.ToString()));
         }
         return list;
     }
+
+    /// <summary>
+    /// Emby 4.8+ keeps the type in LibraryOptions.ContentType and may omit CollectionType;
+    /// Jellyfin and older Emby use CollectionType. As a last resort the library name is used.
+    /// </summary>
+    internal static string ContentTypeOf(JsonNode item, string name)
+    {
+        string? type = NonEmpty((string?)item["CollectionType"]) ?? NonEmpty((string?)item["LibraryOptions"]?["ContentType"]);
+        if (type is not null) return type;
+
+        string n = name.ToLowerInvariant();
+        if (n.Contains("tv") || n.Contains("series") || n.Contains("serie") || n.Contains("show") || n.Contains("سریال"))
+            return "tvshows";
+        if (n.Contains("movie") || n.Contains("film") || n.Contains("فیلم")) return "movies";
+        if (n.Contains("music") || n.Contains("musik") || n.Contains("موسیقی")) return "music";
+        return "mixed";
+    }
+
+    /// <summary>
+    /// Accepts what users paste from the browser: "http://localhost:8096/web/index.html#!/home" → "http://localhost:8096".
+    /// </summary>
+    public static string NormalizeUrl(string url)
+    {
+        string u = url.Trim();
+        int hash = u.IndexOf('#');
+        if (hash >= 0) u = u[..hash];
+        u = u.TrimEnd('/');
+        int web = u.IndexOf("/web", StringComparison.OrdinalIgnoreCase);
+        if (web > 0 && (web + 4 == u.Length || u[web + 4] == '/')) u = u[..web];
+        return u.TrimEnd('/');
+    }
+
+    private static string? NonEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
     public async Task RefreshAsync(CancellationToken ct)
     {
@@ -78,7 +108,7 @@ public sealed class MediaServerClient(HttpClient http, MediaServerSettings setti
 
     private HttpRequestMessage Build(HttpMethod method, string path, string? prefix = null)
     {
-        var request = new HttpRequestMessage(method, settings.Url.TrimEnd('/') + (prefix ?? _prefix ?? "") + path);
+        var request = new HttpRequestMessage(method, NormalizeUrl(settings.Url) + (prefix ?? _prefix ?? "") + path);
         request.Headers.Add("X-Emby-Token", settings.ApiKey.Trim()); // accepted by Emby and Jellyfin
         return request;
     }

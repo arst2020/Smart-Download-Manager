@@ -208,6 +208,30 @@ public class MediaServerTests
         Assert.Equal("key", fake.Requests[0].Request.Headers.GetValues("X-Emby-Token").Single());
     }
 
+    [Theory]
+    [InlineData("http://localhost:8096/web/", "http://localhost:8096")]
+    [InlineData("http://localhost:8096/web/index.html#!/home", "http://localhost:8096")]
+    [InlineData("http://nas:8096/emby/web", "http://nas:8096/emby")]
+    [InlineData(" http://localhost:8096/ ", "http://localhost:8096")]
+    [InlineData("https://media.example.com/webdav-proxy", "https://media.example.com/webdav-proxy")]
+    public void Normalizes_pasted_server_address(string input, string expected)
+    {
+        Assert.Equal(expected, MediaServerClient.NormalizeUrl(input));
+    }
+
+    [Fact]
+    public async Task Emby_48_content_type_in_library_options()
+    {
+        // Emby 4.8+: no CollectionType, the type lives in LibraryOptions.ContentType.
+        var fake = new FakeHttp((_, _) => FakeHttp.Json("""
+            [{"Name":"TV shows","Locations":["E:\\emby\\tv show"],"LibraryOptions":{"ContentType":"tvshows"}},
+             {"Name":"Filme","Locations":["E:\\emby\\filme"],"LibraryOptions":{}}]
+            """));
+        var libs = await new MediaServerClient(fake.Client(), Emby).GetLibrariesAsync(default);
+        Assert.Equal(MediaKind.Series, libs[0].Kind);
+        Assert.Equal(MediaKind.Movie, libs[1].Kind); // guessed from the name
+    }
+
     [Fact]
     public async Task Falls_back_to_emby_prefix_and_items_wrapper()
     {
@@ -305,6 +329,22 @@ public class MediaAdvisorTests : IDisposable
         Assert.Equal("Dark - S01E01 - Secrets.mkv", s.StandardFileName);
         Assert.Equal("local + TMDB", s.Media.Source);
         Assert.True(s.Alternatives.Any(a => a.Label == "Series"));
+    }
+
+    [Fact]
+    public async Task Warns_when_library_folder_is_missing()
+    {
+        var fake = new FakeHttp((_, _) => FakeHttp.Json("""[{"Name":"TV shows","CollectionType":"tvshows","Locations":["Z:\\nope\\tv"]}]"""));
+        AppSettings Cfg()
+        {
+            var s = Settings();
+            s.MediaServer = new MediaServerSettings { Type = MediaServerType.Emby, Url = "http://localhost:8096", ApiKey = "e" };
+            return s;
+        }
+        var advisor = new MediaAdvisor(Cfg, fake.Client(), _ => null);
+        var s = await advisor.SuggestAsync(new SuggestRequest("Dark.S01E01.mkv"));
+        Assert.Null(s.Library);
+        Assert.True(advisor.LastWarning!.Contains("not found on this PC"), advisor.LastWarning);
     }
 
     [Fact]

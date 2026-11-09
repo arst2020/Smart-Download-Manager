@@ -22,6 +22,15 @@ public sealed class TestHttpServer : IDisposable
 
     public string FileName { get; init; } = "file.bin";
 
+    /// <summary>Requests that carry a Range header get 503 (a picky CDN).</summary>
+    public bool Reject503WithRange { get; set; }
+
+    /// <summary>Every request gets this status (e.g. 503).</summary>
+    public int? AlwaysStatus { get; set; }
+
+    /// <summary>User-Agent of the last request.</summary>
+    public string? LastUserAgent { get; private set; }
+
     /// <summary>When set, requests beyond this many at once get 503 (like servers that limit connections per IP).</summary>
     public int? MaxConcurrent { get; set; }
 
@@ -75,8 +84,15 @@ public sealed class TestHttpServer : IDisposable
         Interlocked.Increment(ref _requests);
         var res = ctx.Response;
         int now = Interlocked.Increment(ref _active);
+        LastUserAgent = ctx.Request.UserAgent;
         try
         {
+            if (AlwaysStatus is int status || (Reject503WithRange && ctx.Request.Headers["Range"] is not null))
+            {
+                res.StatusCode = AlwaysStatus ?? 503;
+                res.Close();
+                return;
+            }
             if (MaxConcurrent is int max && now > max && ctx.Request.Headers["Range"] != "bytes=0-0")
             {
                 Interlocked.Increment(ref Rejected);

@@ -1,0 +1,68 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Light theme palette. Every control uses these keys through DynamicResource. -->
+    <Color x:Key="BgColor">#F4F6F9</Color>
+    <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}" />
+    <Color x:Key="SidebarColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="SidebarBrush" Color="{StaticResource SidebarColor}" />
+    <Color x:Key="SurfaceColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+    <Color x:Key="SurfaceSelColor">#F0F6FF</Color>
+    <SolidColorBrush x:Key="SurfaceSelBrush" Color="{StaticResource SurfaceSelColor}" />
+    <Color x:Key="InputColor">#F3F5F8</Color>
+    <SolidColorBrush x:Key="InputBrush" Color="{StaticResource InputColor}" />
+    <Color x:Key="NavActiveColor">#E8F0FC</Color>
+    <SolidColorBrush x:Key="NavActiveBrush" Color="{StaticResource NavActiveColor}" />
+    <Color x:Key="LineColor">#E3E8EF</Color>
+    <SolidColorBrush x:Key="LineBrush" Color="{StaticResource LineColor}" />
+    <Color x:Key="LineStrongColor">#D5DCE5</Color>
+    <SolidColorBrush x:Key="LineStrongBrush" Color="{StaticResource LineStrongColor}" />
+    <Color x:Key="TextColor">#111827</Color>
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
+    <Color x:Key="Text2Color">#374151</Color>
+    <SolidColorBrush x:Key="Text2Brush" Color="{StaticResource Text2Color}" />
+    <Color x:Key="MutedColor">#5B6676</Color>
+    <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource MutedColor}" />
+    <Color x:Key="AccentColor">#2F6FED</Color>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+    <Color x:Key="AccentSoftColor">#EAF2FF</Color>
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="{StaticResource AccentSoftColor}" />
+    <Color x:Key="OnAccentColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="OnAccentBrush" Color="{StaticResource OnAccentColor}" />
+    <Color x:Key="SuccessColor">#1A7F37</Color>
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
+    <Color x:Key="SuccessBgColor">#E1F5E6</Color>
+    <SolidColorBrush x:Key="SuccessBgBrush" Color="{StaticResource SuccessBgColor}" />
+    <Color x:Key="WarningColor">#B7791F</Color>
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+    <Color x:Key="WarningBgColor">#FDF1DC</Color>
+    <SolidColorBrush x:Key="WarningBgBrush" Color="{StaticResource WarningBgColor}" />
+    <Color x:Key="DangerColor">#C62828</Color>
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+    <Color x:Key="SeriesBgColor">#E3EEFF</Color>
+    <SolidColorBrush x:Key="SeriesBgBrush" Color="{StaticResource SeriesBgColor}" />
+    <Color x:Key="SeriesFgColor">#1D5FBF</Color>
+    <SolidColorBrush x:Key="SeriesFgBrush" Color="{StaticResource SeriesFgColor}" />
+    <Color x:Key="MovieBgColor">#EFE7FD</Color>
+    <SolidColorBrush x:Key="MovieBgBrush" Color="{StaticResource MovieBgColor}" />
+    <Color x:Key="MovieFgColor">#6B3FC7</Color>
+    <SolidColorBrush x:Key="MovieFgBrush" Color="{StaticResource MovieFgColor}" />
+    <Color x:Key="MusicBgColor">#FDF1DC</Color>
+    <SolidColorBrush x:Key="MusicBgBrush" Color="{StaticResource MusicBgColor}" />
+    <Color x:Key="MusicFgColor">#8A5A00</Color>
+    <SolidColorBrush x:Key="MusicFgBrush" Color="{StaticResource MusicFgColor}" />
+    <Color x:Key="SoftwareBgColor">#DDF6EF</Color>
+    <SolidColorBrush x:Key="SoftwareBgBrush" Color="{StaticResource SoftwareBgColor}" />
+    <Color x:Key="SoftwareFgColor">#0F7A63</Color>
+    <SolidColorBrush x:Key="SoftwareFgBrush" Color="{StaticResource SoftwareFgColor}" />
+    <Color x:Key="DocBgColor">#FDE6E6</Color>
+    <SolidColorBrush x:Key="DocBgBrush" Color="{StaticResource DocBgColor}" />
+    <Color x:Key="DocFgColor">#B42323</Color>
+    <SolidColorBrush x:Key="DocFgBrush" Color="{StaticResource DocFgColor}" />
+    <Color x:Key="OtherBgColor">#E3E8EF</Color>
+    <SolidColorBrush x:Key="OtherBgBrush" Color="{StaticResource OtherBgColor}" />
+    <Color x:Key="OtherFgColor">#374151</Color>
+    <SolidColorBrush x:Key="OtherFgBrush" Color="{StaticResource OtherFgColor}" />
+    <Color x:Key="PosterBgColor">#E9EDF2</Color>
+    <SolidColorBrush x:Key="PosterBgBrush" Color="{StaticResource PosterBgColor}" />
+</ResourceDictionary>

@@ -36,7 +36,7 @@ public sealed class SegmentedDownloader
     {
         Directory.CreateDirectory(request.Directory);
 
-        ProbeResult probe = await HttpProbe.ProbeAsync(_http, request.Url, request.Headers, ct).ConfigureAwait(false);
+        ProbeResult probe = await ProbeWithRetryAsync(request, ct).ConfigureAwait(false);
         string fileName = FileNameHelper.Sanitize(request.FileName ?? probe.FileName ?? "download");
         string finalPath = Path.Combine(request.Directory, fileName);
         string partPath = finalPath + DownloadStateStore.PartExtension;
@@ -105,8 +105,27 @@ public sealed class SegmentedDownloader
         File.Move(partPath, target);
         File.Delete(statePath);
 
-        progress?.Report(new DownloadProgress(size, size, 0, 0));
+        progress?.Report(new DownloadProgress(size, size, 0, 0)
+        {
+            SegmentFractions = state.Segments.Select(_ => 1.0).ToArray()
+        });
         return new DownloadResult(target, size, probe, resumed);
+    }
+
+    /// <summary>A busy server (503/429) or a dropped connection gets a few more tries before giving up.</summary>
+    private async Task<ProbeResult> ProbeWithRetryAsync(DownloadRequest request, CancellationToken ct)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await HttpProbe.ProbeAsync(_http, request.Url, request.Headers, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (IsTransient(ex) && !ct.IsCancellationRequested && attempt <= request.MaxRetries)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(Math.Min(30, 2 * attempt)), ct).ConfigureAwait(false);
+            }
+        }
     }
 
     private static bool IsResumable(DownloadState state, ProbeResult probe)
@@ -285,7 +304,12 @@ public sealed class SegmentedDownloader
             }
             lastBytes = bytes;
             lastSample = now;
-            progress?.Report(new DownloadProgress(bytes, state.TotalSize, speed, active()));
+            progress?.Report(new DownloadProgress(bytes, state.TotalSize, speed, active())
+            {
+                SegmentFractions = state.Segments
+                    .Select(s => s.IsComplete ? 1.0 : s.Length > 0 ? Math.Min(1.0, (double)s.Downloaded / s.Length) : 0.0)
+                    .ToArray()
+            });
 
             if (now - lastSave >= SaveInterval)
             {

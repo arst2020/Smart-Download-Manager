@@ -3,90 +3,147 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="clr-namespace:SDM.App.Localization"
         Style="{StaticResource AppWindow}"
-        Title="{Binding [Add], Source={x:Static loc:Loc.Instance}}"
+        Background="{DynamicResource SurfaceBrush}"
+        Title="{Binding [AddDownload], Source={x:Static loc:Loc.Instance}}"
         FlowDirection="{Binding FlowDirection, Source={x:Static loc:Loc.Instance}}"
-        Width="680" SizeToContent="Height" ResizeMode="NoResize"
+        Width="660" SizeToContent="Height" ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" Loaded="OnLoaded">
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-    </Window.Resources>
-    <StackPanel Margin="16">
-        <!-- Link -->
-        <TextBlock Text="{Binding [Url], Source={x:Static loc:Loc.Instance}}" Margin="0,0,0,4" />
-        <DockPanel>
-            <Button DockPanel.Dock="Right" Content="{Binding [Analyze], Source={x:Static loc:Loc.Instance}}"
-                    Command="{Binding AnalyzeCommand}" Margin="8,0,0,0" />
-            <!-- URLs are always left-to-right, even in the Persian UI. -->
-            <TextBox x:Name="UrlBox" Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
-        </DockPanel>
-        <TextBlock Text="{Binding Status}" Foreground="#666" Margin="0,4,0,0" TextWrapping="Wrap" />
-
-        <!-- Suggestion -->
-        <Border Margin="0,10,0,0" Padding="12" Background="#F3F6FB" BorderBrush="#C9D6EA" BorderThickness="1" CornerRadius="6"
-                Visibility="{Binding HasSuggestion, Converter={StaticResource BoolToVis}}">
-            <StackPanel>
-                <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding Details}" Margin="0,2,0,0" />
-                <TextBlock Text="{Binding Source}" Foreground="#555" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding Reason}" Foreground="#555" FontSize="12" FontStyle="Italic" TextWrapping="Wrap" FlowDirection="LeftToRight" />
-                <TextBlock Text="{Binding Warning}" Foreground="#B45309" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
-
-                <TextBlock Text="{Binding [SuggestedFolder], Source={x:Static loc:Loc.Instance}}" FontWeight="SemiBold" Margin="0,10,0,4" />
-                <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="{Binding [Browse], Source={x:Static loc:Loc.Instance}}"
-                            Command="{Binding BrowseCommand}" Margin="8,0,0,0" />
-                    <TextBox Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
-                </DockPanel>
-                <DockPanel Margin="0,6,0,0">
-                    <TextBlock Text="{Binding [OtherPlaces], Source={x:Static loc:Loc.Instance}}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <ComboBox ItemsSource="{Binding FolderOptions}" SelectedItem="{Binding SelectedOption}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <Run Text="{Binding Label, Mode=OneWay}" FontWeight="SemiBold" />
-                                    <Run Text="  " />
-                                    <Run Text="{Binding Folder, Mode=OneWay}" Foreground="#666" />
-                                </TextBlock>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </DockPanel>
-
-                <!-- Naming -->
-                <StackPanel Margin="0,10,0,0" Visibility="{Binding CanRename, Converter={StaticResource BoolToVis}}">
-                    <CheckBox Content="{Binding [RenameStandard], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding RenameToStandard}" />
-                    <TextBlock Margin="22,2,0,0" FontSize="12" Foreground="#555" FlowDirection="LeftToRight" TextWrapping="Wrap">
-                        <Run Text="{Binding OriginalName, Mode=OneWay}" />
-                        <Run Text="  →  " />
-                        <Run Text="{Binding StandardName, Mode=OneWay}" FontWeight="SemiBold" />
-                    </TextBlock>
+    <DockPanel>
+        <!-- Footer -->
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="22,14">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Style="{StaticResource Ghost}" Content="{Binding [Cancel], Source={x:Static loc:Loc.Instance}}" IsCancel="True" MinHeight="44" Margin="0,0,10,0" />
+                    <Button Click="OnSchedule" MinHeight="44" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconClock}" />
+                            <TextBlock Text="{Binding [ScheduleEllipsis], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource Primary}" IsDefault="True" Click="OnStart">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconDownload}" StrokeThickness="2.6" />
+                            <TextBlock Text="{Binding [Start], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
-                <CheckBox Margin="0,8,0,0" Content="{Binding [RememberRule], Source={x:Static loc:Loc.Instance}}"
-                          IsChecked="{Binding RememberRule}" Visibility="{Binding CanRemember, Converter={StaticResource BoolToVis}}" />
-            </StackPanel>
+                <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,12,0" />
+            </DockPanel>
         </Border>
 
-        <!-- File name + connections -->
-        <Grid Margin="0,12,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="{Binding [FileName], Source={x:Static loc:Loc.Instance}}" Margin="0,0,0,4" />
-                <TextBox Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
-            </StackPanel>
-            <StackPanel Grid.Column="2">
-                <TextBlock Text="{Binding [Connections], Source={x:Static loc:Loc.Instance}}" Margin="0,0,0,4" />
-                <ComboBox Width="90" ItemsSource="{Binding ConnectionChoices}" SelectedItem="{Binding Connections}" />
-            </StackPanel>
-        </Grid>
+        <StackPanel Margin="22,20">
+            <!-- Link -->
+            <TextBlock Text="{Binding [Url], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="{Binding [Analyze], Source={x:Static loc:Loc.Instance}}" Command="{Binding AnalyzeCommand}" MinHeight="44" Margin="8,0,0,0" />
+                <!-- URLs are always left-to-right, even in the Persian UI. -->
+                <TextBox x:Name="UrlBox" Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" MinHeight="44" />
+            </DockPanel>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="{Binding [Start], Source={x:Static loc:Loc.Instance}}" IsDefault="True"
-                    Click="OnStart" FontWeight="SemiBold" />
-            <Button Content="{Binding [Cancel], Source={x:Static loc:Loc.Instance}}" IsCancel="True" />
+            <StackPanel Visibility="{Binding HasSuggestion, Converter={StaticResource BoolToVis}}">
+                <!-- What it is -->
+                <Border Style="{StaticResource InsetCard}" Padding="16" Margin="0,18,0,0">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Left" Width="84" Height="124" CornerRadius="10" Background="{DynamicResource PosterBgBrush}" ClipToBounds="True" Margin="0,0,16,0">
+                            <Grid>
+                                <TextBlock Text="{Binding KindLabel}" Style="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Image Source="{Binding PosterUrl}" Stretch="UniformToFill" Visibility="{Binding HasPoster, Converter={StaticResource BoolToVis}}" />
+                            </Grid>
+                        </Border>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Reason}" Style="{StaticResource Muted}" Margin="0,4,0,0" FlowDirection="LeftToRight" HorizontalAlignment="Left"
+                                       Visibility="{Binding Reason, Converter={StaticResource NullToCollapsed}}" />
+                            <WrapPanel Margin="0,8,0,0">
+                                <Border Style="{StaticResource StatusTag}" Tag="Active" Margin="0,0,6,6"><TextBlock Text="{Binding KindLabel}" /></Border>
+                                <Border Style="{StaticResource StatusTag}" Margin="0,0,6,6"><TextBlock Text="{Binding SizeText}" FlowDirection="LeftToRight" /></Border>
+                            </WrapPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconCheck}" Stroke="{DynamicResource SuccessBrush}" Width="14" Height="14" StrokeThickness="2.4" />
+                                <TextBlock Text="{Binding ConfidenceText}" Style="{StaticResource Muted}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Warning}" Foreground="{DynamicResource WarningBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                                       Visibility="{Binding Warning, Converter={StaticResource NullToCollapsed}}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Where -->
+                <TextBlock Text="{Binding [SuggestedFolder], Source={x:Static loc:Loc.Instance}}" FontWeight="SemiBold" Margin="0,18,0,8" />
+                <Border CornerRadius="12" Padding="14" Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="{Binding [Change], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseCommand}" MinHeight="34" Padding="12,0" />
+                        <Border Width="38" Height="38" CornerRadius="10" Background="{DynamicResource SuccessBgBrush}" TextElement.Foreground="{DynamicResource SuccessBrush}">
+                            <TextBlock Text="{Binding DestinationBadge}" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="12,0">
+                            <TextBlock Text="{Binding DestinationLabel}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Folder}" Style="{StaticResource Muted}" FlowDirection="LeftToRight" HorizontalAlignment="Left" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding Folder}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <WrapPanel Margin="0,8,0,0">
+                    <TextBlock Text="{Binding [Or], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,8,6" />
+                    <ItemsControl ItemsSource="{Binding Alternatives}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource Chip}" Content="{Binding Label}" Margin="0,0,8,6" ToolTip="{Binding Folder}"
+                                        Command="{Binding DataContext.PickOptionCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Style="{StaticResource Chip}" Content="{Binding [PickFolder], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseCommand}" Margin="0,0,8,6" />
+                </WrapPanel>
+
+                <!-- Name -->
+                <Border Style="{StaticResource InsetCard}" Margin="0,14,0,0" Visibility="{Binding CanRename, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding RenameToStandard}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding [StandardName], Source={x:Static loc:Loc.Instance}}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding [StandardNameHint], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" />
+                            </StackPanel>
+                        </CheckBox>
+                        <Border Background="{DynamicResource BgBrush}" CornerRadius="8" Padding="12,10" Margin="0,10,0,0">
+                            <StackPanel FlowDirection="LeftToRight">
+                                <TextBlock Text="{Binding OriginalName}" Style="{StaticResource Muted}" TextDecorations="Strikethrough" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding StandardName}" FontWeight="SemiBold" FontSize="12" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- File name + connections -->
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding [FileName], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{Binding [Connections], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                    <Border Style="{StaticResource SegmentHost}" FlowDirection="LeftToRight">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Style="{StaticResource Segment}" GroupName="conn" Content="1" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=1}" />
+                            <RadioButton Style="{StaticResource Segment}" GroupName="conn" Content="4" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=4}" />
+                            <RadioButton Style="{StaticResource Segment}" GroupName="conn" Content="8" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=8}" />
+                            <RadioButton Style="{StaticResource Segment}" GroupName="conn" Content="16" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=16}" />
+                            <RadioButton Style="{StaticResource Segment}" GroupName="conn" Content="32" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=32}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <CheckBox Margin="0,14,0,0" Content="{Binding RememberText}" IsChecked="{Binding RememberRule}"
+                      Visibility="{Binding CanRemember, Converter={StaticResource BoolToVis}}" />
         </StackPanel>
-    </StackPanel>
+    </DockPanel>
 </Window>

@@ -21,26 +21,47 @@ public static class HttpProbe
         using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct)
             .ConfigureAwait(false);
 
-        if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
+        if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.NotFound)
         {
-            // Typically an empty file: retry without Range to get headers.
+            // Some servers reject "Range: bytes=0-0" (416 for empty files, 403/503 from picky CDNs):
+            // ask again the normal way and only read the headers.
             return await ProbeWithoutRangeAsync(http, url, headers, ct).ConfigureAwait(false);
         }
 
-        response.EnsureSuccessStatusCode();
+        ThrowIfFailed(response);
         return Build(response, url);
+    }
+
+    private static void ThrowIfFailed(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode) return;
+        throw new HttpRequestException(
+            $"The download server answered {(int)response.StatusCode} ({response.ReasonPhrase}).", null, response.StatusCode);
     }
 
     private static async Task<ProbeResult> ProbeWithoutRangeAsync(
         HttpClient http, Uri url, IReadOnlyDictionary<string, string>? headers, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        HttpHeaderHelper.Apply(request, headers);
-        using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct)
-            .ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-        return Build(response, url);
+        for (int attempt = 1; ; attempt++)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            HttpHeaderHelper.Apply(request, headers);
+            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct)
+                .ConfigureAwait(false);
+            bool busy = response.StatusCode is HttpStatusCode.ServiceUnavailable or HttpStatusCode.TooManyRequests;
+            if (busy && attempt < 3)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1.5 * attempt), ct).ConfigureAwait(false); // server busy: wait a moment
+                continue;
+            }
+            ThrowIfFailed(response);
+            return Build(response, url);
+        }
     }
+
+    /// <summary>What can be known without asking the server (used when the probe fails).</summary>
+    public static ProbeResult FromUrlOnly(Uri url) =>
+        new(url, null, false, FileNameHelper.Resolve(null, url, null), null, null, null);
 
     private static ProbeResult Build(HttpResponseMessage response, Uri requested)
     {

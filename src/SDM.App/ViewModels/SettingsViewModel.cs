@@ -61,7 +61,11 @@ public sealed class RuleRow : ObservableObject
 
 public sealed record LanguageOption(string Code, string Name);
 
-public sealed record ChoiceOption<T>(T Value, string Name);
+public sealed record ChoiceOption<T>(T Value, string Name)
+{
+    public string Note { get; init; } = "";
+    public string Badge { get; init; } = "";
+}
 
 public sealed class SettingsViewModel : ObservableObject
 {
@@ -88,6 +92,11 @@ public sealed class SettingsViewModel : ObservableObject
         AutoOrganize = settings.AutoOrganize;
         RenameToStandard = settings.RenameToStandard;
         ProxyUrl = settings.ProxyUrl;
+        Theme = settings.Theme;
+        ShowCompletionDialog = settings.ShowCompletionDialog;
+        ScheduleSummary = settings.Schedule.Enabled
+            ? $"{settings.Schedule.Start} – {settings.Schedule.Stop}"
+            : Loc.Get("ScheduleOff");
 
         _aiProvider = settings.Ai.Provider;
         AiApiKey = settings.Ai.ApiKey;
@@ -120,7 +129,52 @@ public sealed class SettingsViewModel : ObservableObject
         TestAiCommand = new RelayCommand(async () => await TestAiAsync(), () => AiProvider != AiProvider.None);
         TestTmdbCommand = new RelayCommand(async () => await TestTmdbAsync(), () => !string.IsNullOrWhiteSpace(TmdbApiKey));
         TestServerCommand = new RelayCommand(async () => await TestServerAsync(), () => ServerType != MediaServerType.None);
+        OpenSchedulerCommand = new RelayCommand(() => OpenScheduler?.Invoke());
+        BrowserIntegration = settings.BrowserIntegration;
+        ExtraExtensionIds = string.Join(", ", settings.ExtraExtensionIds);
+        RegisterBrowserCommand = new RelayCommand(() =>
+        {
+            string? error = SDM.App.BrowserIntegration.Register(ParseIds(ExtraExtensionIds));
+            BrowserStatus = error is null ? "✔ " + Loc.Get("BrowserRegistered") : "✖ " + error;
+        });
+        OpenExtensionFolderCommand = new RelayCommand(() =>
+        {
+            if (Directory.Exists(SDM.App.BrowserIntegration.ExtensionFolder))
+                System.Diagnostics.Process.Start("explorer.exe", $"\"{SDM.App.BrowserIntegration.ExtensionFolder}\"");
+        });
+        CopyExtensionPathCommand = new RelayCommand(() =>
+        {
+            try { System.Windows.Clipboard.SetText(SDM.App.BrowserIntegration.ExtensionFolder); } catch { /* clipboard busy */ }
+        });
+        BrowserStatus = !SDM.App.BrowserIntegration.HostExists
+            ? "✖ " + Loc.Get("HostMissing")
+            : SDM.App.BrowserIntegration.IsRegistered ? "✔ " + Loc.Get("BrowserRegistered") : Loc.Get("BrowserNotRegistered");
+        PickProviderCommand = new RelayCommand(p => { if (p is ChoiceOption<AiProvider> o) AiProvider = o.Value; });
     }
+
+    private string _browserStatus = "";
+
+    public bool BrowserIntegration { get; set; }
+    public string ExtraExtensionIds { get; set; } = "";
+    public string ExtensionFolder => SDM.App.BrowserIntegration.ExtensionFolder;
+    public string ExtensionId => SDM.Core.Browser.NativeHostManifest.ChromeExtensionId;
+    public string BrowserStatus { get => _browserStatus; private set => Set(ref _browserStatus, value); }
+    public RelayCommand RegisterBrowserCommand { get; }
+    public RelayCommand OpenExtensionFolderCommand { get; }
+    public RelayCommand CopyExtensionPathCommand { get; }
+
+    private static List<string> ParseIds(string s) =>
+        s.Split(new[] { ',', ';', ' ', '،' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+    /// <summary>Set by the main window: opens the scheduler window.</summary>
+    public Action? OpenScheduler { get; set; }
+
+    public RelayCommand OpenSchedulerCommand { get; }
+    public RelayCommand PickProviderCommand { get; }
+
+    public AppTheme Theme { get; set; }
+    public bool ShowCompletionDialog { get; set; }
+    public string ScheduleSummary { get; }
 
     public IReadOnlyList<LanguageOption> Languages { get; } =
         Loc.Languages.Select(l => new LanguageOption(l.Code, l.Name)).ToList();
@@ -129,12 +183,12 @@ public sealed class SettingsViewModel : ObservableObject
 
     public IReadOnlyList<ChoiceOption<AiProvider>> AiProviders { get; } = new[]
     {
-        new ChoiceOption<AiProvider>(AiProvider.None, Loc.Get("AiNone")),
-        new ChoiceOption<AiProvider>(AiProvider.Claude, "Claude (Anthropic)"),
-        new ChoiceOption<AiProvider>(AiProvider.OpenAI, "OpenAI (ChatGPT)"),
-        new ChoiceOption<AiProvider>(AiProvider.Gemini, "Google Gemini"),
-        new ChoiceOption<AiProvider>(AiProvider.Ollama, "Ollama (local, free)"),
-        new ChoiceOption<AiProvider>(AiProvider.OpenAICompatible, "OpenAI-compatible (LM Studio, OpenRouter…)"),
+        new ChoiceOption<AiProvider>(AiProvider.Claude, "Claude") { Note = "Anthropic", Badge = "C" },
+        new ChoiceOption<AiProvider>(AiProvider.OpenAI, "OpenAI") { Note = "ChatGPT", Badge = "O" },
+        new ChoiceOption<AiProvider>(AiProvider.Gemini, "Gemini") { Note = "Google", Badge = "G" },
+        new ChoiceOption<AiProvider>(AiProvider.Ollama, "Ollama") { Note = Loc.Get("LocalFree"), Badge = "L" },
+        new ChoiceOption<AiProvider>(AiProvider.OpenAICompatible, Loc.Get("OpenAICompatible")) { Note = "LM Studio · OpenRouter", Badge = "{}" },
+        new ChoiceOption<AiProvider>(AiProvider.None, Loc.Get("AiNone")) { Note = Loc.Get("LocalOnly"), Badge = "—" },
     };
 
     public IReadOnlyList<ChoiceOption<MediaServerType>> ServerTypes { get; } = new[]
@@ -213,6 +267,11 @@ public sealed class SettingsViewModel : ObservableObject
         AutoOrganize = AutoOrganize,
         RenameToStandard = RenameToStandard,
         ProxyUrl = ProxyUrl.Trim(),
+        Theme = Theme,
+        ShowCompletionDialog = ShowCompletionDialog,
+        BrowserIntegration = BrowserIntegration,
+        ExtraExtensionIds = ParseIds(ExtraExtensionIds),
+        Schedule = _original.Schedule,
         UserAgent = _original.UserAgent,
         CategoryFolders = new(_original.CategoryFolders),
         Ai = new AiSettings { Provider = AiProvider, ApiKey = AiApiKey.Trim(), Model = AiModel.Trim(), BaseUrl = AiBaseUrl.Trim() },
@@ -268,7 +327,7 @@ public sealed class SettingsViewModel : ObservableObject
         {
             var libs = await new MediaServerClient(http, settings.MediaServer).GetLibrariesAsync(CancellationToken.None);
             ServerTestResult = $"✔ {Loc.Get("TestOk")}: " + string.Join("  ·  ", libs.Select(l =>
-                $"{l.Name} → {string.Join(", ", l.Locations)}{(l.Locations.Any(Directory.Exists) ? "" : " (?)")}"));
+                $"{l.Name} [{l.Kind}] → {string.Join(", ", l.Locations)}{(l.Locations.Any(Directory.Exists) ? "" : " (not found on this PC)")}"));
         }
         catch (Exception ex) { ServerTestResult = "✖ " + ex.Message; }
     }

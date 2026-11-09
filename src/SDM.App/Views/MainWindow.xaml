@@ -5,70 +5,371 @@
         Style="{StaticResource AppWindow}"
         Title="{Binding [AppTitle], Source={x:Static loc:Loc.Instance}}"
         FlowDirection="{Binding FlowDirection, Source={x:Static loc:Loc.Instance}}"
-        Width="1100" Height="620" MinWidth="760" MinHeight="400"
-        WindowStartupLocation="CenterScreen">
-    <DockPanel>
-        <!-- Toolbar -->
-        <Border DockPanel.Dock="Top" Padding="8" BorderBrush="#DDD" BorderThickness="0,0,0,1">
-            <DockPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Button Content="{Binding [Add], Source={x:Static loc:Loc.Instance}}" Command="{Binding AddCommand}" FontWeight="SemiBold" />
-                    <Button Content="{Binding [Pause], Source={x:Static loc:Loc.Instance}}" Command="{Binding PauseCommand}" />
-                    <Button Content="{Binding [Resume], Source={x:Static loc:Loc.Instance}}" Command="{Binding ResumeCommand}" />
-                    <Button Content="{Binding [Remove], Source={x:Static loc:Loc.Instance}}" Command="{Binding RemoveCommand}" />
-                    <Button Content="{Binding [OpenFolder], Source={x:Static loc:Loc.Instance}}" Command="{Binding OpenFolderCommand}" />
-                    <Button Content="{Binding [Undo], Source={x:Static loc:Loc.Instance}}" Command="{Binding UndoCommand}" />
+        Width="1280" Height="800" MinWidth="900" MinHeight="560"
+        WindowStartupLocation="CenterScreen" PreviewKeyDown="OnPreviewKeyDown" StateChanged="OnStateChanged">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="44" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="44" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ============ Title bar ============ -->
+        <Border Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1">
+            <DockPanel Margin="16,0,8,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" FlowDirection="LeftToRight">
+                    <Button Style="{StaticResource Caption}" Click="OnMinimize" AutomationProperties.Name="Minimize">
+                        <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconMin}" Width="12" Height="12" />
+                    </Button>
+                    <Button Style="{StaticResource Caption}" Click="OnMaximize" AutomationProperties.Name="Maximize">
+                        <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconMax}" Width="11" Height="11" />
+                    </Button>
+                    <Button Style="{StaticResource Caption}" Click="OnClose" AutomationProperties.Name="Close">
+                        <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconClose}" Width="12" Height="12" />
+                    </Button>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ComboBox Width="140" Margin="4,0" SelectedIndex="{Binding FilterIndex}">
-                        <ComboBoxItem Content="{Binding [FilterAll], Source={x:Static loc:Loc.Instance}}" />
-                        <ComboBoxItem Content="{Binding [FilterActive], Source={x:Static loc:Loc.Instance}}" />
-                        <ComboBoxItem Content="{Binding [FilterCompleted], Source={x:Static loc:Loc.Instance}}" />
-                    </ComboBox>
-                    <Button Content="{Binding [Settings], Source={x:Static loc:Loc.Instance}}" Command="{Binding SettingsCommand}" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="26" Height="26" CornerRadius="8" Background="{DynamicResource AccentBrush}" TextElement.Foreground="{DynamicResource OnAccentBrush}">
+                        <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconDownload}" Width="14" Height="14" StrokeThickness="2.6" />
+                    </Border>
+                    <TextBlock Text="Smart Download Manager" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- Status bar -->
-        <StatusBar DockPanel.Dock="Bottom">
-            <StatusBarItem Content="{Binding TotalSpeed}" />
-        </StatusBar>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="248" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <!-- Downloads -->
-        <DataGrid ItemsSource="{Binding ItemsView}"
-                  SelectedItem="{Binding Selected}"
-                  AutoGenerateColumns="False" IsReadOnly="True"
-                  SelectionMode="Single" HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EEE"
-                  RowHeight="30" BorderThickness="0"
-                  MouseDoubleClick="OnRowDoubleClick">
-            <DataGrid.Columns>
-                <DataGridTextColumn Binding="{Binding Name}" Width="2*"
-                                    Header="{Binding [ColName], Source={x:Static loc:Loc.Instance}}" />
-                <DataGridTextColumn Binding="{Binding Size}" Width="90"
-                                    Header="{Binding [ColSize], Source={x:Static loc:Loc.Instance}}" />
-                <DataGridTemplateColumn Width="150" Header="{Binding [ColProgress], Source={x:Static loc:Loc.Instance}}">
-                    <DataGridTemplateColumn.CellTemplate>
+            <!-- ============ Sidebar ============ -->
+            <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0">
+                <DockPanel Margin="12,16">
+                    <Button DockPanel.Dock="Top" Style="{StaticResource Primary}" Command="{Binding AddCommand}" Margin="0,0,0,14">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconPlus}" StrokeThickness="2.4" />
+                            <TextBlock Text="{Binding [AddLink], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Media server card -->
+                    <Border DockPanel.Dock="Bottom" Style="{StaticResource InsetCard}" Padding="10"
+                            Visibility="{Binding HasLibrary, Converter={StaticResource BoolToVis}}">
+                        <DockPanel>
+                            <Ellipse DockPanel.Dock="Right" Width="8" Height="8" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{DynamicResource WarningBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding LibraryConnected}" Value="True">
+                                                <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <Border Width="30" Height="30" CornerRadius="8" Background="{DynamicResource SuccessBgBrush}" TextElement.Foreground="{DynamicResource SuccessBrush}">
+                                <TextBlock Text="E" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Margin="10,0,8,0">
+                                <TextBlock Text="{Binding LibraryName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding LibraryPath}" Style="{StaticResource Muted}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FlowDirection="LeftToRight" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="{Binding [Downloads], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="10,4,0,4" />
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=all}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountAll}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Ellipse Width="8" Height="8" Fill="{DynamicResource MutedBrush}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{Binding [FilterAll], Source={x:Static loc:Loc.Instance}}" />
+                                </DockPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=active}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountActive}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentBrush}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{Binding [FilterActive], Source={x:Static loc:Loc.Instance}}" />
+                                </DockPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=done}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountDone}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Ellipse Width="8" Height="8" Fill="{DynamicResource SuccessBrush}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{Binding [FilterCompleted], Source={x:Static loc:Loc.Instance}}" />
+                                </DockPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=queued}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountQueued}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Ellipse Width="8" Height="8" Fill="{DynamicResource WarningBrush}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{Binding [FilterQueued], Source={x:Static loc:Loc.Instance}}" />
+                                </DockPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=scheduled}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountScheduled}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Ellipse Width="8" Height="8" Fill="{DynamicResource MovieFgBrush}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{Binding [FilterScheduled], Source={x:Static loc:Loc.Instance}}" />
+                                </DockPanel>
+                            </RadioButton>
+
+                            <TextBlock Text="{Binding [Categories], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="10,16,0,4" />
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=cat:Series}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountSeries}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Border Style="{StaticResource KindBadge}" Tag="Series" Width="26" Height="26" CornerRadius="7" Margin="0,0,10,0">
+                                        <TextBlock Text="TV" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding [CatSeries], Source={x:Static loc:Loc.Instance}}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=cat:Movie}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountMovie}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Border Style="{StaticResource KindBadge}" Tag="Movie" Width="26" Height="26" CornerRadius="7" Margin="0,0,10,0">
+                                        <TextBlock Text="M" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding [CatMovies], Source={x:Static loc:Loc.Instance}}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=cat:Music}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountMusic}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Border Style="{StaticResource KindBadge}" Tag="Music" Width="26" Height="26" CornerRadius="7" Margin="0,0,10,0">
+                                        <TextBlock Text="♪" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding [CatMusic], Source={x:Static loc:Loc.Instance}}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=cat:Software}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountSoftware}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Border Style="{StaticResource KindBadge}" Tag="Software" Width="26" Height="26" CornerRadius="7" Margin="0,0,10,0">
+                                        <TextBlock Text="EXE" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding [CatSoftware], Source={x:Static loc:Loc.Instance}}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=cat:Doc}">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding CountDoc}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                    <Border Style="{StaticResource KindBadge}" Tag="Doc" Width="26" Height="26" CornerRadius="7" Margin="0,0,10,0">
+                                        <TextBlock Text="PDF" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding [CatDocs], Source={x:Static loc:Loc.Instance}}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </RadioButton>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- ============ Content ============ -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="40" />
+                </Grid.RowDefinitions>
+
+                <!-- Toolbar -->
+                <Border BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" Padding="24,14">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Border Width="260" Height="40" CornerRadius="10" Background="{DynamicResource InputBrush}"
+                                    BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Margin="0,0,10,0">
+                                <DockPanel Margin="12,0">
+                                    <Path DockPanel.Dock="Left" Style="{StaticResource LineIcon}" Data="{StaticResource IconSearch}" Stroke="{DynamicResource MutedBrush}" />
+                                    <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0"
+                                             MinHeight="36" Padding="8,0" AutomationProperties.Name="{Binding [Search], Source={x:Static loc:Loc.Instance}}" />
+                                </DockPanel>
+                            </Border>
+                            <Button Command="{Binding PauseAllCommand}" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{StaticResource FillIcon}" Data="{StaticResource IconPause}" />
+                                    <TextBlock Text="{Binding [PauseAll], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource IconButton}" Width="40" Height="40" Command="{Binding ScheduleCommand}" Margin="0,0,10,0"
+                                    ToolTip="{Binding [Schedule], Source={x:Static loc:Loc.Instance}}" AutomationProperties.Name="{Binding [Schedule], Source={x:Static loc:Loc.Instance}}">
+                                <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconClock}" Width="18" Height="18" />
+                            </Button>
+                            <Button Style="{StaticResource IconButton}" Width="40" Height="40" Command="{Binding SettingsCommand}"
+                                    ToolTip="{Binding [Settings], Source={x:Static loc:Loc.Instance}}" AutomationProperties.Name="{Binding [Settings], Source={x:Static loc:Loc.Instance}}">
+                                <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconSliders}" Width="18" Height="18" />
+                            </Button>
+                        </StackPanel>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding HeaderTitle}" Style="{StaticResource Heading}" />
+                            <TextBlock Text="{Binding HeaderSummary}" Style="{StaticResource Muted}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Download cards -->
+                <ListBox Grid.Row="1" Style="{StaticResource CardList}" Padding="24,16,24,6"
+                         ItemsSource="{Binding ItemsView}" SelectedItem="{Binding Selected}" MouseDoubleClick="OnCardDoubleClick">
+                    <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="4,6">
-                                <ProgressBar Value="{Binding Percent, Mode=OneWay}" Maximum="100" />
-                                <TextBlock Text="{Binding PercentText}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" />
-                            </Grid>
+                            <Border x:Name="Card" CornerRadius="14" Padding="16,14" BorderThickness="1"
+                                    Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}">
+                                <Border.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="{Binding [OpenFile], Source={x:Static loc:Loc.Instance}}"
+                                                  Command="{Binding PlacementTarget.Tag.OpenFileCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [OpenFolder], Source={x:Static loc:Loc.Instance}}"
+                                                  Command="{Binding PlacementTarget.Tag.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [CopyLink], Source={x:Static loc:Loc.Instance}}"
+                                                  Command="{Binding PlacementTarget.Tag.CopyLinkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [Undo], Source={x:Static loc:Loc.Instance}}"
+                                                  Command="{Binding PlacementTarget.Tag.UndoCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [Remove], Source={x:Static loc:Loc.Instance}}"
+                                                  Command="{Binding PlacementTarget.Tag.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                    </ContextMenu>
+                                </Border.ContextMenu>
+                                <Border.Tag>
+                                    <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType=ListBox}" />
+                                </Border.Tag>
+                                <StackPanel>
+                                    <DockPanel>
+                                        <!-- Actions -->
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                                            <Button Style="{StaticResource IconButton}" Margin="0,0,6,0"
+                                                    Command="{Binding DataContext.ItemActionCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}">
+                                                <Grid>
+                                                    <Path Style="{StaticResource FillIcon}" Data="{StaticResource IconPause}" Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}" />
+                                                    <Path Style="{StaticResource FillIcon}" Data="{StaticResource IconPlay}" Visibility="{Binding IsPausedLike, Converter={StaticResource BoolToVis}}" />
+                                                    <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconFolder}" Visibility="{Binding IsDone, Converter={StaticResource BoolToVis}}" />
+                                                </Grid>
+                                            </Button>
+                                            <Button Style="{StaticResource IconButton}" Click="OnMoreClick" AutomationProperties.Name="{Binding [More], Source={x:Static loc:Loc.Instance}}">
+                                                <Path Style="{StaticResource FillIcon}" Data="{StaticResource IconMore}" Width="16" />
+                                            </Button>
+                                        </StackPanel>
+                                        <!-- Speed / meta -->
+                                        <StackPanel DockPanel.Dock="Right" MinWidth="130" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding SpeedText}" FontWeight="SemiBold" HorizontalAlignment="Right" FlowDirection="LeftToRight" />
+                                            <TextBlock Text="{Binding MetaText}" Style="{StaticResource Muted}" HorizontalAlignment="Right" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" MaxWidth="240" />
+                                        </StackPanel>
+                                        <!-- Icon -->
+                                        <Border Style="{StaticResource KindBadge}" Tag="{Binding KindKey}" Width="44" Height="44" CornerRadius="12" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Badge}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <!-- Title -->
+                                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" />
+                                                <Border Style="{StaticResource StatusTag}" Tag="{Binding StatusKey}" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Tag}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Style="{StaticResource Muted}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Margin="0,3,0,0">
+                                                <Run Text="{Binding FileName, Mode=OneWay}" />
+                                                <Run Text=" · " />
+                                                <Run Text="{Binding Destination, Mode=OneWay}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,12,0,0" Visibility="{Binding ShowBar, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding PercentText}" FontSize="12" Foreground="{DynamicResource Text2Brush}"
+                                                   MinWidth="44" TextAlignment="Right" Margin="12,0,0,0" FlowDirection="LeftToRight" />
+                                        <ProgressBar x:Name="Bar" Style="{StaticResource ThinProgress}" Value="{Binding Percent, Mode=OneWay}" Maximum="100" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                    <Setter TargetName="Card" Property="Background" Value="{DynamicResource SurfaceSelBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding StatusKey}" Value="Paused">
+                                    <Setter TargetName="Bar" Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding StatusKey}" Value="Scheduled">
+                                    <Setter TargetName="Bar" Property="Foreground" Value="{DynamicResource MovieFgBrush}" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Binding="{Binding Speed}" Width="100"
-                                    Header="{Binding [ColSpeed], Source={x:Static loc:Loc.Instance}}" />
-                <DataGridTextColumn Binding="{Binding Remaining}" Width="90"
-                                    Header="{Binding [ColEta], Source={x:Static loc:Loc.Instance}}" />
-                <DataGridTextColumn Binding="{Binding StatusText}" Width="130"
-                                    Header="{Binding [ColStatus], Source={x:Static loc:Loc.Instance}}" />
-                <DataGridTextColumn Binding="{Binding Category}" Width="*"
-                                    Header="{Binding [ColCategory], Source={x:Static loc:Loc.Instance}}" />
-                <DataGridTextColumn Binding="{Binding Folder}" Width="1.5*"
-                                    Header="{Binding [ColFolder], Source={x:Static loc:Loc.Instance}}" />
-            </DataGrid.Columns>
-        </DataGrid>
-    </DockPanel>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Details of the selected download -->
+                <Border Grid.Row="2" Style="{StaticResource Card}" Margin="24,0,24,14" Padding="18"
+                        DataContext="{Binding Selected}" Visibility="{Binding Converter={StaticResource NullToCollapsed}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding SegmentsText}" Style="{StaticResource Muted}" />
+                                <TextBlock Text="{Binding [ConnectionMap], Source={x:Static loc:Loc.Instance}}" FontWeight="SemiBold" />
+                            </DockPanel>
+                            <ItemsControl ItemsSource="{Binding Segments}" FlowDirection="LeftToRight">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="16" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Height="22" CornerRadius="4" Margin="2" Background="{DynamicResource LineBrush}" ClipToBounds="True">
+                                            <Border VerticalAlignment="Bottom" CornerRadius="4" Background="{DynamicResource AccentBrush}"
+                                                    Height="{Binding Converter={StaticResource FractionToHeight}, ConverterParameter=22}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                        <UniformGrid Grid.Column="2" Columns="2" VerticalAlignment="Top">
+                            <StackPanel Margin="0,0,12,12">
+                                <TextBlock Text="{Binding [DetectedBy], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" />
+                                <TextBlock Text="{Binding DetectedBy}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,12,12">
+                                <TextBlock Text="{Binding [ColSize], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" />
+                                <TextBlock Text="{Binding Size}" FlowDirection="LeftToRight" HorizontalAlignment="Left" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,12,0">
+                                <TextBlock Text="{Binding [ColFolder], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" />
+                                <TextBlock Text="{Binding FullFolder}" TextTrimming="CharacterEllipsis" FlowDirection="LeftToRight" HorizontalAlignment="Left" ToolTip="{Binding FullFolder}" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="{Binding [Source], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" />
+                                <TextBlock Text="{Binding SourceHost}" TextTrimming="CharacterEllipsis" FlowDirection="LeftToRight" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </UniformGrid>
+                    </Grid>
+                </Border>
+
+                <!-- Status bar -->
+                <Border Grid.Row="3" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="24,0">
+                    <DockPanel VerticalAlignment="Center" TextElement.FontSize="12">
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding ServicesText}" Style="{StaticResource Muted}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconDownload}" Stroke="{DynamicResource AccentBrush}" Width="14" Height="14" />
+                            <TextBlock Style="{StaticResource Muted}" Margin="6,0,20,0" VerticalAlignment="Center">
+                                <Run Text="{Binding [TotalSpeed], Source={x:Static loc:Loc.Instance}, Mode=OneWay}" />
+                                <Run Text=": " />
+                                <Run Text="{Binding TotalSpeed, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                            </TextBlock>
+                            <TextBlock Text="{Binding SpeedLimitText}" Style="{StaticResource Muted}" Margin="0,0,20,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding ScheduleText}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
 </Window>

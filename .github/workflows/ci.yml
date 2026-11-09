@@ -24,6 +24,12 @@ jobs:
           dotnet-version: 8.0.x
       - run: dotnet build SmartDownloadManager.sln -c Release
       - run: dotnet publish src/SDM.App/SDM.App.csproj -c Release -r win-x64 --self-contained false -o publish
+      - name: Check that the native host and the extension ship with the app
+        shell: pwsh
+        run: |
+          foreach ($f in 'publish/SmartDownloadManager.exe', 'publish/SmartDownloadManager.Host.exe', 'publish/SmartDownloadManager.Host.dll', 'publish/extension/manifest.json', 'publish/extension/background.js') {
+            if (-not (Test-Path $f)) { Write-Error "missing $f"; exit 1 }
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: SmartDownloadManager-win-x64

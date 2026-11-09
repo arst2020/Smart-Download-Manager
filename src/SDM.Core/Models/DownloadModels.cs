@@ -11,7 +11,9 @@ public enum DownloadStatus
     Paused,
     Completed,
     Failed,
-    Canceled
+    Canceled,
+    /// <summary>Waiting for the scheduler's time window.</summary>
+    Scheduled
 }
 
 /// <summary>One byte range of a file, downloaded by its own connection.</summary>
@@ -89,6 +91,9 @@ public sealed class DownloadRequest
 
 public readonly record struct DownloadProgress(long Downloaded, long? Total, double BytesPerSecond, int ActiveSegments)
 {
+    /// <summary>Progress of each segment (0..1), for the connection map; null when unknown.</summary>
+    public IReadOnlyList<double>? SegmentFractions { get; init; }
+
     public double? Fraction => Total is > 0 ? (double)Downloaded / Total.Value : null;
 
     public TimeSpan? Remaining =>

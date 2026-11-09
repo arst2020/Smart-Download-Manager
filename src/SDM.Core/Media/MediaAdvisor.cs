@@ -50,6 +50,16 @@ public sealed class MediaAdvisor
         MediaLibrary? library = libraries.FirstOrDefault(l =>
             l.Kind == media.Kind && media.Kind != MediaKind.Unknown && LocalRoot(l) is not null);
 
+        if (library is null && settings.MediaServer.IsConfigured && media.Kind is MediaKind.Series or MediaKind.Movie or MediaKind.Music
+            && LastWarning is null)
+        {
+            // Explain why the server's library was not used, instead of silently falling back.
+            var sameKind = libraries.Where(l => l.Kind == media.Kind).ToList();
+            LastWarning = sameKind.Count > 0
+                ? $"{settings.MediaServer.Type}: {sameKind[0].Name} → {string.Join(", ", sameKind[0].Locations)} — folder not found on this PC"
+                : $"{settings.MediaServer.Type}: no {media.Kind} library ({(libraries.Count == 0 ? "no libraries returned" : string.Join(", ", libraries.Select(l => $"{l.Name} [{l.CollectionType}]")))})";
+        }
+
         string folder = FolderFor(media, settings, library, req.FileName, req.ContentType);
         string? ruleName = null;
 
@@ -120,7 +130,7 @@ public sealed class MediaAdvisor
                     : null;
                 return media with
                 {
-                    Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id,
+                    Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id, PosterUrl = match.PosterUrl,
                     EpisodeTitle = epTitle, Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
                 };
             }
@@ -130,7 +140,7 @@ public sealed class MediaAdvisor
                 if (match is null) return media;
                 return media with
                 {
-                    Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id,
+                    Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id, PosterUrl = match.PosterUrl,
                     Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
                 };
             }
@@ -163,6 +173,10 @@ public sealed class MediaAdvisor
         }
         return _libraries;
     }
+
+    /// <summary>The (cached) media server library that contains <paramref name="path"/>, if any.</summary>
+    public MediaLibrary? CachedLibraryFor(string path) =>
+        _libraries.FirstOrDefault(l => l.Locations.Any(loc => IsUnder(path, loc)));
 
     /// <summary>After a file landed in a library folder, ask the media server to scan.</summary>
     public async Task NotifyFileSavedAsync(string filePath, CancellationToken ct = default)

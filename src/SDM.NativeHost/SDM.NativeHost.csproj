@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Started by Chrome / Edge / Firefox for every message from the extension.
+       A console program on purpose: browsers talk to it over stdin/stdout. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SmartDownloadManager.Host</AssemblyName>
+    <RootNamespace>SDM.NativeHost</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SDM.Core\SDM.Core.csproj" />
+  </ItemGroup>
+</Project>

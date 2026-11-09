@@ -104,4 +104,105 @@
   <data name="Test" xml:space="preserve"><value>Testen</value></data>
   <data name="Testing" xml:space="preserve"><value>Wird getestet…</value></data>
   <data name="TestOk" xml:space="preserve"><value>Funktioniert</value></data>
+  <data name="AddDownload" xml:space="preserve"><value>Download hinzufügen</value></data>
+  <data name="AddLink" xml:space="preserve"><value>Link hinzufügen</value></data>
+  <data name="AddToQueue" xml:space="preserve"><value>Zur Warteschlange</value></data>
+  <data name="AfterExit" xml:space="preserve"><value>App schließen</value></data>
+  <data name="AfterNothing" xml:space="preserve"><value>Nichts tun</value></data>
+  <data name="AfterQueue" xml:space="preserve"><value>Wenn die Warteschlange fertig ist</value></data>
+  <data name="AfterShutdown" xml:space="preserve"><value>Computer herunterfahren</value></data>
+  <data name="AfterSleep" xml:space="preserve"><value>Energie sparen</value></data>
+  <data name="AiAlwaysHint" xml:space="preserve"><value>Aus = nur wenn die lokale Erkennung unsicher ist</value></data>
+  <data name="AiShort" xml:space="preserve"><value>KI</value></data>
+  <data name="AutoFolderShort" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="Average" xml:space="preserve"><value>Ø {0}</value></data>
+  <data name="BatchHeader" xml:space="preserve"><value>{0} Links aus der Zwischenablage · {1} Duplikate entfernt</value></data>
+  <data name="BatchTitle" xml:space="preserve"><value>Mehrere Downloads hinzufügen</value></data>
+  <data name="CatDocs" xml:space="preserve"><value>Dokumente</value></data>
+  <data name="CatMovies" xml:space="preserve"><value>Filme</value></data>
+  <data name="CatMusic" xml:space="preserve"><value>Musik</value></data>
+  <data name="CatSeries" xml:space="preserve"><value>Serien</value></data>
+  <data name="CatSoftware" xml:space="preserve"><value>Software</value></data>
+  <data name="Categories" xml:space="preserve"><value>Kategorien</value></data>
+  <data name="Change" xml:space="preserve"><value>Ändern…</value></data>
+  <data name="Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="ConnectionMap" xml:space="preserve"><value>Verbindungsübersicht</value></data>
+  <data name="ConnectionsActive" xml:space="preserve"><value>{0} von {1} aktiv</value></data>
+  <data name="ConnectionsCount" xml:space="preserve"><value>{0} Verbindungen</value></data>
+  <data name="ConnectionsPerFile" xml:space="preserve"><value>Verbindungen pro Datei</value></data>
+  <data name="CopyLink" xml:space="preserve"><value>Link kopieren</value></data>
+  <data name="Days" xml:space="preserve"><value>Tage</value></data>
+  <data name="DetectedLine" xml:space="preserve"><value>Erkannt: {0} · Sicherheit {1} %</value></data>
+  <data name="DontShowAgain" xml:space="preserve"><value>Nicht mehr anzeigen (in den Einstellungen wieder aktivierbar)</value></data>
+  <data name="DownloadFinished" xml:space="preserve"><value>Download abgeschlossen</value></data>
+  <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="FilterQueued" xml:space="preserve"><value>Wartend</value></data>
+  <data name="FilterScheduled" xml:space="preserve"><value>Geplant</value></data>
+  <data name="HeaderSummary" xml:space="preserve"><value>{0} aktiv · {1} wartend · {2} geplant · {3} fertig</value></data>
+  <data name="Libraries" xml:space="preserve"><value>Bibliotheken</value></data>
+  <data name="LibraryOf" xml:space="preserve"><value>{0}-Bibliothek</value></data>
+  <data name="LibraryScanned" xml:space="preserve"><value>In {0} gespeichert, Bibliotheksscan angefordert</value></data>
+  <data name="LocalFree" xml:space="preserve"><value>lokal, kostenlos</value></data>
+  <data name="LocalOnly" xml:space="preserve"><value>nur lokale Erkennung</value></data>
+  <data name="More" xml:space="preserve"><value>Mehr</value></data>
+  <data name="NextStartLine" xml:space="preserve"><value>Nächster Start: {0} · {1} Downloads wartend</value></data>
+  <data name="NoDaySelected" xml:space="preserve"><value>Kein Tag ausgewählt</value></data>
+  <data name="NoLimit" xml:space="preserve"><value>Keine Begrenzung</value></data>
+  <data name="None" xml:space="preserve"><value>keine</value></data>
+  <data name="NotYet" xml:space="preserve"><value>noch nicht</value></data>
+  <data name="OpenAICompatible" xml:space="preserve"><value>OpenAI-kompatibel</value></data>
+  <data name="OpenFile" xml:space="preserve"><value>Datei öffnen</value></data>
+  <data name="Or" xml:space="preserve"><value>oder:</value></data>
+  <data name="PasteAgain" xml:space="preserve"><value>Erneut einfügen</value></data>
+  <data name="PauseAll" xml:space="preserve"><value>Alle anhalten</value></data>
+  <data name="PauseAtEnd" xml:space="preserve"><value>Am Ende des Zeitfensters unfertige Downloads anhalten und im nächsten fortsetzen</value></data>
+  <data name="PausedAt" xml:space="preserve"><value>{0} · fortsetzbar</value></data>
+  <data name="PickFolder" xml:space="preserve"><value>Ordner wählen…</value></data>
+  <data name="Remaining" xml:space="preserve"><value>noch {0}</value></data>
+  <data name="RememberTitle" xml:space="preserve"><value>{0} immer hier speichern</value></data>
+  <data name="Run" xml:space="preserve"><value>Ausführen</value></data>
+  <data name="SavedInLibrary" xml:space="preserve"><value>In {0} gespeichert</value></data>
+  <data name="Schedule" xml:space="preserve"><value>Zeitplan</value></data>
+  <data name="ScheduleEllipsis" xml:space="preserve"><value>Planen…</value></data>
+  <data name="ScheduleHint" xml:space="preserve"><value>Geplante Downloads laufen nur in diesem Zeitfenster</value></data>
+  <data name="ScheduleNext" xml:space="preserve"><value>Zeitplan: nächster Start {0}</value></data>
+  <data name="ScheduleOff" xml:space="preserve"><value>Zeitplan ist aus</value></data>
+  <data name="ScheduleOpenNow" xml:space="preserve"><value>Zeitfenster ist jetzt offen</value></data>
+  <data name="ScheduleSpeed" xml:space="preserve"><value>Geschwindigkeitslimit im Zeitfenster</value></data>
+  <data name="Search" xml:space="preserve"><value>Downloads durchsuchen</value></data>
+  <data name="SelectAllN" xml:space="preserve"><value>Alle auswählen ({0})</value></data>
+  <data name="ShowCompletion" xml:space="preserve"><value>Fenster anzeigen, wenn ein Download fertig ist</value></data>
+  <data name="Simultaneous" xml:space="preserve"><value>Gleichzeitig</value></data>
+  <data name="Source" xml:space="preserve"><value>Quelle</value></data>
+  <data name="SpeedLimitShort" xml:space="preserve"><value>Limit</value></data>
+  <data name="StandardName" xml:space="preserve"><value>Standardname (Emby / Jellyfin)</value></data>
+  <data name="StandardNameHint" xml:space="preserve"><value>Aus = aktuellen Dateinamen behalten</value></data>
+  <data name="StartN" xml:space="preserve"><value>{0} Downloads starten</value></data>
+  <data name="StartTime" xml:space="preserve"><value>Beginn</value></data>
+  <data name="Status_Scheduled" xml:space="preserve"><value>Geplant</value></data>
+  <data name="StopTime" xml:space="preserve"><value>Ende</value></data>
+  <data name="TabConnection" xml:space="preserve"><value>Verbindung</value></data>
+  <data name="TestConnection" xml:space="preserve"><value>Verbindung testen</value></data>
+  <data name="Theme" xml:space="preserve"><value>Design</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dunkel</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Hell</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>Wie Windows</value></data>
+  <data name="TimeFormat" xml:space="preserve"><value>Zeit als HH:mm eingeben, z. B. 02:00</value></data>
+  <data name="TmdbLanguageShort" xml:space="preserve"><value>Sprache</value></data>
+  <data name="TotalSize" xml:space="preserve"><value>Gesamtgröße</value></data>
+  <data name="WaitingForSchedule" xml:space="preserve"><value>Wartet auf Zeitplan</value></data>
+  <data name="WaitingInQueue" xml:space="preserve"><value>Wartet in der Warteschlange</value></data>
+  <data name="TabBrowser" xml:space="preserve"><value>Browser</value></data>
+  <data name="BrowserHint" xml:space="preserve"><value>Die Erweiterung übergibt Browser-Downloads mit Cookies und Referrer an diese App, damit auch Seiten mit Login oder Bot-Schutz funktionieren.</value></data>
+  <data name="BrowserCapture" xml:space="preserve"><value>Downloads von der Browser-Erweiterung annehmen</value></data>
+  <data name="RegisterAgain" xml:space="preserve"><value>Für Chrome, Edge und Firefox registrieren</value></data>
+  <data name="BrowserRegistered" xml:space="preserve"><value>Registriert</value></data>
+  <data name="BrowserNotRegistered" xml:space="preserve"><value>Noch nicht registriert</value></data>
+  <data name="HostMissing" xml:space="preserve"><value>SmartDownloadManager.Host.exe fehlt neben der App</value></data>
+  <data name="InstallSteps" xml:space="preserve"><value>Erweiterung installieren</value></data>
+  <data name="InstallStep1" xml:space="preserve"><value>1. chrome://extensions (Chrome) bzw. edge://extensions (Edge) öffnen und den Entwicklermodus einschalten.</value></data>
+  <data name="InstallStep2" xml:space="preserve"><value>2. „Entpackte Erweiterung laden“ klicken und den Ordner unten wählen.</value></data>
+  <data name="InstallStep3" xml:space="preserve"><value>3. Auf das Erweiterungssymbol klicken: Es sollte „Mit der App verbunden“ anzeigen.</value></data>
+  <data name="CopyPath" xml:space="preserve"><value>Pfad kopieren</value></data>
+  <data name="ExtraIds" xml:space="preserve"><value>Weitere erlaubte Erweiterungs-IDs (z. B. Web-Store-Version), kommagetrennt</value></data>
 </root>
