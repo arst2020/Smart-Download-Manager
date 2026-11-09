@@ -1,9 +1,11 @@
 name: Release
 
-# Push a tag like v0.4.0 → builds the installer, the portable zip and SHA256SUMS.txt and publishes a GitHub release.
+# Push a tag like v0.4.0 (or a branch release/v0.4.0) → builds the installer, the portable zip and SHA256SUMS.txt
+# and publishes a GitHub release with that tag.
 on:
   push:
     tags: ['v*']
+    branches: ['release/v*']
   workflow_dispatch:
     inputs:
       version:
@@ -27,8 +29,13 @@ jobs:
         id: v
         shell: pwsh
         run: |
-          $v = if ('${{ github.ref_type }}' -eq 'tag') { '${{ github.ref_name }}'.TrimStart('v') } else { '${{ inputs.version }}' }
+          $ref = '${{ github.ref_name }}'
+          $v = if ('${{ github.ref_type }}' -eq 'tag') { $ref.TrimStart('v') }
+               elseif ($ref -like 'release/v*') { $ref.Substring('release/v'.Length) }
+               else { '${{ inputs.version }}' }
+          $publish = if ('${{ github.event_name }}' -eq 'push') { 'true' } else { 'false' }
           "version=$v" >> $env:GITHUB_OUTPUT
+          "publish=$publish" >> $env:GITHUB_OUTPUT
 
       - run: dotnet test tests/SDM.Core.Tests/SDM.Core.Tests.csproj -c Release
 
@@ -63,9 +70,10 @@ jobs:
           path: dist
 
       - name: Publish GitHub release
-        if: github.ref_type == 'tag'
+        if: steps.v.outputs.publish == 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create '${{ github.ref_name }}' (Get-ChildItem dist -File).FullName --title "Smart Download Manager ${{ steps.v.outputs.version }}" --generate-notes
+          # Creates the tag v<version> on this commit when it does not exist yet (release-branch builds).
+          gh release create "v${{ steps.v.outputs.version }}" (Get-ChildItem dist -File).FullName --target "${{ github.sha }}" --title "Smart Download Manager ${{ steps.v.outputs.version }}" --generate-notes
