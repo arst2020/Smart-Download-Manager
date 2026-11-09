@@ -130,7 +130,7 @@ public sealed class MediaAdvisor
                     : null;
                 return media with
                 {
-                    Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id,
+                    Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id, PosterUrl = match.PosterUrl,
                     EpisodeTitle = epTitle, Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
                 };
             }
@@ -140,7 +140,7 @@ public sealed class MediaAdvisor
                 if (match is null) return media;
                 return media with
                 {
-                    Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id,
+                    Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id, PosterUrl = match.PosterUrl,
                     Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
                 };
             }

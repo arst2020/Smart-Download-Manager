@@ -4,7 +4,11 @@ using SDM.Core.Media.Ai;
 
 namespace SDM.Core.Media;
 
-public sealed record TmdbMatch(int Id, string Title, int? Year, string? EpisodeTitle = null);
+public sealed record TmdbMatch(int Id, string Title, int? Year, string? EpisodeTitle = null)
+{
+    /// <summary>Full poster URL (w185), or null.</summary>
+    public string? PosterUrl { get; init; }
+}
 
 /// <summary>
 /// The Movie Database: turns a rough title into the official name and year
@@ -56,7 +60,11 @@ public sealed class TmdbClient(HttpClient http, string credential, string langua
 
         string? date = (string?)first[dateField];
         int? year = date is { Length: >= 4 } && int.TryParse(date[..4], out var y) ? y : null;
-        return new TmdbMatch((int)first["id"]!, (string?)first[nameField] ?? title, year);
+        string? poster = (string?)first["poster_path"];
+        return new TmdbMatch((int)first["id"]!, (string?)first[nameField] ?? title, year)
+        {
+            PosterUrl = string.IsNullOrEmpty(poster) ? null : "https://image.tmdb.org/t/p/w185" + poster
+        };
     }
 
     private async Task<JsonNode> GetAsync(string pathAndQuery, CancellationToken ct)

@@ -3,6 +3,7 @@ using SDM.Core.Engine;
 using SDM.Core.Media;
 using SDM.Core.Media.Ai;
 using SDM.Core.Models;
+using SDM.Core.Scheduling;
 using SDM.Core.Settings;
 
 namespace SDM.Core;
@@ -21,6 +22,9 @@ public sealed record AddOptions
 
     public IReadOnlyDictionary<string, string>? Headers { get; init; }
     public string? PageTitle { get; init; }
+
+    /// <summary>Wait for the scheduler's time window instead of starting now.</summary>
+    public bool Scheduled { get; init; }
 }
 
 /// <summary>
@@ -31,6 +35,10 @@ public sealed class SmartDownloadService : IDisposable
     private readonly HttpClient _http;
     private readonly HttpClient _apiHttp;
     private readonly RateLimiter _globalLimiter = new();
+    private readonly Timer _schedulerTimer;
+    private readonly object _scheduleLock = new();
+    private bool _windowOpen;
+    private bool _finishedRaised;
 
     public AppSettings Settings { get; private set; }
     public DownloadQueue Queue { get; }
@@ -53,15 +61,80 @@ public sealed class SmartDownloadService : IDisposable
         });
         Advisor = new MediaAdvisor(() => Settings, _apiHttp, llmFactory);
         Queue = new DownloadQueue(RunJobAsync, settings.MaxConcurrentDownloads);
+        Queue.JobCompleted += _ => SchedulerTick(DateTime.Now);
+        _schedulerTimer = new Timer(_ => SchedulerTick(DateTime.Now), null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(20));
+    }
+
+    /// <summary>The scheduled queue finished inside the window; the UI performs the action (sleep, shutdown...).</summary>
+    public event Action<AfterQueueAction>? ScheduledQueueFinished;
+
+    /// <summary>Tests drive the scheduler with their own clock.</summary>
+    internal void StopSchedulerTimer() => _schedulerTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+    public bool IsScheduleWindowOpen
+    {
+        get { lock (_scheduleLock) return _windowOpen; }
+    }
+
+    public DateTime? NextScheduledStart => ScheduleWindow.NextStart(Settings.Schedule, DateTime.Now);
+
+    /// <summary>Opens/closes the schedule window and detects the end of the scheduled queue. Public for tests.</summary>
+    public void SchedulerTick(DateTime now)
+    {
+        var schedule = Settings.Schedule;
+        bool open = ScheduleWindow.IsOpen(schedule, now);
+        bool opened, closed;
+        lock (_scheduleLock)
+        {
+            opened = open && !_windowOpen;
+            closed = !open && _windowOpen;
+            _windowOpen = open;
+            if (opened) _finishedRaised = false;
+        }
+
+        if (opened)
+        {
+            ApplySpeedLimit();
+            Queue.ReleaseScheduled();
+        }
+        else if (closed)
+        {
+            ApplySpeedLimit();
+            if (schedule.PauseAtEnd) Queue.ParkScheduled();
+        }
+
+        if (!open) return;
+        var scheduled = Queue.Jobs.Where(j => j.IsScheduled).ToList();
+        bool allDone = scheduled.Count > 0 && scheduled.All(j => j.Status is DownloadStatus.Completed or DownloadStatus.Failed
+                                                                 or DownloadStatus.Canceled);
+        bool raise = false;
+        lock (_scheduleLock)
+        {
+            if (allDone && !_finishedRaised) { _finishedRaised = true; raise = true; }
+        }
+        if (raise) ScheduledQueueFinished?.Invoke(schedule.AfterQueue);
+    }
+
+    private void ApplySpeedLimit()
+    {
+        long kbps = IsScheduleWindowOpen && Settings.Schedule.SpeedLimitKBps > 0
+            ? Settings.Schedule.SpeedLimitKBps
+            : Settings.GlobalSpeedLimitKBps;
+        _globalLimiter.BytesPerSecond = kbps * 1024;
     }
 
     /// <summary>Applies changed settings (speed limit, concurrency, rules, AI...) to running components.</summary>
     public void UpdateSettings(AppSettings settings)
     {
         Settings = settings;
-        _globalLimiter.BytesPerSecond = settings.GlobalSpeedLimitKBps * 1024;
+        ApplySpeedLimit();
         Queue.MaxConcurrent = settings.MaxConcurrentDownloads;
+        SchedulerTick(DateTime.Now);
     }
+
+    /// <summary>Adds several links at once (batch add from the clipboard).</summary>
+    public IReadOnlyList<DownloadJob> AddMany(IEnumerable<(Uri Url, AddOptions Options)> items) =>
+        items.Select(i => Add(i.Url, i.Options)).ToList();
 
     public DownloadJob Add(Uri url, AddOptions? options = null)
     {
@@ -76,7 +149,13 @@ public sealed class SmartDownloadService : IDisposable
             Headers = options.Headers ?? new Dictionary<string, string>(),
             PageTitle = options.PageTitle,
         };
-        return Queue.Enqueue(new DownloadJob(request) { ForcedFolder = options.Folder });
+        var job = new DownloadJob(request) { ForcedFolder = options.Folder };
+        if (options.Scheduled)
+        {
+            job.IsScheduled = true;
+            if (!IsScheduleWindowOpen) job.Status = DownloadStatus.Scheduled;
+        }
+        return Queue.Enqueue(job);
     }
 
     /// <summary>Probes the URL and asks the advisor where it should go (used by the popup).</summary>
@@ -146,6 +225,7 @@ public sealed class SmartDownloadService : IDisposable
 
     public void Dispose()
     {
+        _schedulerTimer.Dispose();
         _http.Dispose();
         _apiHttp.Dispose();
     }

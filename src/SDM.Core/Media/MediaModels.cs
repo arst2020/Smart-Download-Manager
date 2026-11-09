@@ -25,6 +25,7 @@ public sealed record MediaInfo
     public string? Artist { get; init; }
     public string? Album { get; init; }
     public int? TmdbId { get; init; }
+    public string? PosterUrl { get; init; }
     public double Confidence { get; init; }
 
     /// <summary>Which steps produced this, e.g. "local", "local + TMDB", "Claude + TMDB".</summary>

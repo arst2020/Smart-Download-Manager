@@ -22,6 +22,11 @@ public sealed class DownloadJob
     /// <summary>Overrides automatic organizing for this job (e.g. the user picked a folder).</summary>
     public string? ForcedFolder { get; init; }
 
+    /// <summary>Belongs to the scheduler: runs only inside the schedule's time window.</summary>
+    public bool IsScheduled { get; internal set; }
+
+    public DateTimeOffset? Finished { get; internal set; }
+
     public event Action<DownloadJob>? Changed;
 
     public DownloadJob(DownloadRequest request) => Request = request;
@@ -45,6 +50,7 @@ public sealed class DownloadQueue
     private readonly List<DownloadJob> _jobs = new();
     private readonly HashSet<DownloadJob> _running = new();
     private readonly HashSet<DownloadJob> _pausing = new();
+    private readonly HashSet<DownloadJob> _parking = new(); // stopped by the scheduler → back to Scheduled
     private readonly Func<DownloadJob, IProgress<DownloadProgress>, CancellationToken, Task> _run;
     private int _maxConcurrent;
 
@@ -69,6 +75,9 @@ public sealed class DownloadQueue
     public event Action<DownloadJob>? JobAdded;
     public event Action<DownloadJob>? JobRemoved;
 
+    /// <summary>Raised once when a job reaches Completed (used for the "download finished" popup).</summary>
+    public event Action<DownloadJob>? JobCompleted;
+
     public DownloadJob Enqueue(DownloadJob job)
     {
         lock (_lock) _jobs.Add(job);
@@ -92,12 +101,64 @@ public sealed class DownloadQueue
     {
         lock (_lock)
         {
-            if (job.Status is not (DownloadStatus.Paused or DownloadStatus.Failed or DownloadStatus.Canceled)) return;
+            if (job.Status is not (DownloadStatus.Paused or DownloadStatus.Failed or DownloadStatus.Canceled
+                or DownloadStatus.Scheduled)) return;
             job.Status = DownloadStatus.Queued;
             job.Error = null;
         }
         job.Raise();
         Pump();
+    }
+
+    /// <summary>Moves jobs to the scheduler (they wait for the time window).</summary>
+    public void Schedule(IEnumerable<DownloadJob> jobs)
+    {
+        var changed = new List<DownloadJob>();
+        lock (_lock)
+        {
+            foreach (var job in jobs)
+            {
+                job.IsScheduled = true;
+                if (_running.Contains(job)) { _parking.Add(job); job.RequestStop(); continue; }
+                if (job.Status is DownloadStatus.Queued or DownloadStatus.Paused or DownloadStatus.Failed or DownloadStatus.Canceled)
+                {
+                    job.Status = DownloadStatus.Scheduled;
+                    changed.Add(job);
+                }
+            }
+        }
+        foreach (var j in changed) j.Raise();
+    }
+
+    /// <summary>The window opened: scheduled jobs join the queue.</summary>
+    public void ReleaseScheduled()
+    {
+        var changed = new List<DownloadJob>();
+        lock (_lock)
+        {
+            foreach (var job in _jobs.Where(j => j.Status == DownloadStatus.Scheduled))
+            {
+                job.Status = DownloadStatus.Queued;
+                changed.Add(job);
+            }
+        }
+        foreach (var j in changed) j.Raise();
+        Pump();
+    }
+
+    /// <summary>The window closed: running and queued scheduled jobs go back to waiting (progress is kept).</summary>
+    public void ParkScheduled()
+    {
+        var changed = new List<DownloadJob>();
+        lock (_lock)
+        {
+            foreach (var job in _jobs.Where(j => j.IsScheduled))
+            {
+                if (_running.Contains(job)) { _parking.Add(job); job.RequestStop(); }
+                else if (job.Status == DownloadStatus.Queued) { job.Status = DownloadStatus.Scheduled; changed.Add(job); }
+            }
+        }
+        foreach (var j in changed) j.Raise();
     }
 
     /// <summary>Stops and removes a job. Partial files stay on disk, so the same URL can resume later.</summary>
@@ -148,12 +209,13 @@ public sealed class DownloadQueue
         {
             await Task.Run(() => _run(job, new SyncProgress(job), ct), ct).ConfigureAwait(false);
             job.Status = DownloadStatus.Completed;
+            job.Finished = DateTimeOffset.Now;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            bool paused;
-            lock (_lock) paused = _pausing.Remove(job);
-            job.Status = paused ? DownloadStatus.Paused : DownloadStatus.Canceled;
+            bool paused, parked;
+            lock (_lock) { paused = _pausing.Remove(job); parked = _parking.Remove(job); }
+            job.Status = parked ? DownloadStatus.Scheduled : paused ? DownloadStatus.Paused : DownloadStatus.Canceled;
         }
         catch (Exception ex)
         {
@@ -162,9 +224,10 @@ public sealed class DownloadQueue
         }
         finally
         {
-            lock (_lock) { _running.Remove(job); _pausing.Remove(job); }
+            lock (_lock) { _running.Remove(job); _pausing.Remove(job); _parking.Remove(job); }
         }
         job.Raise();
+        if (job.Status == DownloadStatus.Completed) JobCompleted?.Invoke(job);
         Pump();
     }
 

@@ -105,7 +105,10 @@ public sealed class SegmentedDownloader
         File.Move(partPath, target);
         File.Delete(statePath);
 
-        progress?.Report(new DownloadProgress(size, size, 0, 0));
+        progress?.Report(new DownloadProgress(size, size, 0, 0)
+        {
+            SegmentFractions = state.Segments.Select(_ => 1.0).ToArray()
+        });
         return new DownloadResult(target, size, probe, resumed);
     }
 
@@ -285,7 +288,12 @@ public sealed class SegmentedDownloader
             }
             lastBytes = bytes;
             lastSample = now;
-            progress?.Report(new DownloadProgress(bytes, state.TotalSize, speed, active()));
+            progress?.Report(new DownloadProgress(bytes, state.TotalSize, speed, active())
+            {
+                SegmentFractions = state.Segments
+                    .Select(s => s.IsComplete ? 1.0 : s.Length > 0 ? Math.Min(1.0, (double)s.Downloaded / s.Length) : 0.0)
+                    .ToArray()
+            });
 
             if (now - lastSave >= SaveInterval)
             {

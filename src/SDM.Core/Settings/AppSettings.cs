@@ -3,11 +3,27 @@ using System.Text.Json;
 using SDM.Core.Classification;
 using SDM.Core.Media;
 using SDM.Core.Media.Ai;
+using SDM.Core.Scheduling;
 
 namespace SDM.Core.Settings;
 
+public enum AppTheme
+{
+    System,
+    Dark,
+    Light
+}
+
 public sealed class AppSettings
 {
+    /// <summary>Dark, Light, or follow the Windows setting.</summary>
+    public AppTheme Theme { get; set; } = AppTheme.System;
+
+    /// <summary>Show the "download finished" window (Run / Open folder / Close).</summary>
+    public bool ShowCompletionDialog { get; set; } = true;
+
+    public ScheduleSettings Schedule { get; set; } = new();
+
     public string DownloadDirectory { get; set; } =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "SDM");
 
