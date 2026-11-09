@@ -94,6 +94,12 @@ public sealed class SettingsViewModel : ObservableObject
         ProxyUrl = settings.ProxyUrl;
         Theme = settings.Theme;
         ShowCompletionDialog = settings.ShowCompletionDialog;
+        CloseToTray = settings.CloseToTray;
+        ShowNotifications = settings.ShowNotifications;
+        WatchClipboard = settings.WatchClipboard;
+        KeepHistory = settings.KeepHistory;
+        ResumeOnStart = settings.ResumeOnStart;
+        _subtitleSearchUrl = settings.SubtitleSearchUrl;
         ScheduleSummary = settings.Schedule.Enabled
             ? $"{settings.Schedule.Start} – {settings.Schedule.Stop}"
             : Loc.Get("ScheduleOff");
@@ -174,6 +180,34 @@ public sealed class SettingsViewModel : ObservableObject
 
     public AppTheme Theme { get; set; }
     public bool ShowCompletionDialog { get; set; }
+    public bool CloseToTray { get; set; }
+    public bool ShowNotifications { get; set; }
+    public bool WatchClipboard { get; set; }
+    public bool KeepHistory { get; set; }
+    public bool ResumeOnStart { get; set; }
+
+    private string _subtitleSearchUrl;
+
+    /// <summary>Search page opened by "Subtitles" ({query} = "Show S01E03" / "Movie 2024"). Only opened, never downloaded.</summary>
+    public string SubtitleSearchUrl
+    {
+        get => _subtitleSearchUrl;
+        set { if (Set(ref _subtitleSearchUrl, value)) { OnPropertyChanged(nameof(SubtitleExample)); OnPropertyChanged(nameof(SelectedSubtitlePreset)); } }
+    }
+
+    public IReadOnlyList<SubtitlePreset> SubtitlePresets { get; } =
+        SubtitleSearch.Presets.Select(p => new SubtitlePreset(p.Name, p.Template)).ToList();
+
+    /// <summary>Picking a preset fills the address box.</summary>
+    public SubtitlePreset? SelectedSubtitlePreset
+    {
+        get => SubtitlePresets.FirstOrDefault(p => string.Equals(p.Template, SubtitleSearchUrl, StringComparison.OrdinalIgnoreCase));
+        set { if (value is not null) SubtitleSearchUrl = value.Template; }
+    }
+
+    /// <summary>Preview of the link for a sample episode (or a warning when the address is not http/https).</summary>
+    public string SubtitleExample =>
+        SubtitleSearch.BuildUrl(SubtitleSearchUrl, "Dark S01E03")?.AbsoluteUri ?? Loc.Get("SubtitleUrlInvalid");
     public string ScheduleSummary { get; }
 
     public IReadOnlyList<LanguageOption> Languages { get; } =
@@ -269,6 +303,13 @@ public sealed class SettingsViewModel : ObservableObject
         ProxyUrl = ProxyUrl.Trim(),
         Theme = Theme,
         ShowCompletionDialog = ShowCompletionDialog,
+        CloseToTray = CloseToTray,
+        ShowNotifications = ShowNotifications,
+        WatchClipboard = WatchClipboard,
+        KeepHistory = KeepHistory,
+        ResumeOnStart = ResumeOnStart,
+        TrayHintShown = _original.TrayHintShown,
+        SubtitleSearchUrl = SubtitleSearch.BuildUrl(SubtitleSearchUrl, "x") is null ? SubtitleSearch.DefaultTemplate : SubtitleSearchUrl.Trim(),
         BrowserIntegration = BrowserIntegration,
         ExtraExtensionIds = ParseIds(ExtraExtensionIds),
         Schedule = _original.Schedule,
@@ -338,3 +379,5 @@ public sealed class SettingsViewModel : ObservableObject
         return dialog.ShowDialog() == true ? dialog.FolderName : null;
     }
 }
+
+public sealed record SubtitlePreset(string Name, string Template);

@@ -26,6 +26,14 @@
                                 <TextBlock Text="{Binding [OpenFolder], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
                             </StackPanel>
                         </Button>
+                        <Button Command="{Binding SubtitleCommand}" Margin="8,0,0,0"
+                                Visibility="{Binding CanSearchSubtitles, Converter={StaticResource BoolToVis}}"
+                                ToolTip="{Binding [SubtitleSearchTip], Source={x:Static loc:Loc.Instance}}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconSearch}" />
+                                <TextBlock Text="{Binding [Subtitles], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </DockPanel>
                 <CheckBox Margin="0,12,0,0" Content="{Binding [DontShowAgain], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding DontShowAgain}" FontSize="12" />

@@ -3,6 +3,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- Only for the notification-area icon (NotifyIcon); WinForms names stay out of the global usings. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>SDM.App</RootNamespace>
@@ -13,6 +16,11 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <SatelliteResourceLanguages>fa;de</SatelliteResourceLanguages>
   </PropertyGroup>
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <EmbeddedResource Include="Assets\app.ico" LogicalName="SDM.App.app.ico" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SDM.Core\SDM.Core.csproj" />
     <!-- Built first; its files are copied next to the app below (browsers start it directly). -->

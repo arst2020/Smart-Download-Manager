@@ -42,6 +42,10 @@ public sealed class SmartDownloadService : IDisposable
     private readonly object _scheduleLock = new();
     private bool _windowOpen;
     private bool _finishedRaised;
+    private string? _historyPath;
+    private Timer? _historyTimer;
+    private int _historyDirty;
+    private readonly object _historyLock = new();
 
     public AppSettings Settings { get; private set; }
     public DownloadQueue Queue { get; }
@@ -70,6 +74,81 @@ public sealed class SmartDownloadService : IDisposable
 
     /// <summary>The scheduled queue finished inside the window; the UI performs the action (sleep, shutdown...).</summary>
     public event Action<AfterQueueAction>? ScheduledQueueFinished;
+
+    // ---------------------------------------------------------------- history
+
+    /// <summary>Loads the saved list (if any) and keeps saving it while the app runs.</summary>
+    public bool HistoryEnabled => _historyPath is not null;
+
+    /// <param name="restore">False when the option is switched on while the app runs: start saving, keep the current list.</param>
+    public void EnableHistory(string? path = null, bool restore = true)
+    {
+        if (_historyPath is not null) return;
+        _historyPath = path ?? DownloadHistory.DefaultPath;
+        if (restore) RestoreHistory(DownloadHistory.Load(_historyPath), Settings.ResumeOnStart);
+
+        Queue.JobAdded += job => { job.Changed += _ => MarkHistoryDirty(); MarkHistoryDirty(); };
+        Queue.JobRemoved += _ => MarkHistoryDirty();
+        foreach (var job in Queue.Jobs) job.Changed += _ => MarkHistoryDirty();
+        _historyTimer = new Timer(_ => SaveHistoryIfDirty(), null, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
+    }
+
+    /// <summary>Puts saved downloads back in the list. Ones that were running continue (or wait paused).</summary>
+    public void RestoreHistory(IEnumerable<DownloadRecord> records, bool resumeUnfinished)
+    {
+        foreach (var record in records.OrderBy(r => r.Added))
+        {
+            DownloadJob job;
+            try { job = DownloadJob.FromRecord(record, Settings.MaxRetries); }
+            catch (UriFormatException) { continue; }
+
+            job.Status = record.Status switch
+            {
+                DownloadStatus.Queued or DownloadStatus.Probing or DownloadStatus.Downloading or DownloadStatus.Organizing =>
+                    job.IsScheduled ? DownloadStatus.Scheduled : resumeUnfinished ? DownloadStatus.Queued : DownloadStatus.Paused,
+                DownloadStatus.Scheduled when IsScheduleWindowOpen => DownloadStatus.Queued,
+                var s => s
+            };
+            Queue.Enqueue(job);
+        }
+    }
+
+    public void SaveHistory()
+    {
+        if (_historyPath is null || !Settings.KeepHistory) return;
+        lock (_historyLock)
+        {
+            Interlocked.Exchange(ref _historyDirty, 0);
+            try { DownloadHistory.Save(_historyPath, Queue.Jobs.Select(j => j.ToRecord())); }
+            catch (IOException) { Interlocked.Exchange(ref _historyDirty, 1); } // retry next tick
+        }
+    }
+
+    /// <summary>
+    /// Closing the app: save the list as it is (running downloads stay "running" so they continue next
+    /// start), then stop them so each writes its .sdmstate, and wait briefly for that.
+    /// </summary>
+    public void Shutdown(TimeSpan? wait = null)
+    {
+        _historyTimer?.Dispose();
+        SaveHistory();
+        _historyPath = null; // the stops below must not overwrite the saved statuses
+
+        var running = Queue.Jobs.Where(j => j.Status is DownloadStatus.Probing or DownloadStatus.Downloading
+            or DownloadStatus.Organizing).ToList();
+        foreach (var job in running) Queue.Pause(job);
+        var deadline = DateTime.UtcNow + (wait ?? TimeSpan.FromSeconds(3));
+        while (DateTime.UtcNow < deadline && running.Any(j => j.Status is DownloadStatus.Probing or DownloadStatus.Downloading
+                   or DownloadStatus.Organizing))
+            Thread.Sleep(50);
+    }
+
+    private void MarkHistoryDirty() => Interlocked.Exchange(ref _historyDirty, 1);
+
+    private void SaveHistoryIfDirty()
+    {
+        if (Volatile.Read(ref _historyDirty) == 1) SaveHistory();
+    }
 
     /// <summary>Tests drive the scheduler with their own clock.</summary>
     internal void StopSchedulerTimer() => _schedulerTimer.Change(Timeout.Infinite, Timeout.Infinite);
@@ -250,6 +329,8 @@ public sealed class SmartDownloadService : IDisposable
 
     public void Dispose()
     {
+        _historyTimer?.Dispose();
+        SaveHistory();
         _schedulerTimer.Dispose();
         _http.Dispose();
         _apiHttp.Dispose();

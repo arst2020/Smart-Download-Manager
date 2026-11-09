@@ -8,7 +8,7 @@ public sealed class DownloadJob
 {
     private CancellationTokenSource? _cts;
 
-    public Guid Id { get; } = Guid.NewGuid();
+    public Guid Id { get; private init; } = Guid.NewGuid();
     public DownloadRequest Request { get; }
     public DownloadStatus Status { get; internal set; } = DownloadStatus.Queued;
     public DownloadProgress Progress { get; internal set; }
@@ -17,7 +17,7 @@ public sealed class DownloadJob
     public ClassificationResult? Classification { get; internal set; }
     public MoveRecord? Move { get; internal set; }
     public string? Error { get; internal set; }
-    public DateTimeOffset Added { get; } = DateTimeOffset.Now;
+    public DateTimeOffset Added { get; private init; } = DateTimeOffset.Now;
 
     /// <summary>Overrides automatic organizing for this job (e.g. the user picked a folder).</summary>
     public string? ForcedFolder { get; init; }
@@ -31,6 +31,69 @@ public sealed class DownloadJob
     public event Action<DownloadJob>? Changed;
 
     public DownloadJob(DownloadRequest request) => Request = request;
+
+    /// <summary>Snapshot for the history file.</summary>
+    public DownloadRecord ToRecord() => new()
+    {
+        Id = Id,
+        Url = Request.Url.ToString(),
+        Directory = Request.Directory,
+        RequestedFileName = Request.FileName,
+        Connections = Request.MaxSegments,
+        Headers = Request.Headers.Count == 0 ? null : new Dictionary<string, string>(Request.Headers),
+        PageTitle = Request.PageTitle,
+        ForcedFolder = ForcedFolder,
+        IsScheduled = IsScheduled,
+        Status = Status,
+        FileName = FileName,
+        FilePath = FilePath,
+        Downloaded = Progress.Downloaded,
+        Total = Progress.Total,
+        Category = Classification?.Category,
+        Folder = Classification?.Folder,
+        Source = Classification?.Source,
+        Explanation = Classification?.Explanation,
+        MovedFrom = Move?.From,
+        MovedTo = Move?.To,
+        Error = Error,
+        Added = Added,
+        Started = Started,
+        Finished = Finished,
+    };
+
+    /// <summary>Rebuilds a job from the history file (it is not running).</summary>
+    public static DownloadJob FromRecord(DownloadRecord r, int maxRetries = 5)
+    {
+        var request = new DownloadRequest
+        {
+            Url = new Uri(r.Url),
+            Directory = r.Directory,
+            FileName = r.RequestedFileName,
+            MaxSegments = Math.Clamp(r.Connections, 1, 32),
+            MaxRetries = maxRetries,
+            Headers = r.Headers ?? new Dictionary<string, string>(),
+            PageTitle = r.PageTitle,
+        };
+        return new DownloadJob(request)
+        {
+            Id = r.Id == Guid.Empty ? Guid.NewGuid() : r.Id,
+            Added = r.Added,
+            ForcedFolder = r.ForcedFolder,
+            IsScheduled = r.IsScheduled,
+            Status = r.Status,
+            FileName = r.FileName,
+            FilePath = r.FilePath,
+            Progress = new DownloadProgress(r.Downloaded, r.Total, 0, 0),
+            Classification = r.Folder is null ? null
+                : new ClassificationResult(r.Category ?? "", r.Folder, 1, r.Source ?? "", null, r.Explanation),
+            Move = r.MovedFrom is not null && r.MovedTo is not null
+                ? new MoveRecord(r.MovedFrom, r.MovedTo, r.Finished ?? r.Added, r.Category ?? "")
+                : null,
+            Error = r.Error,
+            Started = r.Started,
+            Finished = r.Finished,
+        };
+    }
 
     internal CancellationToken Begin()
     {
@@ -79,6 +142,9 @@ public sealed class DownloadQueue
     /// <summary>Raised once when a job reaches Completed (used for the "download finished" popup).</summary>
     public event Action<DownloadJob>? JobCompleted;
 
+    /// <summary>Raised when a job ends as Failed (after its retries).</summary>
+    public event Action<DownloadJob>? JobFailed;
+
     public DownloadJob Enqueue(DownloadJob job)
     {
         lock (_lock) _jobs.Add(job);
@@ -109,6 +175,19 @@ public sealed class DownloadQueue
         }
         job.Raise();
         Pump();
+    }
+
+    /// <summary>Removes completed downloads from the list (their files stay on disk).</summary>
+    public int RemoveCompleted()
+    {
+        List<DownloadJob> done;
+        lock (_lock)
+        {
+            done = _jobs.Where(j => j.Status == DownloadStatus.Completed).ToList();
+            foreach (var j in done) _jobs.Remove(j);
+        }
+        foreach (var j in done) JobRemoved?.Invoke(j);
+        return done.Count;
     }
 
     /// <summary>Moves jobs to the scheduler (they wait for the time window).</summary>
@@ -230,6 +309,7 @@ public sealed class DownloadQueue
         }
         job.Raise();
         if (job.Status == DownloadStatus.Completed) JobCompleted?.Invoke(job);
+        else if (job.Status == DownloadStatus.Failed) JobFailed?.Invoke(job);
         Pump();
     }
 

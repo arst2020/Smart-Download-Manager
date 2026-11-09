@@ -205,4 +205,27 @@
   <data name="InstallStep3" xml:space="preserve"><value>3. Auf das Erweiterungssymbol klicken: Es sollte „Mit der App verbunden“ anzeigen.</value></data>
   <data name="CopyPath" xml:space="preserve"><value>Pfad kopieren</value></data>
   <data name="ExtraIds" xml:space="preserve"><value>Weitere erlaubte Erweiterungs-IDs (z. B. Web-Store-Version), kommagetrennt</value></data>
+  <data name="TrayOpen" xml:space="preserve"><value>Smart Download Manager öffnen</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>Beenden</value></data>
+  <data name="TrayActive" xml:space="preserve"><value>{0} aktiv</value></data>
+  <data name="TrayHint" xml:space="preserve"><value>Läuft weiter im Infobereich. Zum Beenden mit der rechten Maustaste auf das Symbol klicken.</value></data>
+  <data name="DownloadFailed" xml:space="preserve"><value>Download fehlgeschlagen</value></data>
+  <data name="ClipboardTitle" xml:space="preserve"><value>Link kopiert</value></data>
+  <data name="ClipboardOne" xml:space="preserve"><value>Diesen Link herunterladen?</value></data>
+  <data name="ClipboardMany" xml:space="preserve"><value>{0} Download-Links kopiert</value></data>
+  <data name="ClipDownload" xml:space="preserve"><value>Herunterladen</value></data>
+  <data name="ClipBatch" xml:space="preserve"><value>Alle hinzufügen</value></data>
+  <data name="Ignore" xml:space="preserve"><value>Ignorieren</value></data>
+  <data name="Subtitles" xml:space="preserve"><value>Untertitel suchen</value></data>
+  <data name="SubtitleSearchTip" xml:space="preserve"><value>Öffnet die Untertitel-Seite im Browser — es wird nichts automatisch heruntergeladen</value></data>
+  <data name="ClearCompleted" xml:space="preserve"><value>Fertige aus der Liste entfernen (Dateien bleiben erhalten)</value></data>
+  <data name="BackgroundSection" xml:space="preserve"><value>Hintergrund &amp; Liste</value></data>
+  <data name="CloseToTray" xml:space="preserve"><value>Beim Schließen im Infobereich weiterlaufen</value></data>
+  <data name="ShowNotifications" xml:space="preserve"><value>Windows-Benachrichtigung bei fertigem oder fehlgeschlagenem Download (Fenster ausgeblendet)</value></data>
+  <data name="WatchClipboard" xml:space="preserve"><value>Download anbieten, wenn ich einen Download-Link kopiere</value></data>
+  <data name="KeepHistory" xml:space="preserve"><value>Download-Liste nach Neustart behalten</value></data>
+  <data name="ResumeOnStart" xml:space="preserve"><value>Unfertige Downloads beim Start fortsetzen</value></data>
+  <data name="SubtitleSite" xml:space="preserve"><value>Untertitel-Suchseite</value></data>
+  <data name="SubtitleHint" xml:space="preserve"><value>{query} wird z. B. durch „Dark S01E03“ ersetzt. Die Seite öffnet sich nur im Browser; Untertitel wählen und laden Sie selbst.</value></data>
+  <data name="SubtitleUrlInvalid" xml:space="preserve"><value>Muss mit https:// beginnen (Standardseite wird verwendet)</value></data>
 </root>

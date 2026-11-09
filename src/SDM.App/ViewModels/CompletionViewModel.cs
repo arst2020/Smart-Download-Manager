@@ -34,6 +34,7 @@ public sealed class CompletionViewModel : ObservableObject
             Close();
         });
         CloseCommand = new RelayCommand(Close);
+        SubtitleCommand = new RelayCommand(() => SubtitleLauncher.Open(_service.Settings, _job));
     }
 
     public event Action? CloseRequested;
@@ -41,6 +42,11 @@ public sealed class CompletionViewModel : ObservableObject
     public RelayCommand RunCommand { get; }
     public RelayCommand OpenFolderCommand { get; }
     public RelayCommand CloseCommand { get; }
+
+    /// <summary>Opens the subtitle site's search page in the browser (nothing is downloaded).</summary>
+    public RelayCommand SubtitleCommand { get; }
+
+    public bool CanSearchSubtitles => SubtitleLauncher.CanSearch(_job);
 
     public string FilePath => _job.FilePath ?? "";
     public string FileName => Path.GetFileName(FilePath);

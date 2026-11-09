@@ -24,6 +24,30 @@ public sealed class AppSettings
 
     public ScheduleSettings Schedule { get; set; } = new();
 
+    /// <summary>Remember the download list between runs.</summary>
+    /// <summary>The window's close button hides the app to the notification area instead of quitting.</summary>
+    public bool CloseToTray { get; set; } = true;
+
+    /// <summary>The "still running in the notification area" hint was shown once.</summary>
+    public bool TrayHintShown { get; set; }
+
+    /// <summary>Windows notifications for finished / failed downloads while the window is hidden.</summary>
+    public bool ShowNotifications { get; set; } = true;
+
+    /// <summary>Offer to download when a download link is copied in another program.</summary>
+    public bool WatchClipboard { get; set; } = true;
+
+    /// <summary>
+    /// Subtitle search page opened in the browser ({query} is replaced). The app only opens the page;
+    /// it never downloads subtitles itself.
+    /// </summary>
+    public string SubtitleSearchUrl { get; set; } = SubtitleSearch.DefaultTemplate;
+
+    public bool KeepHistory { get; set; } = true;
+
+    /// <summary>On start, continue downloads that were running when the app closed.</summary>
+    public bool ResumeOnStart { get; set; } = true;
+
     /// <summary>Capture downloads from the browser extension (the extension has its own switch too).</summary>
     public bool BrowserIntegration { get; set; } = true;
 

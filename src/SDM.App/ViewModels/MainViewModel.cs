@@ -43,8 +43,13 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand UndoCommand { get; }
     public RelayCommand SettingsCommand { get; }
     public RelayCommand ScheduleCommand { get; }
+    public RelayCommand ClearCompletedCommand { get; }
+    public RelayCommand SubtitleCommand { get; }
 
     public Window? Owner { get; set; }
+
+    /// <summary>Raised after the Settings window was saved (the app refreshes the tray and clipboard watcher).</summary>
+    public event Action? SettingsSaved;
 
     public MainViewModel(SmartDownloadService service)
     {
@@ -94,9 +99,14 @@ public sealed class MainViewModel : ObservableObject
         OpenFileCommand = new RelayCommand(p => OpenFile(Item(p)), p => Item(p)?.IsCompleted == true);
         CopyLinkCommand = new RelayCommand(p =>
         {
-            try { Clipboard.SetText(Item(p)!.Job.Request.Url.ToString()); } catch { /* clipboard busy */ }
+            string link = Item(p)!.Job.Request.Url.ToString();
+            ClipboardWatcher.IgnoreNext(link); // don't offer our own copy back as a new download
+            try { Clipboard.SetText(link); } catch { /* clipboard busy */ }
         }, p => Item(p) is not null);
         UndoCommand = new RelayCommand(p => _service.UndoMove(Item(p)!.Job), p => Item(p)?.Job.Move is not null);
+        SubtitleCommand = new RelayCommand(p => SubtitleLauncher.Open(_service.Settings, Item(p)!.Job),
+            p => SubtitleLauncher.CanSearch(Item(p)?.Job));
+        ClearCompletedCommand = new RelayCommand(() => _service.Queue.RemoveCompleted(), () => CountDone > 0);
         SettingsCommand = new RelayCommand(ShowSettings);
         ScheduleCommand = new RelayCommand(ShowScheduler);
 
@@ -263,6 +273,14 @@ public sealed class MainViewModel : ObservableObject
         else if (links.Links.Count == 1) ShowAddDialog(links.Links[0].ToString());
     }
 
+    /// <summary>"Download" on the clipboard popup: one link opens the Add window, several the batch window.</summary>
+    public void HandleCopiedLinks(IReadOnlyList<Uri> links)
+    {
+        BringToFront();
+        if (links.Count == 1) ShowAddDialog(links[0].ToString());
+        else ShowBatchDialog(new LinkExtractor.Result(links, 0));
+    }
+
     /// <summary>A link (or many) arrived from the browser extension or a second app instance.</summary>
     public void HandleBrowserMessage(BrowserMessage message)
     {
@@ -288,6 +306,18 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public void ShowAddDialog(string? url) => ShowAddDialog(url, null, null, null);
+
+    /// <summary>Tray menu "Add link": same as the toolbar button, with the window brought up first.</summary>
+    public void AddFromTray()
+    {
+        BringToFront();
+        AddFromClipboardOrDialog();
+    }
+
+    public void PauseAll() => PauseAllCommand.Execute(null);
+
+    /// <summary>"2 active · 3.4 MB/s" for the tray tooltip (empty when idle).</summary>
+    public string TrayStatus => CountActive == 0 ? "" : $"{string.Format(Loc.Get("TrayActive"), CountActive)} · {TotalSpeed}";
 
     public void ShowAddDialog(string? url, IReadOnlyDictionary<string, string>? headers, string? pageTitle, string? browserFileName)
     {
@@ -360,6 +390,7 @@ public sealed class MainViewModel : ObservableObject
         ThemeManager.Apply(updated.Theme);
         OnPropertyChanged(string.Empty);
         _ = LoadLibraryAsync();
+        SettingsSaved?.Invoke();
     }
 
     public void ShowScheduler()

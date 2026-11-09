@@ -205,4 +205,27 @@
   <data name="InstallStep3" xml:space="preserve"><value>۳. روی آیکون افزونه بزنید؛ باید «به برنامه متصل است» را ببینید.</value></data>
   <data name="CopyPath" xml:space="preserve"><value>کپی مسیر</value></data>
   <data name="ExtraIds" xml:space="preserve"><value>شناسه‌های دیگر افزونه که مجازند (مثلاً نسخهٔ Chrome Web Store)، با ویرگول</value></data>
+  <data name="TrayOpen" xml:space="preserve"><value>باز کردن Smart Download Manager</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>خروج</value></data>
+  <data name="TrayActive" xml:space="preserve"><value>{0} فعال</value></data>
+  <data name="TrayHint" xml:space="preserve"><value>برنامه در ناحیهٔ اعلان‌ها (کنار ساعت) فعال است. برای خروج روی آیکون راست‌کلیک کنید.</value></data>
+  <data name="DownloadFailed" xml:space="preserve"><value>دانلود ناموفق بود</value></data>
+  <data name="ClipboardTitle" xml:space="preserve"><value>لینک کپی شد</value></data>
+  <data name="ClipboardOne" xml:space="preserve"><value>این لینک دانلود شود؟</value></data>
+  <data name="ClipboardMany" xml:space="preserve"><value>{0} لینک دانلود کپی شد</value></data>
+  <data name="ClipDownload" xml:space="preserve"><value>دانلود</value></data>
+  <data name="ClipBatch" xml:space="preserve"><value>افزودن همه</value></data>
+  <data name="Ignore" xml:space="preserve"><value>نادیده بگیر</value></data>
+  <data name="Subtitles" xml:space="preserve"><value>جستجوی زیرنویس</value></data>
+  <data name="SubtitleSearchTip" xml:space="preserve"><value>سایت زیرنویس را در مرورگر باز می‌کند — چیزی خودکار دانلود نمی‌شود</value></data>
+  <data name="ClearCompleted" xml:space="preserve"><value>پاک کردن دانلودهای تمام‌شده از لیست (فایل‌ها حذف نمی‌شوند)</value></data>
+  <data name="BackgroundSection" xml:space="preserve"><value>پس‌زمینه و لیست</value></data>
+  <data name="CloseToTray" xml:space="preserve"><value>با بستن پنجره، برنامه در ناحیهٔ اعلان‌ها فعال بماند</value></data>
+  <data name="ShowNotifications" xml:space="preserve"><value>اعلان ویندوز هنگام پایان یا خطای دانلود (وقتی پنجره پنهان است)</value></data>
+  <data name="WatchClipboard" xml:space="preserve"><value>وقتی لینک دانلود کپی می‌کنم، پیشنهاد دانلود بده</value></data>
+  <data name="KeepHistory" xml:space="preserve"><value>لیست دانلودها بعد از بستن برنامه حفظ شود</value></data>
+  <data name="ResumeOnStart" xml:space="preserve"><value>دانلودهای نیمه‌کاره هنگام اجرای برنامه ادامه پیدا کنند</value></data>
+  <data name="SubtitleSite" xml:space="preserve"><value>سایت جستجوی زیرنویس</value></data>
+  <data name="SubtitleHint" xml:space="preserve"><value>{query} با نام فیلم/قسمت (مثلاً «Dark S01E03») جایگزین می‌شود. فقط صفحه در مرورگر باز می‌شود؛ انتخاب و دانلود زیرنویس با خودتان است.</value></data>
+  <data name="SubtitleUrlInvalid" xml:space="preserve"><value>باید با https:// شروع شود (سایت پیش‌فرض استفاده می‌شود)</value></data>
 </root>

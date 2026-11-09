@@ -117,6 +117,8 @@ public sealed class DownloadItemViewModel : ObservableObject
     public bool IsActive => StatusKey == "Active";
     public bool IsPausedLike => StatusKey is "Paused" or "Failed" or "Scheduled" or "Queued";
     public bool IsDone => StatusKey == "Done";
+
+    public bool CanSearchSubtitles => SubtitleLauncher.CanSearch(Job);
     public bool CanPause => Job.Status is DownloadStatus.Queued or DownloadStatus.Probing or DownloadStatus.Downloading;
     public bool CanResume => Job.Status is DownloadStatus.Paused or DownloadStatus.Failed or DownloadStatus.Canceled or DownloadStatus.Scheduled;
     public bool IsCompleted => Job.Status == DownloadStatus.Completed;

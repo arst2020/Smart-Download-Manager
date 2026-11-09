@@ -199,6 +199,10 @@
                                     <TextBlock Text="{Binding [PauseAll], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
                                 </StackPanel>
                             </Button>
+                            <Button Style="{StaticResource IconButton}" Width="40" Height="40" Command="{Binding ClearCompletedCommand}" Margin="0,0,10,0"
+                                    ToolTip="{Binding [ClearCompleted], Source={x:Static loc:Loc.Instance}}" AutomationProperties.Name="{Binding [ClearCompleted], Source={x:Static loc:Loc.Instance}}">
+                                <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconTrash}" Width="18" Height="18" />
+                            </Button>
                             <Button Style="{StaticResource IconButton}" Width="40" Height="40" Command="{Binding ScheduleCommand}" Margin="0,0,10,0"
                                     ToolTip="{Binding [Schedule], Source={x:Static loc:Loc.Instance}}" AutomationProperties.Name="{Binding [Schedule], Source={x:Static loc:Loc.Instance}}">
                                 <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconClock}" Width="18" Height="18" />
@@ -228,6 +232,10 @@
                                                   Command="{Binding PlacementTarget.Tag.OpenFileCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                         <MenuItem Header="{Binding [OpenFolder], Source={x:Static loc:Loc.Instance}}"
                                                   Command="{Binding PlacementTarget.Tag.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [Subtitles], Source={x:Static loc:Loc.Instance}}"
+                                                  ToolTip="{Binding [SubtitleSearchTip], Source={x:Static loc:Loc.Instance}}"
+                                                  Visibility="{Binding CanSearchSubtitles, Converter={StaticResource BoolToVis}}"
+                                                  Command="{Binding PlacementTarget.Tag.SubtitleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                         <MenuItem Header="{Binding [CopyLink], Source={x:Static loc:Loc.Instance}}"
                                                   Command="{Binding PlacementTarget.Tag.CopyLinkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                         <MenuItem Header="{Binding [Undo], Source={x:Static loc:Loc.Instance}}"
