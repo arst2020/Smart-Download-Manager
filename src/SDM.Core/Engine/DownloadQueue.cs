@@ -1,0 +1,181 @@
+using SDM.Core.Classification;
+using SDM.Core.Models;
+
+namespace SDM.Core.Engine;
+
+/// <summary>A download in the queue; raises <see cref="Changed"/> when its status or progress changes.</summary>
+public sealed class DownloadJob
+{
+    private CancellationTokenSource? _cts;
+
+    public Guid Id { get; } = Guid.NewGuid();
+    public DownloadRequest Request { get; }
+    public DownloadStatus Status { get; internal set; } = DownloadStatus.Queued;
+    public DownloadProgress Progress { get; internal set; }
+    public string? FileName { get; internal set; }
+    public string? FilePath { get; internal set; }
+    public ClassificationResult? Classification { get; internal set; }
+    public MoveRecord? Move { get; internal set; }
+    public string? Error { get; internal set; }
+    public DateTimeOffset Added { get; } = DateTimeOffset.Now;
+
+    /// <summary>Overrides automatic organizing for this job (e.g. the user picked a folder).</summary>
+    public string? ForcedFolder { get; init; }
+
+    public event Action<DownloadJob>? Changed;
+
+    public DownloadJob(DownloadRequest request) => Request = request;
+
+    internal CancellationToken Begin()
+    {
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+        return _cts.Token;
+    }
+
+    internal void RequestStop() => _cts?.Cancel();
+
+    internal void Raise() => Changed?.Invoke(this);
+}
+
+/// <summary>Runs at most <see cref="MaxConcurrent"/> jobs at once; pause = cancel with state saved.</summary>
+public sealed class DownloadQueue
+{
+    private readonly object _lock = new();
+    private readonly List<DownloadJob> _jobs = new();
+    private readonly HashSet<DownloadJob> _running = new();
+    private readonly HashSet<DownloadJob> _pausing = new();
+    private readonly Func<DownloadJob, IProgress<DownloadProgress>, CancellationToken, Task> _run;
+    private int _maxConcurrent;
+
+    /// <param name="run">Does the actual work for a job (download + organize).</param>
+    public DownloadQueue(Func<DownloadJob, IProgress<DownloadProgress>, CancellationToken, Task> run, int maxConcurrent = 3)
+    {
+        _run = run;
+        _maxConcurrent = Math.Max(1, maxConcurrent);
+    }
+
+    public int MaxConcurrent
+    {
+        get => _maxConcurrent;
+        set { _maxConcurrent = Math.Max(1, value); Pump(); }
+    }
+
+    public IReadOnlyList<DownloadJob> Jobs
+    {
+        get { lock (_lock) return _jobs.ToList(); }
+    }
+
+    public event Action<DownloadJob>? JobAdded;
+    public event Action<DownloadJob>? JobRemoved;
+
+    public DownloadJob Enqueue(DownloadJob job)
+    {
+        lock (_lock) _jobs.Add(job);
+        JobAdded?.Invoke(job);
+        Pump();
+        return job;
+    }
+
+    public void Pause(DownloadJob job)
+    {
+        lock (_lock)
+        {
+            if (_running.Contains(job)) { _pausing.Add(job); job.RequestStop(); return; }
+            if (job.Status != DownloadStatus.Queued) return;
+            job.Status = DownloadStatus.Paused;
+        }
+        job.Raise();
+    }
+
+    public void Resume(DownloadJob job)
+    {
+        lock (_lock)
+        {
+            if (job.Status is not (DownloadStatus.Paused or DownloadStatus.Failed or DownloadStatus.Canceled)) return;
+            job.Status = DownloadStatus.Queued;
+            job.Error = null;
+        }
+        job.Raise();
+        Pump();
+    }
+
+    /// <summary>Stops and removes a job. Partial files stay on disk, so the same URL can resume later.</summary>
+    public void Remove(DownloadJob job)
+    {
+        lock (_lock)
+        {
+            if (_running.Contains(job)) job.RequestStop();
+            _jobs.Remove(job);
+        }
+        JobRemoved?.Invoke(job);
+    }
+
+    public Task WhenIdleAsync(CancellationToken ct = default) => Task.Run(async () =>
+    {
+        while (true)
+        {
+            lock (_lock)
+                if (_running.Count == 0 && !_jobs.Any(j => j.Status == DownloadStatus.Queued)) return;
+            await Task.Delay(100, ct).ConfigureAwait(false);
+        }
+    }, ct);
+
+    private void Pump()
+    {
+        List<DownloadJob> toStart = new();
+        lock (_lock)
+        {
+            foreach (var job in _jobs)
+            {
+                if (_running.Count + toStart.Count >= _maxConcurrent) break;
+                if (job.Status == DownloadStatus.Queued && !_running.Contains(job)) toStart.Add(job);
+            }
+            foreach (var job in toStart)
+            {
+                _running.Add(job);
+                job.Status = DownloadStatus.Probing;
+            }
+        }
+        foreach (var job in toStart) _ = RunJobAsync(job);
+    }
+
+    private async Task RunJobAsync(DownloadJob job)
+    {
+        job.Raise();
+        CancellationToken ct = job.Begin();
+        try
+        {
+            await Task.Run(() => _run(job, new SyncProgress(job), ct), ct).ConfigureAwait(false);
+            job.Status = DownloadStatus.Completed;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            bool paused;
+            lock (_lock) paused = _pausing.Remove(job);
+            job.Status = paused ? DownloadStatus.Paused : DownloadStatus.Canceled;
+        }
+        catch (Exception ex)
+        {
+            job.Status = DownloadStatus.Failed;
+            job.Error = ex.Message;
+        }
+        finally
+        {
+            lock (_lock) { _running.Remove(job); _pausing.Remove(job); }
+        }
+        job.Raise();
+        Pump();
+    }
+
+    /// <summary>Reports progress on the calling thread; UI layers marshal to their own dispatcher.</summary>
+    private sealed class SyncProgress(DownloadJob job) : IProgress<DownloadProgress>
+    {
+        public void Report(DownloadProgress value)
+        {
+            job.Progress = value;
+            if (job.Status == DownloadStatus.Probing) job.Status = DownloadStatus.Downloading;
+            job.Raise();
+        }
+    }
+}

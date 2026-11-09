@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppTitle" xml:space="preserve"><value>Smart Download Manager</value></data>
+  <data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="Undo" xml:space="preserve"><value>Undo move</value></data>
+  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="ColName" xml:space="preserve"><value>Name</value></data>
+  <data name="ColSize" xml:space="preserve"><value>Size</value></data>
+  <data name="ColProgress" xml:space="preserve"><value>Progress</value></data>
+  <data name="ColSpeed" xml:space="preserve"><value>Speed</value></data>
+  <data name="ColEta" xml:space="preserve"><value>Remaining</value></data>
+  <data name="ColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="ColCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="ColFolder" xml:space="preserve"><value>Folder</value></data>
+  <data name="FilterAll" xml:space="preserve"><value>All</value></data>
+  <data name="FilterActive" xml:space="preserve"><value>Active</value></data>
+  <data name="FilterCompleted" xml:space="preserve"><value>Completed</value></data>
+  <data name="Url" xml:space="preserve"><value>Address (URL)</value></data>
+  <data name="FileName" xml:space="preserve"><value>File name</value></data>
+  <data name="Folder" xml:space="preserve"><value>Save to</value></data>
+  <data name="Detected" xml:space="preserve"><value>Detected</value></data>
+  <data name="Analyze" xml:space="preserve"><value>Check</value></data>
+  <data name="Analyzing" xml:space="preserve"><value>Checking…</value></data>
+  <data name="Start" xml:space="preserve"><value>Start download</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Browse" xml:space="preserve"><value>Browse…</value></data>
+  <data name="AutoFolder" xml:space="preserve"><value>Automatic (smart)</value></data>
+  <data name="InvalidUrl" xml:space="preserve"><value>Please enter a valid http(s) address.</value></data>
+  <data name="DownloadDir" xml:space="preserve"><value>Download folder</value></data>
+  <data name="SeriesDir" xml:space="preserve"><value>Series folder (empty = Download folder\Series)</value></data>
+  <data name="MaxConcurrent" xml:space="preserve"><value>Simultaneous downloads</value></data>
+  <data name="Segments" xml:space="preserve"><value>Connections per file</value></data>
+  <data name="SpeedLimit" xml:space="preserve"><value>Speed limit (KB/s, 0 = none)</value></data>
+  <data name="Language" xml:space="preserve"><value>Language</value></data>
+  <data name="AutoOrganize" xml:space="preserve"><value>Move finished files to their folder automatically</value></data>
+  <data name="Proxy" xml:space="preserve"><value>Proxy (http://… or socks5://…)</value></data>
+  <data name="Rules" xml:space="preserve"><value>My topics and folders</value></data>
+  <data name="RulesHint" xml:space="preserve"><value>Files whose name contains a keyword go to that folder. Episodes get a Season subfolder.</value></data>
+  <data name="RuleEnabled" xml:space="preserve"><value>On</value></data>
+  <data name="RuleName" xml:space="preserve"><value>Topic</value></data>
+  <data name="RuleKeywords" xml:space="preserve"><value>Keywords (comma separated)</value></data>
+  <data name="RuleDomains" xml:space="preserve"><value>Sites</value></data>
+  <data name="RuleTarget" xml:space="preserve"><value>Folder</value></data>
+  <data name="RuleSeason" xml:space="preserve"><value>Season folders</value></data>
+  <data name="AddRule" xml:space="preserve"><value>Add topic</value></data>
+  <data name="DeleteRule" xml:space="preserve"><value>Delete topic</value></data>
+  <data name="Status_Queued" xml:space="preserve"><value>Queued</value></data>
+  <data name="Status_Probing" xml:space="preserve"><value>Connecting</value></data>
+  <data name="Status_Downloading" xml:space="preserve"><value>Downloading</value></data>
+  <data name="Status_Organizing" xml:space="preserve"><value>Organizing</value></data>
+  <data name="Status_Paused" xml:space="preserve"><value>Paused</value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="Status_Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="Status_Canceled" xml:space="preserve"><value>Canceled</value></data>
+  <data name="TotalSpeed" xml:space="preserve"><value>Total speed</value></data>
+  <data name="Connections" xml:space="preserve"><value>Connections</value></data>
+  <data name="Suggestion" xml:space="preserve"><value>Suggestion</value></data>
+  <data name="SuggestedFolder" xml:space="preserve"><value>I suggest saving it here:</value></data>
+  <data name="OtherPlaces" xml:space="preserve"><value>Other places</value></data>
+  <data name="RenameStandard" xml:space="preserve"><value>Rename to the standard name (Emby / Jellyfin)</value></data>
+  <data name="KeepName" xml:space="preserve"><value>Current name</value></data>
+  <data name="RememberRule" xml:space="preserve"><value>Always save this title here</value></data>
+  <data name="DetectedBy" xml:space="preserve"><value>Detected by</value></data>
+  <data name="Library" xml:space="preserve"><value>Library</value></data>
+  <data name="Rule" xml:space="preserve"><value>Rule</value></data>
+  <data name="Kind_Series" xml:space="preserve"><value>Series</value></data>
+  <data name="Kind_Movie" xml:space="preserve"><value>Movie</value></data>
+  <data name="Kind_Music" xml:space="preserve"><value>Music</value></data>
+  <data name="Kind_Software" xml:space="preserve"><value>Software</value></data>
+  <data name="Kind_Document" xml:space="preserve"><value>Document</value></data>
+  <data name="Kind_Archive" xml:space="preserve"><value>Archive</value></data>
+  <data name="Kind_Image" xml:space="preserve"><value>Image</value></data>
+  <data name="Kind_Other" xml:space="preserve"><value>Other</value></data>
+  <data name="Kind_Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="TabGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="TabSmart" xml:space="preserve"><value>AI and TMDB</value></data>
+  <data name="TabMediaServer" xml:space="preserve"><value>Media server</value></data>
+  <data name="TabRules" xml:space="preserve"><value>My topics</value></data>
+  <data name="MoviesDir" xml:space="preserve"><value>Movies folder (empty = Download folder\Movies)</value></data>
+  <data name="DefaultConnections" xml:space="preserve"><value>Default connections per download</value></data>
+  <data name="AiProvider" xml:space="preserve"><value>AI provider</value></data>
+  <data name="AiNone" xml:space="preserve"><value>Off</value></data>
+  <data name="ApiKey" xml:space="preserve"><value>API key</value></data>
+  <data name="Model" xml:space="preserve"><value>Model (empty = default)</value></data>
+  <data name="BaseUrl" xml:space="preserve"><value>Server address (empty = default)</value></data>
+  <data name="AiAlways" xml:space="preserve"><value>Ask the AI for every download (not only when unsure)</value></data>
+  <data name="AiHint" xml:space="preserve"><value>Only the file name, address and page title are sent — never the file itself.</value></data>
+  <data name="TmdbKey" xml:space="preserve"><value>TMDB API key or Read Access Token</value></data>
+  <data name="TmdbLanguage" xml:space="preserve"><value>TMDB language (e.g. en-US, fa-IR, de-DE)</value></data>
+  <data name="TmdbHint" xml:space="preserve"><value>Free key: themoviedb.org → Settings → API. Used for the official title, year and episode name.</value></data>
+  <data name="ServerType" xml:space="preserve"><value>Server</value></data>
+  <data name="ServerUrl" xml:space="preserve"><value>Address</value></data>
+  <data name="ServerKey" xml:space="preserve"><value>API key (Dashboard → API keys)</value></data>
+  <data name="ServerRefresh" xml:space="preserve"><value>Scan the library after a download</value></data>
+  <data name="Test" xml:space="preserve"><value>Test</value></data>
+  <data name="Testing" xml:space="preserve"><value>Testing…</value></data>
+  <data name="TestOk" xml:space="preserve"><value>Works</value></data>
+</root>

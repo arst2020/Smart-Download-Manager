@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <Authors>Smart Download Manager contributors</Authors>
+    <Product>Smart Download Manager</Product>
+    <Copyright>MIT License</Copyright>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

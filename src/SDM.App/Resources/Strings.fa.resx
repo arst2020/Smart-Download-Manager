@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppTitle" xml:space="preserve"><value>دانلود منیجر هوشمند</value></data>
+  <data name="Add" xml:space="preserve"><value>افزودن</value></data>
+  <data name="Pause" xml:space="preserve"><value>توقف</value></data>
+  <data name="Resume" xml:space="preserve"><value>ادامه</value></data>
+  <data name="Remove" xml:space="preserve"><value>حذف</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>باز کردن پوشه</value></data>
+  <data name="Undo" xml:space="preserve"><value>بازگرداندن</value></data>
+  <data name="Settings" xml:space="preserve"><value>تنظیمات</value></data>
+  <data name="ColName" xml:space="preserve"><value>نام</value></data>
+  <data name="ColSize" xml:space="preserve"><value>حجم</value></data>
+  <data name="ColProgress" xml:space="preserve"><value>پیشرفت</value></data>
+  <data name="ColSpeed" xml:space="preserve"><value>سرعت</value></data>
+  <data name="ColEta" xml:space="preserve"><value>زمان باقی‌مانده</value></data>
+  <data name="ColStatus" xml:space="preserve"><value>وضعیت</value></data>
+  <data name="ColCategory" xml:space="preserve"><value>دسته</value></data>
+  <data name="ColFolder" xml:space="preserve"><value>پوشه</value></data>
+  <data name="FilterAll" xml:space="preserve"><value>همه</value></data>
+  <data name="FilterActive" xml:space="preserve"><value>در حال دانلود</value></data>
+  <data name="FilterCompleted" xml:space="preserve"><value>تمام‌شده</value></data>
+  <data name="Url" xml:space="preserve"><value>آدرس (URL)</value></data>
+  <data name="FileName" xml:space="preserve"><value>نام فایل</value></data>
+  <data name="Folder" xml:space="preserve"><value>محل ذخیره</value></data>
+  <data name="Detected" xml:space="preserve"><value>تشخیص</value></data>
+  <data name="Analyze" xml:space="preserve"><value>بررسی</value></data>
+  <data name="Analyzing" xml:space="preserve"><value>در حال بررسی…</value></data>
+  <data name="Start" xml:space="preserve"><value>شروع دانلود</value></data>
+  <data name="Cancel" xml:space="preserve"><value>انصراف</value></data>
+  <data name="Save" xml:space="preserve"><value>ذخیره</value></data>
+  <data name="Browse" xml:space="preserve"><value>انتخاب…</value></data>
+  <data name="AutoFolder" xml:space="preserve"><value>خودکار (هوشمند)</value></data>
+  <data name="InvalidUrl" xml:space="preserve"><value>لطفاً یک آدرس http(s) معتبر وارد کنید.</value></data>
+  <data name="DownloadDir" xml:space="preserve"><value>پوشهٔ دانلود</value></data>
+  <data name="SeriesDir" xml:space="preserve"><value>پوشهٔ سریال‌ها (خالی = پوشهٔ دانلود\Series)</value></data>
+  <data name="MaxConcurrent" xml:space="preserve"><value>دانلود همزمان</value></data>
+  <data name="Segments" xml:space="preserve"><value>تعداد کانکشن برای هر فایل</value></data>
+  <data name="SpeedLimit" xml:space="preserve"><value>محدودیت سرعت (KB/s، صفر = بدون محدودیت)</value></data>
+  <data name="Language" xml:space="preserve"><value>زبان</value></data>
+  <data name="AutoOrganize" xml:space="preserve"><value>انتقال خودکار فایل‌های تمام‌شده به پوشهٔ مربوط</value></data>
+  <data name="Proxy" xml:space="preserve"><value>پروکسی (http://… یا socks5://…)</value></data>
+  <data name="Rules" xml:space="preserve"><value>موضوعات و پوشه‌های من</value></data>
+  <data name="RulesHint" xml:space="preserve"><value>فایل‌هایی که نامشان شامل کلیدواژه باشد به آن پوشه منتقل می‌شوند. قسمت‌های سریال در زیرپوشهٔ فصل قرار می‌گیرند.</value></data>
+  <data name="RuleEnabled" xml:space="preserve"><value>فعال</value></data>
+  <data name="RuleName" xml:space="preserve"><value>موضوع</value></data>
+  <data name="RuleKeywords" xml:space="preserve"><value>کلیدواژه‌ها (با ویرگول)</value></data>
+  <data name="RuleDomains" xml:space="preserve"><value>سایت‌ها</value></data>
+  <data name="RuleTarget" xml:space="preserve"><value>پوشه</value></data>
+  <data name="RuleSeason" xml:space="preserve"><value>پوشهٔ فصل</value></data>
+  <data name="AddRule" xml:space="preserve"><value>افزودن موضوع</value></data>
+  <data name="DeleteRule" xml:space="preserve"><value>حذف موضوع</value></data>
+  <data name="Status_Queued" xml:space="preserve"><value>در صف</value></data>
+  <data name="Status_Probing" xml:space="preserve"><value>در حال اتصال</value></data>
+  <data name="Status_Downloading" xml:space="preserve"><value>در حال دانلود</value></data>
+  <data name="Status_Organizing" xml:space="preserve"><value>در حال مرتب‌سازی</value></data>
+  <data name="Status_Paused" xml:space="preserve"><value>متوقف</value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>تمام شد</value></data>
+  <data name="Status_Failed" xml:space="preserve"><value>خطا</value></data>
+  <data name="Status_Canceled" xml:space="preserve"><value>لغو شد</value></data>
+  <data name="TotalSpeed" xml:space="preserve"><value>سرعت کل</value></data>
+  <data name="Connections" xml:space="preserve"><value>تعداد کانکشن</value></data>
+  <data name="Suggestion" xml:space="preserve"><value>پیشنهاد</value></data>
+  <data name="SuggestedFolder" xml:space="preserve"><value>پیشنهاد می‌کنم اینجا ذخیره شود:</value></data>
+  <data name="OtherPlaces" xml:space="preserve"><value>مکان‌های دیگر</value></data>
+  <data name="RenameStandard" xml:space="preserve"><value>تغییر نام به نام استاندارد (Emby / Jellyfin)</value></data>
+  <data name="KeepName" xml:space="preserve"><value>نام فعلی</value></data>
+  <data name="RememberRule" xml:space="preserve"><value>همیشه این عنوان را اینجا ذخیره کن</value></data>
+  <data name="DetectedBy" xml:space="preserve"><value>تشخیص توسط</value></data>
+  <data name="Library" xml:space="preserve"><value>کتابخانه</value></data>
+  <data name="Rule" xml:space="preserve"><value>قانون</value></data>
+  <data name="Kind_Series" xml:space="preserve"><value>سریال</value></data>
+  <data name="Kind_Movie" xml:space="preserve"><value>فیلم</value></data>
+  <data name="Kind_Music" xml:space="preserve"><value>موسیقی</value></data>
+  <data name="Kind_Software" xml:space="preserve"><value>نرم‌افزار</value></data>
+  <data name="Kind_Document" xml:space="preserve"><value>سند</value></data>
+  <data name="Kind_Archive" xml:space="preserve"><value>فایل فشرده</value></data>
+  <data name="Kind_Image" xml:space="preserve"><value>تصویر</value></data>
+  <data name="Kind_Other" xml:space="preserve"><value>سایر</value></data>
+  <data name="Kind_Unknown" xml:space="preserve"><value>نامشخص</value></data>
+  <data name="TabGeneral" xml:space="preserve"><value>عمومی</value></data>
+  <data name="TabSmart" xml:space="preserve"><value>هوش مصنوعی و TMDB</value></data>
+  <data name="TabMediaServer" xml:space="preserve"><value>سرور رسانه</value></data>
+  <data name="TabRules" xml:space="preserve"><value>موضوعات من</value></data>
+  <data name="MoviesDir" xml:space="preserve"><value>پوشهٔ فیلم‌ها (خالی = پوشهٔ دانلود\Movies)</value></data>
+  <data name="DefaultConnections" xml:space="preserve"><value>تعداد کانکشن پیش‌فرض برای هر دانلود</value></data>
+  <data name="AiProvider" xml:space="preserve"><value>ارائه‌دهندهٔ هوش مصنوعی</value></data>
+  <data name="AiNone" xml:space="preserve"><value>خاموش</value></data>
+  <data name="ApiKey" xml:space="preserve"><value>کلید API</value></data>
+  <data name="Model" xml:space="preserve"><value>مدل (خالی = پیش‌فرض)</value></data>
+  <data name="BaseUrl" xml:space="preserve"><value>آدرس سرور (خالی = پیش‌فرض)</value></data>
+  <data name="AiAlways" xml:space="preserve"><value>برای همهٔ دانلودها از هوش مصنوعی بپرس (نه فقط وقتی مطمئن نیست)</value></data>
+  <data name="AiHint" xml:space="preserve"><value>فقط نام فایل، آدرس و عنوان صفحه ارسال می‌شود؛ هرگز خود فایل.</value></data>
+  <data name="TmdbKey" xml:space="preserve"><value>کلید API یا Read Access Token سایت TMDB</value></data>
+  <data name="TmdbLanguage" xml:space="preserve"><value>زبان TMDB (مثلاً en-US، fa-IR، de-DE)</value></data>
+  <data name="TmdbHint" xml:space="preserve"><value>کلید رایگان: themoviedb.org ← Settings ← API. برای نام رسمی، سال و نام قسمت استفاده می‌شود.</value></data>
+  <data name="ServerType" xml:space="preserve"><value>سرور</value></data>
+  <data name="ServerUrl" xml:space="preserve"><value>آدرس</value></data>
+  <data name="ServerKey" xml:space="preserve"><value>کلید API (داشبورد ← API keys)</value></data>
+  <data name="ServerRefresh" xml:space="preserve"><value>اسکن کتابخانه بعد از هر دانلود</value></data>
+  <data name="Test" xml:space="preserve"><value>تست</value></data>
+  <data name="Testing" xml:space="preserve"><value>در حال تست…</value></data>
+  <data name="TestOk" xml:space="preserve"><value>کار می‌کند</value></data>
+</root>

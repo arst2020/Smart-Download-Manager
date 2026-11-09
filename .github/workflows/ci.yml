@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet test tests/SDM.Core.Tests/SDM.Core.Tests.csproj -c Release
+
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet build SmartDownloadManager.sln -c Release
+      - run: dotnet publish src/SDM.App/SDM.App.csproj -c Release -r win-x64 --self-contained false -o publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SmartDownloadManager-win-x64
+          path: publish
