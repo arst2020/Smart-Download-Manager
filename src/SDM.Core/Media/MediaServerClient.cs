@@ -67,6 +67,20 @@ public sealed class MediaServerClient(HttpClient http, MediaServerSettings setti
         return "mixed";
     }
 
+    /// <summary>
+    /// Accepts what users paste from the browser: "http://localhost:8096/web/index.html#!/home" → "http://localhost:8096".
+    /// </summary>
+    public static string NormalizeUrl(string url)
+    {
+        string u = url.Trim();
+        int hash = u.IndexOf('#');
+        if (hash >= 0) u = u[..hash];
+        u = u.TrimEnd('/');
+        int web = u.IndexOf("/web", StringComparison.OrdinalIgnoreCase);
+        if (web > 0 && (web + 4 == u.Length || u[web + 4] == '/')) u = u[..web];
+        return u.TrimEnd('/');
+    }
+
     private static string? NonEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
     public async Task RefreshAsync(CancellationToken ct)
@@ -94,7 +108,7 @@ public sealed class MediaServerClient(HttpClient http, MediaServerSettings setti
 
     private HttpRequestMessage Build(HttpMethod method, string path, string? prefix = null)
     {
-        var request = new HttpRequestMessage(method, settings.Url.TrimEnd('/') + (prefix ?? _prefix ?? "") + path);
+        var request = new HttpRequestMessage(method, NormalizeUrl(settings.Url) + (prefix ?? _prefix ?? "") + path);
         request.Headers.Add("X-Emby-Token", settings.ApiKey.Trim()); // accepted by Emby and Jellyfin
         return request;
     }

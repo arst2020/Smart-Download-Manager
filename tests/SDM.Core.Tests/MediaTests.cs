@@ -208,6 +208,17 @@ public class MediaServerTests
         Assert.Equal("key", fake.Requests[0].Request.Headers.GetValues("X-Emby-Token").Single());
     }
 
+    [Theory]
+    [InlineData("http://localhost:8096/web/", "http://localhost:8096")]
+    [InlineData("http://localhost:8096/web/index.html#!/home", "http://localhost:8096")]
+    [InlineData("http://nas:8096/emby/web", "http://nas:8096/emby")]
+    [InlineData(" http://localhost:8096/ ", "http://localhost:8096")]
+    [InlineData("https://media.example.com/webdav-proxy", "https://media.example.com/webdav-proxy")]
+    public void Normalizes_pasted_server_address(string input, string expected)
+    {
+        Assert.Equal(expected, MediaServerClient.NormalizeUrl(input));
+    }
+
     [Fact]
     public async Task Emby_48_content_type_in_library_options()
     {
