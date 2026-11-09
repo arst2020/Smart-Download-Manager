@@ -61,7 +61,11 @@ public sealed class RuleRow : ObservableObject
 
 public sealed record LanguageOption(string Code, string Name);
 
-public sealed record ChoiceOption<T>(T Value, string Name);
+public sealed record ChoiceOption<T>(T Value, string Name)
+{
+    public string Note { get; init; } = "";
+    public string Badge { get; init; } = "";
+}
 
 public sealed class SettingsViewModel : ObservableObject
 {
@@ -88,6 +92,11 @@ public sealed class SettingsViewModel : ObservableObject
         AutoOrganize = settings.AutoOrganize;
         RenameToStandard = settings.RenameToStandard;
         ProxyUrl = settings.ProxyUrl;
+        Theme = settings.Theme;
+        ShowCompletionDialog = settings.ShowCompletionDialog;
+        ScheduleSummary = settings.Schedule.Enabled
+            ? $"{settings.Schedule.Start} – {settings.Schedule.Stop}"
+            : Loc.Get("ScheduleOff");
 
         _aiProvider = settings.Ai.Provider;
         AiApiKey = settings.Ai.ApiKey;
@@ -120,7 +129,19 @@ public sealed class SettingsViewModel : ObservableObject
         TestAiCommand = new RelayCommand(async () => await TestAiAsync(), () => AiProvider != AiProvider.None);
         TestTmdbCommand = new RelayCommand(async () => await TestTmdbAsync(), () => !string.IsNullOrWhiteSpace(TmdbApiKey));
         TestServerCommand = new RelayCommand(async () => await TestServerAsync(), () => ServerType != MediaServerType.None);
+        OpenSchedulerCommand = new RelayCommand(() => OpenScheduler?.Invoke());
+        PickProviderCommand = new RelayCommand(p => { if (p is ChoiceOption<AiProvider> o) AiProvider = o.Value; });
     }
+
+    /// <summary>Set by the main window: opens the scheduler window.</summary>
+    public Action? OpenScheduler { get; set; }
+
+    public RelayCommand OpenSchedulerCommand { get; }
+    public RelayCommand PickProviderCommand { get; }
+
+    public AppTheme Theme { get; set; }
+    public bool ShowCompletionDialog { get; set; }
+    public string ScheduleSummary { get; }
 
     public IReadOnlyList<LanguageOption> Languages { get; } =
         Loc.Languages.Select(l => new LanguageOption(l.Code, l.Name)).ToList();
@@ -129,12 +150,12 @@ public sealed class SettingsViewModel : ObservableObject
 
     public IReadOnlyList<ChoiceOption<AiProvider>> AiProviders { get; } = new[]
     {
-        new ChoiceOption<AiProvider>(AiProvider.None, Loc.Get("AiNone")),
-        new ChoiceOption<AiProvider>(AiProvider.Claude, "Claude (Anthropic)"),
-        new ChoiceOption<AiProvider>(AiProvider.OpenAI, "OpenAI (ChatGPT)"),
-        new ChoiceOption<AiProvider>(AiProvider.Gemini, "Google Gemini"),
-        new ChoiceOption<AiProvider>(AiProvider.Ollama, "Ollama (local, free)"),
-        new ChoiceOption<AiProvider>(AiProvider.OpenAICompatible, "OpenAI-compatible (LM Studio, OpenRouter…)"),
+        new ChoiceOption<AiProvider>(AiProvider.Claude, "Claude") { Note = "Anthropic", Badge = "C" },
+        new ChoiceOption<AiProvider>(AiProvider.OpenAI, "OpenAI") { Note = "ChatGPT", Badge = "O" },
+        new ChoiceOption<AiProvider>(AiProvider.Gemini, "Gemini") { Note = "Google", Badge = "G" },
+        new ChoiceOption<AiProvider>(AiProvider.Ollama, "Ollama") { Note = Loc.Get("LocalFree"), Badge = "L" },
+        new ChoiceOption<AiProvider>(AiProvider.OpenAICompatible, Loc.Get("OpenAICompatible")) { Note = "LM Studio · OpenRouter", Badge = "{}" },
+        new ChoiceOption<AiProvider>(AiProvider.None, Loc.Get("AiNone")) { Note = Loc.Get("LocalOnly"), Badge = "—" },
     };
 
     public IReadOnlyList<ChoiceOption<MediaServerType>> ServerTypes { get; } = new[]
@@ -213,6 +234,9 @@ public sealed class SettingsViewModel : ObservableObject
         AutoOrganize = AutoOrganize,
         RenameToStandard = RenameToStandard,
         ProxyUrl = ProxyUrl.Trim(),
+        Theme = Theme,
+        ShowCompletionDialog = ShowCompletionDialog,
+        Schedule = _original.Schedule,
         UserAgent = _original.UserAgent,
         CategoryFolders = new(_original.CategoryFolders),
         Ai = new AiSettings { Provider = AiProvider, ApiKey = AiApiKey.Trim(), Model = AiModel.Trim(), BaseUrl = AiBaseUrl.Trim() },

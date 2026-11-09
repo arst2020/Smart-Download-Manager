@@ -4,23 +4,16 @@
              xmlns:views="clr-namespace:SDM.App.Views"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
-        <views:InverseBoolConverter x:Key="InverseBool" />
-        <!-- Vazirmatn is used when installed; Segoe UI covers Latin and has Persian glyphs as fallback. -->
-        <FontFamily x:Key="AppFont">Vazirmatn, Segoe UI</FontFamily>
-
-        <Style TargetType="Window" x:Key="AppWindow">
-            <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
-            <Setter Property="FontSize" Value="13" />
-        </Style>
-
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="12,5" />
-            <Setter Property="Margin" Value="4,0" />
-            <Setter Property="MinWidth" Value="72" />
-        </Style>
-
-        <Style TargetType="TextBox">
-            <Setter Property="Padding" Value="4,3" />
-        </Style>
+        <ResourceDictionary>
+            <!-- The palette (Themes/Dark.xaml or Themes/Light.xaml) is inserted first by ThemeManager at startup. -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <views:InverseBoolConverter x:Key="InverseBool" />
+            <views:EqualsConverter x:Key="Equals" />
+            <views:FractionToHeightConverter x:Key="FractionToHeight" />
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+            <views:NullToCollapsedConverter x:Key="NullToCollapsed" />
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

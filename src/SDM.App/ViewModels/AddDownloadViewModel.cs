@@ -39,10 +39,44 @@ public sealed class AddDownloadViewModel : ObservableObject
         _connections = ConnectionGate.Choices.Contains(service.Settings.MaxSegments) ? service.Settings.MaxSegments : 32;
         AnalyzeCommand = new RelayCommand(async () => await AnalyzeAsync(), () => !IsBusy && IsValidUrl);
         BrowseCommand = new RelayCommand(Browse);
+        PickOptionCommand = new RelayCommand(p => { if (p is FolderOption o) SelectedOption = o; });
     }
 
     public RelayCommand AnalyzeCommand { get; }
     public RelayCommand BrowseCommand { get; }
+    public RelayCommand PickOptionCommand { get; }
+
+    /// <summary>The user clicked "Schedule…" instead of "Start".</summary>
+    public bool Scheduled { get; set; }
+
+    public string? PosterUrl => _suggestion?.Media.PosterUrl;
+
+    public bool HasPoster => PosterUrl is not null;
+
+    public string KindLabel => _suggestion is null ? "" : Loc.Get("Kind_" + _suggestion.Media.Kind);
+
+    public string SizeText { get; private set; } = "";
+
+    public string ConfidenceText => _suggestion is null
+        ? ""
+        : string.Format(Loc.Get("DetectedLine"), _suggestion.Media.Source, (int)Math.Round(_suggestion.Media.Confidence * 100));
+
+    /// <summary>"Emby library · TV shows", a rule name, or the folder kind.</summary>
+    public string DestinationLabel => _suggestion switch
+    {
+        null => "",
+        { Library: { } lib } => $"{string.Format(Loc.Get("LibraryOf"), lib.Server)} · {lib.Name}",
+        { RuleName: { } rule } => $"{Loc.Get("Rule")}: {rule}",
+        _ => Loc.Get("Kind_" + _suggestion.Media.Kind)
+    };
+
+    public string DestinationBadge => _suggestion?.Library?.Server[..1] ?? (_suggestion?.RuleName is not null ? "★" : "⌂");
+
+    public bool IsLibrary => _suggestion?.Library is not null;
+
+    public IReadOnlyList<FolderOption> Alternatives => _suggestion?.Alternatives ?? Array.Empty<FolderOption>();
+
+    public string RememberText => _suggestion?.Media.Title is { } t ? string.Format(Loc.Get("RememberTitle"), t) : "";
 
     public IReadOnlyList<int> ConnectionChoices => ConnectionGate.Choices;
 
@@ -126,6 +160,7 @@ public sealed class AddDownloadViewModel : ObservableObject
             _analyzed = true;
 
             string size = probe.Length is long l ? FileNameHelper.FormatSize(l) : "?";
+            SizeText = size;
             Details = $"{Loc.Get("Kind_" + s.Media.Kind)} · {size}";
             Source = $"{Loc.Get("DetectedBy")}: {s.Media.Source}"
                      + (s.Library is { } lib ? $" · {Loc.Get("Library")}: {lib.Server} – {lib.Name}" : "")
@@ -159,6 +194,7 @@ public sealed class AddDownloadViewModel : ObservableObject
             Folder = _analyzed ? Folder.Trim() : null,
             FileName = name,
             Connections = Connections,
+            Scheduled = Scheduled,
         };
     }
 

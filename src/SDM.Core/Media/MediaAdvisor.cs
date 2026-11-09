@@ -174,6 +174,10 @@ public sealed class MediaAdvisor
         return _libraries;
     }
 
+    /// <summary>The (cached) media server library that contains <paramref name="path"/>, if any.</summary>
+    public MediaLibrary? CachedLibraryFor(string path) =>
+        _libraries.FirstOrDefault(l => l.Locations.Any(loc => IsUnder(path, loc)));
+
     /// <summary>After a file landed in a library folder, ask the media server to scan.</summary>
     public async Task NotifyFileSavedAsync(string filePath, CancellationToken ct = default)
     {

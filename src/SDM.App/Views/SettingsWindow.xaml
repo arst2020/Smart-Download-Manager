@@ -3,198 +3,268 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="clr-namespace:SDM.App.Localization"
         Style="{StaticResource AppWindow}"
+        Background="{DynamicResource SurfaceBrush}"
         Title="{Binding [Settings], Source={x:Static loc:Loc.Instance}}"
         FlowDirection="{Binding FlowDirection, Source={x:Static loc:Loc.Instance}}"
-        Width="860" Height="660" MinWidth="680" MinHeight="520"
+        Width="980" Height="700" MinWidth="820" MinHeight="560" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
-        <Style TargetType="TextBlock" x:Key="Label">
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Margin" Value="0,5,12,5" />
+        <!-- Provider cards: a ListBox whose selection is the provider. -->
+        <Style x:Key="ProviderItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,10,10" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Root" CornerRadius="12" Padding="12" MinHeight="58" BorderThickness="1"
+                                Background="{DynamicResource InputBrush}" BorderBrush="{DynamicResource LineBrush}">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource LineStrongBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
-        <Style TargetType="TextBlock" x:Key="Hint">
-            <Setter Property="Foreground" Value="#666" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Margin" Value="0,2,0,8" />
-        </Style>
-        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-            <Setter Property="Margin" Value="0,4" />
+        <Style x:Key="Section" TargetType="StackPanel">
+            <Setter Property="Margin" Value="26,22" />
         </Style>
     </Window.Resources>
 
-    <DockPanel Margin="12">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="{Binding [Save], Source={x:Static loc:Loc.Instance}}" IsDefault="True" Click="OnSave" FontWeight="SemiBold" />
-            <Button Content="{Binding [Cancel], Source={x:Static loc:Loc.Instance}}" IsCancel="True" />
-        </StackPanel>
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="26,14">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource Ghost}" Content="{Binding [Cancel], Source={x:Static loc:Loc.Instance}}" IsCancel="True" Margin="0,0,10,0" />
+                <Button Style="{StaticResource Primary}" Content="{Binding [Save], Source={x:Static loc:Loc.Instance}}" IsDefault="True" Click="OnSave" />
+            </StackPanel>
+        </Border>
 
-        <TabControl>
+        <TabControl Style="{StaticResource SideTabs}" Tag="{Binding [Settings], Source={x:Static loc:Loc.Instance}}">
             <!-- ============ General ============ -->
-            <TabItem Header="{Binding [TabGeneral], Source={x:Static loc:Loc.Instance}}">
+            <TabItem Style="{StaticResource SideTab}" Header="{Binding [TabGeneral], Source={x:Static loc:Loc.Instance}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <Grid Margin="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                    <StackPanel Style="{StaticResource Section}">
+                        <TextBlock Text="{Binding [TabGeneral], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Heading}" Margin="0,0,0,18" />
 
-                        <TextBlock Style="{StaticResource Label}" Text="{Binding [DownloadDir], Source={x:Static loc:Loc.Instance}}" />
-                        <TextBox Grid.Column="1" Text="{Binding DownloadDirectory, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
-                        <Button Grid.Column="2" Content="{Binding [Browse], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseDownloadCommand}" Margin="8,4,0,4" />
+                        <TextBlock Text="{Binding [Theme], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource SegmentHost}">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource Segment}" GroupName="theme" Content="{Binding [ThemeSystem], Source={x:Static loc:Loc.Instance}}"
+                                             IsChecked="{Binding Theme, Converter={StaticResource Equals}, ConverterParameter=System}" />
+                                <RadioButton Style="{StaticResource Segment}" GroupName="theme" Content="{Binding [ThemeDark], Source={x:Static loc:Loc.Instance}}"
+                                             IsChecked="{Binding Theme, Converter={StaticResource Equals}, ConverterParameter=Dark}" />
+                                <RadioButton Style="{StaticResource Segment}" GroupName="theme" Content="{Binding [ThemeLight], Source={x:Static loc:Loc.Instance}}"
+                                             IsChecked="{Binding Theme, Converter={StaticResource Equals}, ConverterParameter=Light}" />
+                            </StackPanel>
+                        </Border>
 
-                        <TextBlock Grid.Row="1" Style="{StaticResource Label}" Text="{Binding [SeriesDir], Source={x:Static loc:Loc.Instance}}" />
-                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SeriesDirectory, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
-                        <Button Grid.Row="1" Grid.Column="2" Content="{Binding [Browse], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseSeriesCommand}" Margin="8,4,0,4" />
-
-                        <TextBlock Grid.Row="2" Style="{StaticResource Label}" Text="{Binding [MoviesDir], Source={x:Static loc:Loc.Instance}}" />
-                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding MoviesDirectory, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
-                        <Button Grid.Row="2" Grid.Column="2" Content="{Binding [Browse], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseMoviesCommand}" Margin="8,4,0,4" />
-
-                        <TextBlock Grid.Row="3" Style="{StaticResource Label}" Text="{Binding [DefaultConnections], Source={x:Static loc:Loc.Instance}}" />
-                        <ComboBox Grid.Row="3" Grid.Column="1" Width="90" HorizontalAlignment="Left" Margin="0,4"
-                                  ItemsSource="{Binding ConnectionChoices}" SelectedItem="{Binding Connections}" />
-
-                        <TextBlock Grid.Row="4" Style="{StaticResource Label}" Text="{Binding [MaxConcurrent], Source={x:Static loc:Loc.Instance}}" />
-                        <TextBox Grid.Row="4" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding MaxConcurrent}" />
-
-                        <TextBlock Grid.Row="5" Style="{StaticResource Label}" Text="{Binding [SpeedLimit], Source={x:Static loc:Loc.Instance}}" />
-                        <TextBox Grid.Row="5" Grid.Column="1" Width="120" HorizontalAlignment="Left" Text="{Binding SpeedLimit}" />
-
-                        <TextBlock Grid.Row="6" Style="{StaticResource Label}" Text="{Binding [Proxy], Source={x:Static loc:Loc.Instance}}" />
-                        <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding ProxyUrl}" FlowDirection="LeftToRight" />
-
-                        <TextBlock Grid.Row="7" Style="{StaticResource Label}" Text="{Binding [Language], Source={x:Static loc:Loc.Instance}}" />
-                        <ComboBox Grid.Row="7" Grid.Column="1" Width="160" HorizontalAlignment="Left" Margin="0,4"
-                                  ItemsSource="{Binding Languages}" DisplayMemberPath="Name"
+                        <TextBlock Text="{Binding [Language], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                        <ComboBox Width="200" HorizontalAlignment="Left" ItemsSource="{Binding Languages}" DisplayMemberPath="Name"
                                   SelectedValuePath="Code" SelectedValue="{Binding Language}" />
 
-                        <CheckBox Grid.Row="8" Grid.ColumnSpan="3" Margin="0,10,0,4"
-                                  Content="{Binding [AutoOrganize], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding AutoOrganize}" />
-                        <CheckBox Grid.Row="9" Grid.ColumnSpan="3" Margin="0,4"
-                                  Content="{Binding [RenameStandard], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding RenameToStandard}" />
-                    </Grid>
+                        <TextBlock Text="{Binding [DownloadDir], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="{Binding [Browse], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseDownloadCommand}" Margin="8,0,0,0" />
+                            <TextBox Text="{Binding DownloadDirectory, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding [SeriesDir], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,12,0,6" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="{Binding [Browse], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseSeriesCommand}" Margin="8,0,0,0" />
+                            <TextBox Text="{Binding SeriesDirectory, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding [MoviesDir], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,12,0,6" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="{Binding [Browse], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseMoviesCommand}" Margin="8,0,0,0" />
+                            <TextBox Text="{Binding MoviesDirectory, UpdateSourceTrigger=PropertyChanged}" FlowDirection="LeftToRight" />
+                        </DockPanel>
+
+                        <Border Style="{StaticResource InsetCard}" Margin="0,18,0,0">
+                            <StackPanel>
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [AutoOrganize], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding AutoOrganize}" />
+                                <Separator Margin="0,10" Background="{DynamicResource LineBrush}" />
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [RenameStandard], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding RenameToStandard}" />
+                                <Separator Margin="0,10" Background="{DynamicResource LineBrush}" />
+                                <CheckBox Style="{StaticResource Switch}" Content="{Binding [ShowCompletion], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding ShowCompletionDialog}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ============ Connection ============ -->
+            <TabItem Style="{StaticResource SideTab}" Header="{Binding [TabConnection], Source={x:Static loc:Loc.Instance}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Style="{StaticResource Section}">
+                        <TextBlock Text="{Binding [TabConnection], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Heading}" Margin="0,0,0,18" />
+                        <TextBlock Text="{Binding [DefaultConnections], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource SegmentHost}" FlowDirection="LeftToRight">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource Segment}" GroupName="sconn" Content="1" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=1}" />
+                                <RadioButton Style="{StaticResource Segment}" GroupName="sconn" Content="4" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=4}" />
+                                <RadioButton Style="{StaticResource Segment}" GroupName="sconn" Content="8" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=8}" />
+                                <RadioButton Style="{StaticResource Segment}" GroupName="sconn" Content="16" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=16}" />
+                                <RadioButton Style="{StaticResource Segment}" GroupName="sconn" Content="32" IsChecked="{Binding Connections, Converter={StaticResource Equals}, ConverterParameter=32}" />
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{Binding [MaxConcurrent], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                        <TextBox Text="{Binding MaxConcurrent}" Width="100" HorizontalAlignment="Left" />
+                        <TextBlock Text="{Binding [SpeedLimit], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                        <TextBox Text="{Binding SpeedLimit}" Width="160" HorizontalAlignment="Left" />
+                        <TextBlock Text="{Binding [Proxy], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                        <TextBox Text="{Binding ProxyUrl}" FlowDirection="LeftToRight" />
+
+                        <Border Style="{StaticResource InsetCard}" Margin="0,22,0,0">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Command="{Binding OpenSchedulerCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconClock}" />
+                                        <TextBlock Text="{Binding [ScheduleEllipsis], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
+                                    </StackPanel>
+                                </Button>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding [Schedule], Source={x:Static loc:Loc.Instance}}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding ScheduleSummary}" Style="{StaticResource Muted}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <!-- ============ AI + TMDB ============ -->
-            <TabItem Header="{Binding [TabSmart], Source={x:Static loc:Loc.Instance}}">
+            <TabItem Style="{StaticResource SideTab}" Header="{Binding [TabSmart], Source={x:Static loc:Loc.Instance}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="12">
-                        <Grid>
+                    <StackPanel Style="{StaticResource Section}">
+                        <TextBlock Text="{Binding [TabSmart], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Heading}" />
+                        <TextBlock Text="{Binding [AiHint], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="0,4,0,18" />
+
+                        <TextBlock Text="{Binding [AiProvider], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                        <ListBox ItemsSource="{Binding AiProviders}" SelectedValuePath="Value" SelectedValue="{Binding AiProvider}"
+                                 ItemContainerStyle="{StaticResource ProviderItem}" Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate><UniformGrid Columns="3" /></ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel>
+                                        <Border Width="32" Height="32" CornerRadius="9" Background="{DynamicResource NavActiveBrush}">
+                                            <TextBlock Text="{Binding Badge}" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Note}" Style="{StaticResource Muted}" FontSize="11" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="14" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Style="{StaticResource Label}" Text="{Binding [AiProvider], Source={x:Static loc:Loc.Instance}}" />
-                            <ComboBox Grid.Column="1" Margin="0,4" Width="340" HorizontalAlignment="Left"
-                                      ItemsSource="{Binding AiProviders}" DisplayMemberPath="Name"
-                                      SelectedValuePath="Value" SelectedValue="{Binding AiProvider}" />
-
-                            <TextBlock Grid.Row="1" Style="{StaticResource Label}" Text="{Binding [ApiKey], Source={x:Static loc:Loc.Instance}}" />
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding AiApiKey}" FlowDirection="LeftToRight" IsEnabled="{Binding AiNeedsKey}" />
-
-                            <TextBlock Grid.Row="2" Style="{StaticResource Label}" Text="{Binding [Model], Source={x:Static loc:Loc.Instance}}" />
-                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding AiModel}" FlowDirection="LeftToRight" />
-
-                            <TextBlock Grid.Row="3" Style="{StaticResource Label}" Text="{Binding [BaseUrl], Source={x:Static loc:Loc.Instance}}" />
-                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AiBaseUrl}" FlowDirection="LeftToRight" />
-
-                            <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource Hint}" Text="{Binding AiDefaults}" FlowDirection="LeftToRight" />
+                            <StackPanel>
+                                <TextBlock Text="{Binding [ApiKey], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding AiApiKey}" FlowDirection="LeftToRight" IsEnabled="{Binding AiNeedsKey}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="{Binding [Model], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding AiModel}" FlowDirection="LeftToRight" />
+                            </StackPanel>
                         </Grid>
-                        <CheckBox Content="{Binding [AiAlways], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding AiAlways}" Margin="0,4" />
-                        <TextBlock Style="{StaticResource Hint}" Text="{Binding [AiHint], Source={x:Static loc:Loc.Instance}}" />
-                        <StackPanel Orientation="Horizontal">
-                            <Button Content="{Binding [Test], Source={x:Static loc:Loc.Instance}}" Command="{Binding TestAiCommand}" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding AiTestResult}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="600" />
+                        <TextBlock Text="{Binding [BaseUrl], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,12,0,6" />
+                        <TextBox Text="{Binding AiBaseUrl}" FlowDirection="LeftToRight" />
+                        <TextBlock Text="{Binding AiDefaults}" Style="{StaticResource Muted}" FlowDirection="LeftToRight" HorizontalAlignment="Left" Margin="0,4,0,0" />
+
+                        <Border Style="{StaticResource InsetCard}" Margin="0,14,0,0">
+                            <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding AiAlways}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding [AiAlways], Source={x:Static loc:Loc.Instance}}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding [AiAlwaysHint], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" />
+                                </StackPanel>
+                            </CheckBox>
+                        </Border>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Content="{Binding [TestConnection], Source={x:Static loc:Loc.Instance}}" Command="{Binding TestAiCommand}" Margin="0,0,12,0" />
+                            <TextBlock Text="{Binding AiTestResult}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="520" />
                         </StackPanel>
 
-                        <Separator Margin="0,16" />
+                        <Separator Margin="0,20" Background="{DynamicResource LineBrush}" />
 
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="14" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <TextBlock Style="{StaticResource Label}" Text="{Binding [TmdbKey], Source={x:Static loc:Loc.Instance}}" />
-                            <TextBox Grid.Column="1" Text="{Binding TmdbApiKey}" FlowDirection="LeftToRight" />
-                            <TextBlock Grid.Row="1" Style="{StaticResource Label}" Text="{Binding [TmdbLanguage], Source={x:Static loc:Loc.Instance}}" />
-                            <TextBox Grid.Row="1" Grid.Column="1" Width="120" HorizontalAlignment="Left" Text="{Binding TmdbLanguage}" FlowDirection="LeftToRight" />
+                            <StackPanel>
+                                <TextBlock Text="{Binding [TmdbKey], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding TmdbApiKey}" FlowDirection="LeftToRight" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="{Binding [TmdbLanguageShort], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                                <TextBox Text="{Binding TmdbLanguage}" FlowDirection="LeftToRight" />
+                            </StackPanel>
                         </Grid>
-                        <TextBlock Style="{StaticResource Hint}" Text="{Binding [TmdbHint], Source={x:Static loc:Loc.Instance}}" />
-                        <StackPanel Orientation="Horizontal">
-                            <Button Content="{Binding [Test], Source={x:Static loc:Loc.Instance}}" Command="{Binding TestTmdbCommand}" Margin="0,0,8,0" />
-                            <TextBlock Text="{Binding TmdbTestResult}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="600" />
+                        <TextBlock Text="{Binding [TmdbHint], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Content="{Binding [TestConnection], Source={x:Static loc:Loc.Instance}}" Command="{Binding TestTmdbCommand}" Margin="0,0,12,0" />
+                            <TextBlock Text="{Binding TmdbTestResult}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="520" />
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <!-- ============ Media server ============ -->
-            <TabItem Header="{Binding [TabMediaServer], Source={x:Static loc:Loc.Instance}}">
-                <StackPanel Margin="12">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <TextBlock Style="{StaticResource Label}" Text="{Binding [ServerType], Source={x:Static loc:Loc.Instance}}" />
-                        <ComboBox Grid.Column="1" Margin="0,4" Width="200" HorizontalAlignment="Left"
-                                  ItemsSource="{Binding ServerTypes}" DisplayMemberPath="Name"
-                                  SelectedValuePath="Value" SelectedValue="{Binding ServerType}" />
-                        <TextBlock Grid.Row="1" Style="{StaticResource Label}" Text="{Binding [ServerUrl], Source={x:Static loc:Loc.Instance}}" />
-                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ServerUrl}" FlowDirection="LeftToRight" />
-                        <TextBlock Grid.Row="2" Style="{StaticResource Label}" Text="{Binding [ServerKey], Source={x:Static loc:Loc.Instance}}" />
-                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ServerApiKey}" FlowDirection="LeftToRight" />
-                    </Grid>
-                    <CheckBox Content="{Binding [ServerRefresh], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding ServerRefresh}" Margin="0,8" />
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                        <Button Content="{Binding [Test], Source={x:Static loc:Loc.Instance}}" Command="{Binding TestServerCommand}" Margin="0,0,8,0" />
-                        <TextBlock Text="{Binding ServerTestResult}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="640" FlowDirection="LeftToRight" />
+            <TabItem Style="{StaticResource SideTab}" Header="{Binding [TabMediaServer], Source={x:Static loc:Loc.Instance}}">
+                <StackPanel Style="{StaticResource Section}">
+                    <TextBlock Text="{Binding [TabMediaServer], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Heading}" Margin="0,0,0,18" />
+                    <TextBlock Text="{Binding [ServerType], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox Width="220" HorizontalAlignment="Left" ItemsSource="{Binding ServerTypes}" DisplayMemberPath="Name"
+                              SelectedValuePath="Value" SelectedValue="{Binding ServerType}" />
+                    <TextBlock Text="{Binding [ServerUrl], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                    <TextBox Text="{Binding ServerUrl}" FlowDirection="LeftToRight" />
+                    <TextBlock Text="{Binding [ServerKey], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                    <TextBox Text="{Binding ServerApiKey}" FlowDirection="LeftToRight" />
+                    <Border Style="{StaticResource InsetCard}" Margin="0,16,0,0">
+                        <CheckBox Style="{StaticResource Switch}" Content="{Binding [ServerRefresh], Source={x:Static loc:Loc.Instance}}" IsChecked="{Binding ServerRefresh}" />
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="{Binding [TestConnection], Source={x:Static loc:Loc.Instance}}" Command="{Binding TestServerCommand}" Margin="0,0,12,0" />
+                        <TextBlock Text="{Binding ServerTestResult}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="560" FlowDirection="LeftToRight" />
                     </StackPanel>
                 </StackPanel>
             </TabItem>
 
             <!-- ============ Topics / rules ============ -->
-            <TabItem Header="{Binding [TabRules], Source={x:Static loc:Loc.Instance}}">
-                <DockPanel Margin="12">
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}" Text="{Binding [RulesHint], Source={x:Static loc:Loc.Instance}}" />
-                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="{Binding [AddRule], Source={x:Static loc:Loc.Instance}}" Command="{Binding AddRuleCommand}" Margin="0,0,4,0" />
-                        <Button Content="{Binding [DeleteRule], Source={x:Static loc:Loc.Instance}}" Command="{Binding DeleteRuleCommand}" />
+            <TabItem Style="{StaticResource SideTab}" Header="{Binding [TabRules], Source={x:Static loc:Loc.Instance}}">
+                <DockPanel Margin="26,22">
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding [TabRules], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Heading}" />
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding [RulesHint], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="0,4,0,12" />
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="{Binding [AddRule], Source={x:Static loc:Loc.Instance}}" Command="{Binding AddRuleCommand}" Margin="0,0,8,0" />
+                        <Button Content="{Binding [DeleteRule], Source={x:Static loc:Loc.Instance}}" Command="{Binding DeleteRuleCommand}" Margin="0,0,8,0" />
                         <Button Content="{Binding [Browse], Source={x:Static loc:Loc.Instance}}" Command="{Binding BrowseRuleCommand}" />
                     </StackPanel>
-                    <DataGrid ItemsSource="{Binding Rules}" SelectedItem="{Binding SelectedRule}"
-                              AutoGenerateColumns="False" CanUserAddRows="False" HeadersVisibility="Column">
+                    <DataGrid ItemsSource="{Binding Rules}" SelectedItem="{Binding SelectedRule}" AutoGenerateColumns="False" CanUserAddRows="False">
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Binding="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}" Width="50"
                                                     Header="{Binding [RuleEnabled], Source={x:Static loc:Loc.Instance}}" />
-                            <DataGridTextColumn Binding="{Binding Name}" Width="*"
-                                                Header="{Binding [RuleName], Source={x:Static loc:Loc.Instance}}" />
-                            <DataGridTextColumn Binding="{Binding Keywords}" Width="1.5*"
-                                                Header="{Binding [RuleKeywords], Source={x:Static loc:Loc.Instance}}" />
-                            <DataGridTextColumn Binding="{Binding Domains}" Width="*"
-                                                Header="{Binding [RuleDomains], Source={x:Static loc:Loc.Instance}}" />
-                            <DataGridTextColumn Binding="{Binding TargetFolder}" Width="2*"
-                                                Header="{Binding [RuleTarget], Source={x:Static loc:Loc.Instance}}" />
+                            <DataGridTextColumn Binding="{Binding Name}" Width="*" Header="{Binding [RuleName], Source={x:Static loc:Loc.Instance}}" />
+                            <DataGridTextColumn Binding="{Binding Keywords}" Width="1.5*" Header="{Binding [RuleKeywords], Source={x:Static loc:Loc.Instance}}" />
+                            <DataGridTextColumn Binding="{Binding Domains}" Width="*" Header="{Binding [RuleDomains], Source={x:Static loc:Loc.Instance}}" />
+                            <DataGridTextColumn Binding="{Binding TargetFolder}" Width="2*" Header="{Binding [RuleTarget], Source={x:Static loc:Loc.Instance}}" />
                             <DataGridCheckBoxColumn Binding="{Binding SeasonSubfolders, UpdateSourceTrigger=PropertyChanged}" Width="90"
                                                     Header="{Binding [RuleSeason], Source={x:Static loc:Loc.Instance}}" />
                         </DataGrid.Columns>

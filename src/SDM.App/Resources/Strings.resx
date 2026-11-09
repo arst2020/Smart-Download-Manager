@@ -104,4 +104,92 @@
   <data name="Test" xml:space="preserve"><value>Test</value></data>
   <data name="Testing" xml:space="preserve"><value>Testing…</value></data>
   <data name="TestOk" xml:space="preserve"><value>Works</value></data>
+  <data name="AddDownload" xml:space="preserve"><value>Add download</value></data>
+  <data name="AddLink" xml:space="preserve"><value>Add link</value></data>
+  <data name="AddToQueue" xml:space="preserve"><value>Add to queue</value></data>
+  <data name="AfterExit" xml:space="preserve"><value>Close the app</value></data>
+  <data name="AfterNothing" xml:space="preserve"><value>Do nothing</value></data>
+  <data name="AfterQueue" xml:space="preserve"><value>When the queue is finished</value></data>
+  <data name="AfterShutdown" xml:space="preserve"><value>Shut down the computer</value></data>
+  <data name="AfterSleep" xml:space="preserve"><value>Sleep</value></data>
+  <data name="AiAlwaysHint" xml:space="preserve"><value>Off = only when the local parser is unsure</value></data>
+  <data name="AiShort" xml:space="preserve"><value>AI</value></data>
+  <data name="AutoFolderShort" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Average" xml:space="preserve"><value>avg {0}</value></data>
+  <data name="BatchHeader" xml:space="preserve"><value>{0} links from the clipboard · {1} duplicates removed</value></data>
+  <data name="BatchTitle" xml:space="preserve"><value>Add several downloads</value></data>
+  <data name="CatDocs" xml:space="preserve"><value>Documents</value></data>
+  <data name="CatMovies" xml:space="preserve"><value>Movies</value></data>
+  <data name="CatMusic" xml:space="preserve"><value>Music</value></data>
+  <data name="CatSeries" xml:space="preserve"><value>Series</value></data>
+  <data name="CatSoftware" xml:space="preserve"><value>Software</value></data>
+  <data name="Categories" xml:space="preserve"><value>Categories</value></data>
+  <data name="Change" xml:space="preserve"><value>Change…</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="ConnectionMap" xml:space="preserve"><value>Connection map</value></data>
+  <data name="ConnectionsActive" xml:space="preserve"><value>{0} of {1} active</value></data>
+  <data name="ConnectionsCount" xml:space="preserve"><value>{0} connections</value></data>
+  <data name="ConnectionsPerFile" xml:space="preserve"><value>Connections per file</value></data>
+  <data name="CopyLink" xml:space="preserve"><value>Copy link</value></data>
+  <data name="Days" xml:space="preserve"><value>Days</value></data>
+  <data name="DetectedLine" xml:space="preserve"><value>Detected: {0} · confidence {1}%</value></data>
+  <data name="DontShowAgain" xml:space="preserve"><value>Don't show this again (can be turned back on in Settings)</value></data>
+  <data name="DownloadFinished" xml:space="preserve"><value>Download finished</value></data>
+  <data name="Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="FilterQueued" xml:space="preserve"><value>Waiting</value></data>
+  <data name="FilterScheduled" xml:space="preserve"><value>Scheduled</value></data>
+  <data name="HeaderSummary" xml:space="preserve"><value>{0} active · {1} waiting · {2} scheduled · {3} done</value></data>
+  <data name="Libraries" xml:space="preserve"><value>libraries</value></data>
+  <data name="LibraryOf" xml:space="preserve"><value>{0} library</value></data>
+  <data name="LibraryScanned" xml:space="preserve"><value>Saved to {0}; library scan requested</value></data>
+  <data name="LocalFree" xml:space="preserve"><value>local, free</value></data>
+  <data name="LocalOnly" xml:space="preserve"><value>local detection only</value></data>
+  <data name="More" xml:space="preserve"><value>More</value></data>
+  <data name="NextStartLine" xml:space="preserve"><value>Next start: {0} · {1} downloads waiting</value></data>
+  <data name="NoDaySelected" xml:space="preserve"><value>No day selected</value></data>
+  <data name="NoLimit" xml:space="preserve"><value>No limit</value></data>
+  <data name="None" xml:space="preserve"><value>none</value></data>
+  <data name="NotYet" xml:space="preserve"><value>not yet</value></data>
+  <data name="OpenAICompatible" xml:space="preserve"><value>OpenAI-compatible</value></data>
+  <data name="OpenFile" xml:space="preserve"><value>Open file</value></data>
+  <data name="Or" xml:space="preserve"><value>or:</value></data>
+  <data name="PasteAgain" xml:space="preserve"><value>Paste again</value></data>
+  <data name="PauseAll" xml:space="preserve"><value>Pause all</value></data>
+  <data name="PauseAtEnd" xml:space="preserve"><value>At the end of the window, pause unfinished downloads and continue in the next one</value></data>
+  <data name="PausedAt" xml:space="preserve"><value>{0} · can resume</value></data>
+  <data name="PickFolder" xml:space="preserve"><value>Choose folder…</value></data>
+  <data name="Remaining" xml:space="preserve"><value>{0} left</value></data>
+  <data name="RememberTitle" xml:space="preserve"><value>Always save {0} here</value></data>
+  <data name="Run" xml:space="preserve"><value>Run</value></data>
+  <data name="SavedInLibrary" xml:space="preserve"><value>Saved to {0}</value></data>
+  <data name="Schedule" xml:space="preserve"><value>Schedule</value></data>
+  <data name="ScheduleEllipsis" xml:space="preserve"><value>Schedule…</value></data>
+  <data name="ScheduleHint" xml:space="preserve"><value>Scheduled downloads only run inside this time window</value></data>
+  <data name="ScheduleNext" xml:space="preserve"><value>Schedule: next start {0}</value></data>
+  <data name="ScheduleOff" xml:space="preserve"><value>Schedule is off</value></data>
+  <data name="ScheduleOpenNow" xml:space="preserve"><value>Schedule window is open now</value></data>
+  <data name="ScheduleSpeed" xml:space="preserve"><value>Speed limit in this window</value></data>
+  <data name="Search" xml:space="preserve"><value>Search downloads</value></data>
+  <data name="SelectAllN" xml:space="preserve"><value>Select all ({0})</value></data>
+  <data name="ShowCompletion" xml:space="preserve"><value>Show a window when a download finishes</value></data>
+  <data name="Simultaneous" xml:space="preserve"><value>At the same time</value></data>
+  <data name="Source" xml:space="preserve"><value>Source</value></data>
+  <data name="SpeedLimitShort" xml:space="preserve"><value>Speed limit</value></data>
+  <data name="StandardName" xml:space="preserve"><value>Standard name (Emby / Jellyfin)</value></data>
+  <data name="StandardNameHint" xml:space="preserve"><value>Off = keep the current file name</value></data>
+  <data name="StartN" xml:space="preserve"><value>Start {0} downloads</value></data>
+  <data name="StartTime" xml:space="preserve"><value>Start</value></data>
+  <data name="Status_Scheduled" xml:space="preserve"><value>Scheduled</value></data>
+  <data name="StopTime" xml:space="preserve"><value>End</value></data>
+  <data name="TabConnection" xml:space="preserve"><value>Connection</value></data>
+  <data name="TestConnection" xml:space="preserve"><value>Test connection</value></data>
+  <data name="Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>Like Windows</value></data>
+  <data name="TimeFormat" xml:space="preserve"><value>Enter times as HH:mm, e.g. 02:00</value></data>
+  <data name="TmdbLanguageShort" xml:space="preserve"><value>Language</value></data>
+  <data name="TotalSize" xml:space="preserve"><value>Total size</value></data>
+  <data name="WaitingForSchedule" xml:space="preserve"><value>Waiting for the schedule</value></data>
+  <data name="WaitingInQueue" xml:space="preserve"><value>Waiting in queue</value></data>
 </root>

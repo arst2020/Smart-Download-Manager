@@ -25,6 +25,9 @@ public sealed record AddOptions
 
     /// <summary>Wait for the scheduler's time window instead of starting now.</summary>
     public bool Scheduled { get; init; }
+
+    /// <summary>Add to the list paused ("add to queue"); the user starts it later.</summary>
+    public bool StartPaused { get; init; }
 }
 
 /// <summary>
@@ -154,6 +157,10 @@ public sealed class SmartDownloadService : IDisposable
         {
             job.IsScheduled = true;
             if (!IsScheduleWindowOpen) job.Status = DownloadStatus.Scheduled;
+        }
+        else if (options.StartPaused)
+        {
+            job.Status = DownloadStatus.Paused;
         }
         return Queue.Enqueue(job);
     }

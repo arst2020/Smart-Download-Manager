@@ -25,6 +25,7 @@ public sealed class DownloadJob
     /// <summary>Belongs to the scheduler: runs only inside the schedule's time window.</summary>
     public bool IsScheduled { get; internal set; }
 
+    public DateTimeOffset? Started { get; internal set; }
     public DateTimeOffset? Finished { get; internal set; }
 
     public event Action<DownloadJob>? Changed;
@@ -203,6 +204,7 @@ public sealed class DownloadQueue
 
     private async Task RunJobAsync(DownloadJob job)
     {
+        job.Started ??= DateTimeOffset.Now;
         job.Raise();
         CancellationToken ct = job.Begin();
         try
