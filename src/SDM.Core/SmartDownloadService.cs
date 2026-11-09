@@ -166,15 +166,33 @@ public sealed class SmartDownloadService : IDisposable
     }
 
     /// <summary>Probes the URL and asks the advisor where it should go (used by the popup).</summary>
+    /// <remarks>
+    /// If the server cannot be reached or refuses the check (e.g. 503), the suggestion is still made from the
+    /// link itself and <see cref="LastSuggestWarning"/> explains what happened; the download can still be tried.
+    /// </remarks>
     public async Task<(ProbeResult Probe, SaveSuggestion Suggestion)> SuggestAsync(
         Uri url, string? pageTitle = null, CancellationToken ct = default)
     {
-        var probe = await HttpProbe.ProbeAsync(_http, url, null, ct).ConfigureAwait(false);
+        ProbeResult probe;
+        string? probeWarning = null;
+        try
+        {
+            probe = await HttpProbe.ProbeAsync(_http, url, null, ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is not System.Net.HttpStatusCode.NotFound)
+        {
+            probe = HttpProbe.FromUrlOnly(url);
+            probeWarning = ex.Message;
+        }
         var suggestion = await Advisor.SuggestAsync(
             new SuggestRequest(probe.FileName ?? "download", url, probe.ContentType, probe.Length, pageTitle), ct)
             .ConfigureAwait(false);
+        LastSuggestWarning = string.Join(" · ", new[] { probeWarning, Advisor.LastWarning }.Where(w => !string.IsNullOrEmpty(w)));
         return (probe, suggestion);
     }
+
+    /// <summary>Problems met by the last <see cref="SuggestAsync"/> (server check, AI, TMDB, media server).</summary>
+    public string LastSuggestWarning { get; private set; } = "";
 
     /// <summary>Moves a job's file back to the download directory.</summary>
     public bool UndoMove(DownloadJob job)

@@ -66,7 +66,14 @@ public sealed class AppSettings
     /// <summary>e.g. "http://127.0.0.1:8080" or "socks5://127.0.0.1:1080"; empty = system proxy.</summary>
     public string ProxyUrl { get; set; } = "";
 
-    public string UserAgent { get; set; } = "SmartDownloadManager/0.1";
+    /// <summary>
+    /// Sent to download servers. A normal browser string, because many file hosts and CDNs reject
+    /// unknown clients (often with 403 or 503) — the same choice other download managers make.
+    /// </summary>
+    public string UserAgent { get; set; } = DefaultUserAgent;
+
+    public const string DefaultUserAgent =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
     /// <summary>Optional renames of category folders, e.g. "Video" -> "فیلم".</summary>
     public Dictionary<string, string> CategoryFolders { get; set; } = new();
@@ -100,7 +107,13 @@ public static class SettingsStore
         try
         {
             if (File.Exists(path))
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path), Options) ?? new AppSettings();
+            {
+                var loaded = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path), Options) ?? new AppSettings();
+                // Version 0.1 saved its own name as user agent, which some servers reject: upgrade it.
+                if (string.IsNullOrWhiteSpace(loaded.UserAgent) || loaded.UserAgent.StartsWith("SmartDownloadManager/", StringComparison.Ordinal))
+                    loaded.UserAgent = AppSettings.DefaultUserAgent;
+                return loaded;
+            }
         }
         catch (JsonException) { /* corrupt file: fall back to defaults */ }
         return new AppSettings();

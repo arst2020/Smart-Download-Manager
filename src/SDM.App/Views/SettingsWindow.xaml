@@ -11,6 +11,7 @@
     <Window.Resources>
         <!-- Provider cards: a ListBox whose selection is the provider. -->
         <Style x:Key="ProviderItem" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
             <Setter Property="Margin" Value="0,0,10,10" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />

@@ -134,3 +134,52 @@ public class ServiceSchedulingTests : IDisposable
         Assert.NotNull(job.Progress.SegmentFractions);
     }
 }
+
+public class ProbeFallbackTests : IDisposable
+{
+    private readonly string _dir = Path.Combine(Path.GetTempPath(), "sdm-probe-" + Guid.NewGuid().ToString("N"));
+
+    public void Dispose()
+    {
+        if (Directory.Exists(_dir)) Directory.Delete(_dir, true);
+    }
+
+    [Fact]
+    public async Task Range_rejected_with_503_falls_back_to_plain_request()
+    {
+        var data = TestHttpServer.RandomBytes(50_000);
+        using var server = new TestHttpServer(data) { Reject503WithRange = true, FileName = "Chicago.PD.S01E01.mkv" };
+        using var http = HttpClientFactory.Create(new AppSettings());
+
+        var probe = await SDM.Core.Engine.HttpProbe.ProbeAsync(http, server.Url, null, default);
+
+        Assert.Equal(50_000L, probe.Length);
+        Assert.False(probe.AcceptRanges);
+        Assert.True(server.LastUserAgent!.StartsWith("Mozilla/5.0"), server.LastUserAgent);
+    }
+
+    [Fact]
+    public async Task Suggestion_still_works_when_server_says_503()
+    {
+        using var server = new TestHttpServer(new byte[10]) { AlwaysStatus = 503, FileName = "Chicago.P.D.S01E01.720p.mkv" };
+        using var service = new SmartDownloadService(new AppSettings { DownloadDirectory = _dir });
+
+        var (probe, s) = await service.SuggestAsync(server.Url);
+
+        Assert.Null(probe.Length);
+        Assert.Equal(SDM.Core.Media.MediaKind.Series, s.Media.Kind);
+        Assert.True(service.LastSuggestWarning.Contains("503"), service.LastSuggestWarning);
+    }
+
+    [Fact]
+    public void Old_user_agent_is_upgraded_on_load()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "sdm-ua-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            File.WriteAllText(path, """{"UserAgent":"SmartDownloadManager/0.1"}""");
+            Assert.Equal(AppSettings.DefaultUserAgent, SettingsStore.Load(path).UserAgent);
+        }
+        finally { File.Delete(path); }
+    }
+}

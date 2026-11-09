@@ -36,7 +36,7 @@ public sealed class SegmentedDownloader
     {
         Directory.CreateDirectory(request.Directory);
 
-        ProbeResult probe = await HttpProbe.ProbeAsync(_http, request.Url, request.Headers, ct).ConfigureAwait(false);
+        ProbeResult probe = await ProbeWithRetryAsync(request, ct).ConfigureAwait(false);
         string fileName = FileNameHelper.Sanitize(request.FileName ?? probe.FileName ?? "download");
         string finalPath = Path.Combine(request.Directory, fileName);
         string partPath = finalPath + DownloadStateStore.PartExtension;
@@ -110,6 +110,22 @@ public sealed class SegmentedDownloader
             SegmentFractions = state.Segments.Select(_ => 1.0).ToArray()
         });
         return new DownloadResult(target, size, probe, resumed);
+    }
+
+    /// <summary>A busy server (503/429) or a dropped connection gets a few more tries before giving up.</summary>
+    private async Task<ProbeResult> ProbeWithRetryAsync(DownloadRequest request, CancellationToken ct)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await HttpProbe.ProbeAsync(_http, request.Url, request.Headers, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (IsTransient(ex) && !ct.IsCancellationRequested && attempt <= request.MaxRetries)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(Math.Min(30, 2 * attempt)), ct).ConfigureAwait(false);
+            }
+        }
     }
 
     private static bool IsResumable(DownloadState state, ProbeResult probe)

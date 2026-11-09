@@ -421,6 +421,7 @@
     <!-- ===================== Lists ===================== -->
     <!-- Items draw their own selection (bind to ListBoxItem.IsSelected), so the container is bare. -->
     <Style x:Key="BareItem" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -433,7 +434,26 @@
         </Setter>
     </Style>
 
+    <!-- WPF's default ListBox/TabControl foreground is black; take the theme's text colour instead. -->
+    <Style TargetType="ListBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style TargetType="TabControl">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+    <Style TargetType="ToolTip">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource LineStrongBrush}" />
+    </Style>
+
     <Style x:Key="CardList" TargetType="ListBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="ItemContainerStyle" Value="{StaticResource BareItem}" />
@@ -489,6 +509,7 @@
 
     <!-- ===================== Settings side navigation ===================== -->
     <Style x:Key="SideTabs" TargetType="TabControl">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Template">

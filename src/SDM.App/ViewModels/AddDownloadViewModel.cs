@@ -170,7 +170,7 @@ public sealed class AddDownloadViewModel : ObservableObject
             FolderOptions = new[] { new FolderOption("★ " + Loc.Get("Suggestion"), s.Folder) }.Concat(s.Alternatives).ToList();
             _selectedOption = FolderOptions[0];
             FileName = RenameToStandard && CanRename ? StandardName : OriginalName;
-            Warning = _service.Advisor.LastWarning ?? "";
+            Warning = _service.LastSuggestWarning;
             Status = "";
             OnPropertyChanged(string.Empty);
         }
