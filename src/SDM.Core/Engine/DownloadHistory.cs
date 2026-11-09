@@ -19,6 +19,7 @@ public sealed class DownloadRecord
     public string? PageTitle { get; set; }
     public string? ForcedFolder { get; set; }
     public bool IsScheduled { get; set; }
+    public string? QueueId { get; set; }
     public DownloadStatus Status { get; set; }
     public string? FileName { get; set; }
     public string? FilePath { get; set; }
@@ -31,6 +32,7 @@ public sealed class DownloadRecord
     public string? MovedFrom { get; set; }
     public string? MovedTo { get; set; }
     public string? Error { get; set; }
+    public string? ExtractedTo { get; set; }
     public DateTimeOffset Added { get; set; }
     public DateTimeOffset? Started { get; set; }
     public DateTimeOffset? Finished { get; set; }
@@ -47,7 +49,7 @@ public static class DownloadHistory
     };
 
     public static string DefaultPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SDM", "downloads.json");
+        Path.Combine(SDM.Core.Settings.AppPaths.DataDirectory, "downloads.json");
 
     public static List<DownloadRecord> Load(string path)
     {

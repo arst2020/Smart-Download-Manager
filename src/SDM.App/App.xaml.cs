@@ -12,6 +12,7 @@ using SDM.Core.Browser;
 using SDM.Core.Engine;
 using SDM.Core.Scheduling;
 using SDM.Core.Settings;
+using SDM.Core.Util;
 
 namespace SDM.App;
 
@@ -47,7 +48,9 @@ public partial class App : Application
         MainWindow = window;
         window.Closing += OnMainWindowClosing;
         vm.SettingsSaved += ApplySettings;
-        window.Show();
+        vm.ExitRequested += ExitApp;
+        // "--tray" (Windows startup): start hidden in the notification area.
+        if (!e.Args.Contains("--tray", StringComparer.OrdinalIgnoreCase)) window.Show();
 
         // Restore the list from last time (after the view model exists, so it sees every job).
         if (settings.KeepHistory) _service.EnableHistory();
@@ -55,6 +58,7 @@ public partial class App : Application
         StartTray();
         StartClipboardWatcher(window, settings);
         StartBrowserIntegration(settings);
+        if (settings.CheckForUpdates) _ = CheckForUpdatesAsync();
 
         // "SmartDownloadManager.exe <url>" opens the Add dialog.
         string? url = e.Args.FirstOrDefault(a => Uri.TryCreate(a, UriKind.Absolute, out var u) && u.Scheme is "http" or "https" or "ftp");
@@ -166,6 +170,26 @@ public partial class App : Application
     {
         _exiting = true; // Windows is logging off: don't hide, just close
         base.OnSessionEnding(e);
+    }
+
+    /// <summary>A few seconds after start, asks GitHub for a newer release (reads the public release list only).</summary>
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(8));
+            if (_service is null || _vm is null) return;
+            using var http = HttpClientFactory.CreateApiClient(_service.Settings);
+            var info = await new UpdateChecker(http).CheckAsync();
+            if (info is null) return;
+            _vm.AvailableUpdate = info;
+            if (!WindowVisible)
+                _tray?.Notify(Loc.Get("AppTitle"), string.Format(Loc.Get("UpdateAvailable"), info.Version), onClick: () => _vm?.BringToFront());
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Update check failed: {ex.Message}"); // offline or GitHub unreachable: try next start
+        }
     }
 
     /// <summary>Registers the extension's host (silently) and listens for links from the browser and from second instances.</summary>

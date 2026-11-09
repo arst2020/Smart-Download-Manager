@@ -67,6 +67,11 @@
                         </StackPanel>
                     </Border>
                 </StackPanel>
+                <StackPanel Margin="0,0,20,0" Visibility="{Binding HasQueues, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding [Queue], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" FontSize="12" />
+                    <ComboBox Width="160" ItemsSource="{Binding QueueOptions}" DisplayMemberPath="Name"
+                              SelectedValuePath="Id" SelectedValue="{Binding QueueId}" />
+                </StackPanel>
                 <StackPanel Margin="0,0,20,0">
                     <TextBlock Text="{Binding [Simultaneous], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" FontSize="12" />
                     <Border Style="{StaticResource SegmentHost}" FlowDirection="LeftToRight">

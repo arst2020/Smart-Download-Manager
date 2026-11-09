@@ -95,6 +95,9 @@ public sealed class SettingsViewModel : ObservableObject
         Theme = settings.Theme;
         ShowCompletionDialog = settings.ShowCompletionDialog;
         CloseToTray = settings.CloseToTray;
+        AutoExtract = settings.AutoExtract;
+        DeleteArchiveAfterExtract = settings.DeleteArchiveAfterExtract;
+        CheckForUpdates = settings.CheckForUpdates;
         ShowNotifications = settings.ShowNotifications;
         WatchClipboard = settings.WatchClipboard;
         KeepHistory = settings.KeepHistory;
@@ -117,6 +120,14 @@ public sealed class SettingsViewModel : ObservableObject
         ServerRefresh = settings.MediaServer.RefreshAfterDownload;
 
         foreach (var r in settings.Rules) Rules.Add(RuleRow.From(r));
+        foreach (var q in settings.Queues) QueueRows.Add(QueueRow.From(q));
+        AddQueueCommand = new RelayCommand(() =>
+        {
+            var row = new QueueRow { Name = string.Format(Loc.Get("QueueDefaultName"), QueueRows.Count + 1) };
+            QueueRows.Add(row);
+            SelectedQueueRow = row;
+        });
+        DeleteQueueCommand = new RelayCommand(() => QueueRows.Remove(SelectedQueueRow!), () => SelectedQueueRow is not null);
 
         BrowseDownloadCommand = new RelayCommand(() => DownloadDirectory = PickFolder(DownloadDirectory) ?? DownloadDirectory);
         BrowseSeriesCommand = new RelayCommand(() => SeriesDirectory = PickFolder(SeriesDirectory) ?? SeriesDirectory);
@@ -181,6 +192,17 @@ public sealed class SettingsViewModel : ObservableObject
     public AppTheme Theme { get; set; }
     public bool ShowCompletionDialog { get; set; }
     public bool CloseToTray { get; set; }
+    public bool AutoExtract { get; set; }
+
+    public string VersionText => $"{Loc.Get("AppTitle")} {SDM.Core.Util.UpdateChecker.CurrentVersion}" +
+        (AppPaths.IsPortable ? $" · {Loc.Get("PortableEdition")}" : "") + $" · {AppPaths.DataDirectory}";
+    public bool DeleteArchiveAfterExtract { get; set; }
+    public bool CheckForUpdates { get; set; }
+
+    /// <summary>Whether .rar/.7z can be extracted (7-Zip found) — shown under the switch.</summary>
+    public string SevenZipStatus => SDM.Core.Util.ArchiveExtractor.SevenZipPath is { } p
+        ? string.Format(Loc.Get("SevenZipFound"), p)
+        : Loc.Get("SevenZipMissing");
     public bool ShowNotifications { get; set; }
     public bool WatchClipboard { get; set; }
     public bool KeepHistory { get; set; }
@@ -276,6 +298,17 @@ public sealed class SettingsViewModel : ObservableObject
 
     public ObservableCollection<RuleRow> Rules { get; } = new();
 
+    public const int QueuesTab = 6;
+    private int _selectedTab;
+    public int SelectedTab { get => _selectedTab; set => Set(ref _selectedTab, value); }
+
+    public ObservableCollection<QueueRow> QueueRows { get; } = new();
+    private QueueRow? _selectedQueueRow;
+    public QueueRow? SelectedQueueRow { get => _selectedQueueRow; set => Set(ref _selectedQueueRow, value); }
+    public RelayCommand AddQueueCommand { get; }
+    public RelayCommand DeleteQueueCommand { get; }
+    public IReadOnlyList<int> ParallelChoices { get; } = new[] { 1, 2, 3, 4, 5, 6, 8, 10 };
+
     public RuleRow? SelectedRule { get => _selectedRule; set => Set(ref _selectedRule, value); }
 
     public RelayCommand BrowseDownloadCommand { get; }
@@ -304,6 +337,9 @@ public sealed class SettingsViewModel : ObservableObject
         Theme = Theme,
         ShowCompletionDialog = ShowCompletionDialog,
         CloseToTray = CloseToTray,
+        AutoExtract = AutoExtract,
+        DeleteArchiveAfterExtract = DeleteArchiveAfterExtract,
+        CheckForUpdates = CheckForUpdates,
         ShowNotifications = ShowNotifications,
         WatchClipboard = WatchClipboard,
         KeepHistory = KeepHistory,
@@ -323,6 +359,7 @@ public sealed class SettingsViewModel : ObservableObject
         {
             Type = ServerType, Url = ServerUrl.Trim(), ApiKey = ServerApiKey.Trim(), RefreshAfterDownload = ServerRefresh
         },
+        Queues = QueueRows.Where(q => !string.IsNullOrWhiteSpace(q.Name)).Select(q => q.ToDefinition()).ToList(),
         Rules = Rules.Where(r => !string.IsNullOrWhiteSpace(r.Keywords) || !string.IsNullOrWhiteSpace(r.Domains))
                      .Select(r => r.ToRule()).ToList(),
     };

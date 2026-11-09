@@ -77,6 +77,11 @@ public sealed class CompletionViewModel : ObservableObject
             $"{lib.Server} · {lib.Name}")
         : null;
 
+    /// <summary>"Extracted to …" or the extraction error, when auto-extract ran.</summary>
+    public string? ExtractNote => _job.ExtractedTo is { } d
+        ? string.Format(Loc.Get("ExtractedTo"), d)
+        : _job.ExtractError is { } e ? string.Format(Loc.Get("ExtractFailed"), e) : null;
+
     public bool DontShowAgain
     {
         get => _dontShowAgain;

@@ -51,6 +51,7 @@ public partial class MainWindow : Window
             node = System.Windows.Media.VisualTreeHelper.GetParent(node);
         if (node is Border card)
         {
+            if (Vm is not null && card.DataContext is DownloadItemViewModel item) Vm.Selected = item;
             card.ContextMenu!.PlacementTarget = card;
             card.ContextMenu.Placement = PlacementMode.Bottom;
             card.ContextMenu.DataContext = card.DataContext;

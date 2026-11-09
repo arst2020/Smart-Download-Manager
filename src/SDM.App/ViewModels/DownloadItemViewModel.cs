@@ -12,6 +12,7 @@ namespace SDM.App.ViewModels;
 public sealed class DownloadItemViewModel : ObservableObject
 {
     private MediaInfo _media;
+    private readonly SpeedHistory _speed = new(60);
 
     public DownloadJob Job { get; }
 
@@ -119,6 +120,8 @@ public sealed class DownloadItemViewModel : ObservableObject
     public bool IsDone => StatusKey == "Done";
 
     public bool CanSearchSubtitles => SubtitleLauncher.CanSearch(Job);
+    public bool FileExists => IsCompleted && Job.FilePath is { } p && File.Exists(p);
+    public bool CanExtract => FileExists && ArchiveExtractor.CanExtract(Job.FilePath!);
     public bool CanPause => Job.Status is DownloadStatus.Queued or DownloadStatus.Probing or DownloadStatus.Downloading;
     public bool CanResume => Job.Status is DownloadStatus.Paused or DownloadStatus.Failed or DownloadStatus.Canceled or DownloadStatus.Scheduled;
     public bool IsCompleted => Job.Status == DownloadStatus.Completed;
@@ -133,6 +136,29 @@ public sealed class DownloadItemViewModel : ObservableObject
         : string.Format(Loc.Get("ConnectionsActive"), Job.Progress.ActiveSegments, Segments.Count);
 
     public string SourceHost => Job.Request.Url.Host;
+
+    // ----- Speed chart (last 60 seconds) -----
+
+    public const double ChartWidth = 300, ChartHeight = 56;
+
+    /// <summary>Called once a second by the main window.</summary>
+    public void SampleSpeed()
+    {
+        if (Job.Status != DownloadStatus.Downloading && _speed.Count == 0) return;
+        _speed.Add(BytesPerSecond);
+        OnPropertyChanged(nameof(SpeedLinePath));
+        OnPropertyChanged(nameof(SpeedAreaPath));
+        OnPropertyChanged(nameof(SpeedPeakText));
+        OnPropertyChanged(nameof(HasSpeedChart));
+    }
+
+    public bool HasSpeedChart => _speed.Count > 1;
+    public string? SpeedLinePath => NullIfEmpty(_speed.ToPath(ChartWidth, ChartHeight));
+    public string? SpeedAreaPath => NullIfEmpty(_speed.ToPath(ChartWidth, ChartHeight, closed: true));
+    public string SpeedPeakText => _speed.Count == 0 ? "" : string.Format(Loc.Get("SpeedPeak"),
+        FileNameHelper.FormatSize((long)_speed.Peak) + "/s", FileNameHelper.FormatSize((long)_speed.Average) + "/s");
+
+    private static string? NullIfEmpty(string s) => s.Length == 0 ? null : s;
 
     public string DetectedBy => Job.Classification?.Source ?? Loc.Get("NotYet");
 

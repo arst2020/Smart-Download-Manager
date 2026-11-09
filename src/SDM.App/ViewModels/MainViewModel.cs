@@ -29,6 +29,9 @@ public sealed class MainViewModel : ObservableObject
     private bool _libraryConnected;
 
     public ObservableCollection<DownloadItemViewModel> Items { get; } = new();
+    public ObservableCollection<QueueItemViewModel> Queues { get; } = new();
+    public bool HasUserQueues => Queues.Count > 1;
+    public RelayCommand ManageQueuesCommand { get; }
     public ICollectionView ItemsView { get; }
 
     public RelayCommand AddCommand { get; }
@@ -44,9 +47,17 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand SettingsCommand { get; }
     public RelayCommand ScheduleCommand { get; }
     public RelayCommand ClearCompletedCommand { get; }
+    public RelayCommand InstallUpdateCommand { get; }
+    public RelayCommand DismissUpdateCommand { get; }
+    public RelayCommand UpdateNotesCommand { get; }
+    public RelayCommand VerifyHashCommand { get; }
+    public RelayCommand ExtractCommand { get; }
     public RelayCommand SubtitleCommand { get; }
 
     public Window? Owner { get; set; }
+
+    /// <summary>The app should quit (an update installer is about to run).</summary>
+    public event Action? ExitRequested;
 
     /// <summary>Raised after the Settings window was saved (the app refreshes the tray and clipboard watcher).</summary>
     public event Action? SettingsSaved;
@@ -106,10 +117,24 @@ public sealed class MainViewModel : ObservableObject
         UndoCommand = new RelayCommand(p => _service.UndoMove(Item(p)!.Job), p => Item(p)?.Job.Move is not null);
         SubtitleCommand = new RelayCommand(p => SubtitleLauncher.Open(_service.Settings, Item(p)!.Job),
             p => SubtitleLauncher.CanSearch(Item(p)?.Job));
+        VerifyHashCommand = new RelayCommand(p => ShowHash(Item(p)), p => Item(p)?.FileExists == true);
+        ExtractCommand = new RelayCommand(async p =>
+        {
+            if (Item(p) is not { } item) return;
+            if (await _service.ExtractAsync(item.Job) && item.Job.ExtractedTo is { } dest)
+                Process.Start("explorer.exe", $"\"{dest}\"");
+            else if (item.Job.ExtractError is { } err)
+                MessageBox.Show(Owner!, err, Loc.Get("ExtractHere"), MessageBoxButton.OK, MessageBoxImage.Warning);
+        }, p => Item(p)?.CanExtract == true);
+        InstallUpdateCommand = new RelayCommand(async () => await InstallUpdateAsync(), () => _update is not null && !_updating);
+        DismissUpdateCommand = new RelayCommand(() => AvailableUpdate = null);
+        UpdateNotesCommand = new RelayCommand(() => OpenUrl(_update?.PageUrl));
         ClearCompletedCommand = new RelayCommand(() => _service.Queue.RemoveCompleted(), () => CountDone > 0);
-        SettingsCommand = new RelayCommand(ShowSettings);
+        SettingsCommand = new RelayCommand(() => ShowSettings());
+        ManageQueuesCommand = new RelayCommand(() => ShowSettings(SettingsViewModel.QueuesTab));
         ScheduleCommand = new RelayCommand(ShowScheduler);
 
+        RebuildQueues();
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _timer.Tick += (_, _) => UpdateStatusBar();
         _timer.Start();
@@ -135,6 +160,7 @@ public sealed class MainViewModel : ObservableObject
         {
             if (!Set(ref _filter, value)) return;
             ItemsView.Refresh();
+            foreach (var q in Queues) q.RefreshChecked();
             OnPropertyChanged(nameof(HeaderTitle));
             OnPropertyChanged(nameof(HeaderSummary));
         }
@@ -169,6 +195,7 @@ public sealed class MainViewModel : ObservableObject
         "cat:Music" => Loc.Get("CatMusic"),
         "cat:Software" => Loc.Get("CatSoftware"),
         "cat:Doc" => Loc.Get("CatDocs"),
+        { } f when f.StartsWith("queue:") => Queues.FirstOrDefault(q => "queue:" + q.Id == f)?.Name ?? Loc.Get("FilterAll"),
         _ => Loc.Get("FilterAll")
     };
 
@@ -234,6 +261,7 @@ public sealed class MainViewModel : ObservableObject
         "queued" => vm.StatusKey is "Queued" or "Paused" or "Failed",
         "scheduled" => vm.StatusKey == "Scheduled",
         { } f when f.StartsWith("cat:") => vm.MatchesCategory(f[4..]),
+        { } f when f.StartsWith("queue:") => _service.Queue.EffectiveQueue(vm.Job) == f[6..],
         _ => true
     };
 
@@ -247,11 +275,118 @@ public sealed class MainViewModel : ObservableObject
                      nameof(HeaderSummary)
                  })
             OnPropertyChanged(name);
+        foreach (var q in Queues) q.Count = Items.Count(i => _service.Queue.EffectiveQueue(i.Job) == q.Id);
     }
+
+    // ----- Updates -----
+
+    private UpdateInfo? _update;
+    private bool _updating;
+    private string? _updateStatus;
+
+    /// <summary>Set by the app when GitHub has a newer release.</summary>
+    public UpdateInfo? AvailableUpdate
+    {
+        get => _update;
+        set
+        {
+            _update = value;
+            _updateStatus = null;
+            OnPropertyChanged(nameof(HasUpdate));
+            OnPropertyChanged(nameof(UpdateText));
+            OnPropertyChanged(nameof(UpdateButtonText));
+        }
+    }
+
+    public bool HasUpdate => _update is not null;
+
+    public string UpdateText => _update is null ? "" : _updateStatus ?? string.Format(Loc.Get("UpdateAvailable"), _update.Version);
+
+    /// <summary>"Install" when the installer can be fetched and checked; "Download" (opens the release page) otherwise.</summary>
+    public string UpdateButtonText => CanSelfUpdate ? Loc.Get("UpdateInstall") : Loc.Get("UpdateDownload");
+
+    private bool CanSelfUpdate => _update is { InstallerUrl: not null, ChecksumsUrl: not null } && !AppPaths.IsPortable;
+
+    private void SetUpdateStatus(string text)
+    {
+        _updateStatus = text;
+        OnPropertyChanged(nameof(UpdateText));
+    }
+
+    /// <summary>
+    /// Installed version: download the installer, check it against the release's SHA256SUMS.txt, ask, then run it
+    /// and quit. Portable version (or a release without installer): open the release page.
+    /// </summary>
+    private async Task InstallUpdateAsync()
+    {
+        if (_update is not { } info) return;
+        if (!CanSelfUpdate) { OpenUrl(info.PageUrl); return; }
+        _updating = true;
+        try
+        {
+            using var http = HttpClientFactory.CreateApiClient(_service.Settings);
+            var progress = new Progress<double>(p => SetUpdateStatus(string.Format(Loc.Get("UpdateDownloading"), (int)(p * 100))));
+            string installer = await new UpdateChecker(http).DownloadInstallerAsync(info,
+                Path.Combine(Path.GetTempPath(), "SDM-Update"), progress, CancellationToken.None);
+            SetUpdateStatus(string.Format(Loc.Get("UpdateReady"), info.Version));
+            if (MessageBox.Show(Owner!, string.Format(Loc.Get("UpdateConfirm"), info.Version), Loc.Get("AppTitle"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            // The installer closes nothing by itself here: we quit first; it restarts the app when done.
+            Process.Start(new ProcessStartInfo(installer, "/SILENT /SUPPRESSMSGBOXES /NORESTART") { UseShellExecute = true });
+            ExitRequested?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            SetUpdateStatus(string.Format(Loc.Get("UpdateFailed"), ex.Message));
+        }
+        finally { _updating = false; }
+    }
+
+    private static void OpenUrl(Uri? url)
+    {
+        if (url is not null && url.Scheme == Uri.UriSchemeHttps)
+            try { Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true }); } catch { /* no browser */ }
+    }
+
+    // ----- Queues -----
+
+    /// <summary>Main queue + user queues from the settings (rebuilt after the settings change).</summary>
+    private void RebuildQueues()
+    {
+        Queues.Clear();
+        foreach (var q in _service.AllQueues)
+            Queues.Add(new QueueItemViewModel(this, q, q.Id == SDM.Core.Engine.DownloadQueue.MainQueueId));
+        if (Filter.StartsWith("queue:") && Queues.All(q => "queue:" + q.Id != Filter)) Filter = "all";
+        OnPropertyChanged(nameof(HasUserQueues));
+        RefreshLists();
+    }
+
+    public void StartQueue(string id) => _service.Queue.StartQueue(id);
+    public void PauseQueue(string id) => _service.Queue.PauseQueue(id);
+
+    /// <summary>"Move to queue" in the card menu (the card is selected when its menu opens).</summary>
+    public void MoveSelectedTo(string id)
+    {
+        if (Selected is null) return;
+        _service.Queue.MoveToQueue(Selected.Job, id);
+        RefreshLists();
+    }
+
+    private readonly SpeedHistory _totalHistory = new(60);
+
+    /// <summary>Mini chart of the total speed in the status bar (100×18 box).</summary>
+    public string? TotalSpeedPath { get; private set; }
 
     private void UpdateStatusBar()
     {
-        TotalSpeed = $"{FileNameHelper.FormatSize((long)Items.Sum(i => i.BytesPerSecond))}/s";
+        double total = Items.Sum(i => i.BytesPerSecond);
+        TotalSpeed = $"{FileNameHelper.FormatSize((long)total)}/s";
+        foreach (var item in Items) item.SampleSpeed();
+        if (total > 0 || _totalHistory.Count > 0) _totalHistory.Add(total);
+        if (_totalHistory.Count > 0 && _totalHistory.Peak == 0) _totalHistory.Clear(); // idle for a minute: hide
+        string path = _totalHistory.ToPath(100, 18);
+        TotalSpeedPath = path.Length == 0 ? null : path;
+        OnPropertyChanged(nameof(TotalSpeedPath));
         OnPropertyChanged(nameof(ScheduleText));
     }
 
@@ -375,9 +510,9 @@ public sealed class MainViewModel : ObservableObject
 
     // ----- Windows -----
 
-    private void ShowSettings()
+    private void ShowSettings(int tab = 0)
     {
-        var vm = new SettingsViewModel(_service.Settings);
+        var vm = new SettingsViewModel(_service.Settings) { SelectedTab = tab };
         var window = new SettingsWindow { DataContext = vm, Owner = Owner };
         vm.OpenScheduler = ShowScheduler;
         if (window.ShowDialog() != true) return;
@@ -390,7 +525,17 @@ public sealed class MainViewModel : ObservableObject
         ThemeManager.Apply(updated.Theme);
         OnPropertyChanged(string.Empty);
         _ = LoadLibraryAsync();
+        RebuildQueues();
         SettingsSaved?.Invoke();
+    }
+
+    private void ShowHash(DownloadItemViewModel? item)
+    {
+        if (item?.Job.FilePath is not { } path) return;
+        var vm = new HashViewModel(path);
+        var window = new HashWindow { DataContext = vm, Owner = Owner };
+        vm.CloseRequested += window.Close;
+        window.ShowDialog();
     }
 
     public void ShowScheduler()

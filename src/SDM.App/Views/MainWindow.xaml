@@ -121,6 +121,36 @@
                                 </DockPanel>
                             </RadioButton>
 
+                            <DockPanel Margin="10,16,4,4">
+                                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Width="24" Height="24" Padding="0"
+                                        Command="{Binding ManageQueuesCommand}" ToolTip="{Binding [ManageQueues], Source={x:Static loc:Loc.Instance}}"
+                                        AutomationProperties.Name="{Binding [ManageQueues], Source={x:Static loc:Loc.Instance}}">
+                                    <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconPlus}" Width="11" Height="11" />
+                                </Button>
+                                <TextBlock Text="{Binding [Queues], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <ItemsControl ItemsSource="{Binding Queues}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                     ToolTip="{Binding Detail}">
+                                            <RadioButton.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="{Binding [StartQueue], Source={x:Static loc:Loc.Instance}}" Command="{Binding StartCommand}" />
+                                                    <MenuItem Header="{Binding [PauseQueue], Source={x:Static loc:Loc.Instance}}" Command="{Binding PauseCommand}" />
+                                                </ContextMenu>
+                                            </RadioButton.ContextMenu>
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                                <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconQueue}" Width="12" Height="12" Margin="0,0,8,0"
+                                                      Stroke="{DynamicResource MutedBrush}" />
+                                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                            </DockPanel>
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
                             <TextBlock Text="{Binding [Categories], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource Muted}" Margin="10,16,0,4" />
                             <RadioButton Style="{StaticResource NavButton}" GroupName="nav" IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=cat:Series}">
                                 <DockPanel>
@@ -181,6 +211,21 @@
                     <RowDefinition Height="40" />
                 </Grid.RowDefinitions>
 
+                <StackPanel>
+                <!-- New version banner -->
+                <Border Background="{DynamicResource AccentSoftBrush}" Padding="24,10" Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVis}}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Style="{StaticResource Primary}" Command="{Binding InstallUpdateCommand}" Content="{Binding UpdateButtonText}" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource Ghost}" Command="{Binding UpdateNotesCommand}" Content="{Binding [WhatsNew], Source={x:Static loc:Loc.Instance}}" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource IconButton}" Command="{Binding DismissUpdateCommand}" AutomationProperties.Name="{Binding [Close], Source={x:Static loc:Loc.Instance}}">
+                                <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconClose}" Width="12" Height="12" />
+                            </Button>
+                        </StackPanel>
+                        <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconDownload}" Stroke="{DynamicResource AccentBrush}" Margin="0,0,10,0" />
+                        <TextBlock Text="{Binding UpdateText}" VerticalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </DockPanel>
+                </Border>
                 <!-- Toolbar -->
                 <Border BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" Padding="24,14">
                     <DockPanel>
@@ -218,6 +263,7 @@
                         </StackPanel>
                     </DockPanel>
                 </Border>
+                </StackPanel>
 
                 <!-- Download cards -->
                 <ListBox Grid.Row="1" Style="{StaticResource CardList}" Padding="24,16,24,6"
@@ -236,10 +282,26 @@
                                                   ToolTip="{Binding [SubtitleSearchTip], Source={x:Static loc:Loc.Instance}}"
                                                   Visibility="{Binding CanSearchSubtitles, Converter={StaticResource BoolToVis}}"
                                                   Command="{Binding PlacementTarget.Tag.SubtitleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [ExtractHere], Source={x:Static loc:Loc.Instance}}"
+                                                  Visibility="{Binding CanExtract, Converter={StaticResource BoolToVis}}"
+                                                  Command="{Binding PlacementTarget.Tag.ExtractCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [VerifyChecksum], Source={x:Static loc:Loc.Instance}}"
+                                                  Visibility="{Binding FileExists, Converter={StaticResource BoolToVis}}"
+                                                  Command="{Binding PlacementTarget.Tag.VerifyHashCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                         <MenuItem Header="{Binding [CopyLink], Source={x:Static loc:Loc.Instance}}"
                                                   Command="{Binding PlacementTarget.Tag.CopyLinkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                         <MenuItem Header="{Binding [Undo], Source={x:Static loc:Loc.Instance}}"
                                                   Command="{Binding PlacementTarget.Tag.UndoCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [MoveToQueue], Source={x:Static loc:Loc.Instance}}"
+                                                  Visibility="{Binding PlacementTarget.Tag.HasUserQueues, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BoolToVis}}"
+                                                  ItemsSource="{Binding PlacementTarget.Tag.Queues, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                            <MenuItem.ItemContainerStyle>
+                                                <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                    <Setter Property="Header" Value="{Binding Name}" />
+                                                    <Setter Property="Command" Value="{Binding MoveHereCommand}" />
+                                                </Style>
+                                            </MenuItem.ItemContainerStyle>
+                                        </MenuItem>
                                         <MenuItem Header="{Binding [Remove], Source={x:Static loc:Loc.Instance}}"
                                                   Command="{Binding PlacementTarget.Tag.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                     </ContextMenu>
@@ -339,6 +401,20 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <StackPanel Visibility="{Binding HasSpeedChart, Converter={StaticResource BoolToVis}}">
+                                <DockPanel Margin="0,12,0,6">
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding SpeedPeakText}" Style="{StaticResource Muted}" />
+                                    <TextBlock Text="{Binding [SpeedChart], Source={x:Static loc:Loc.Instance}}" FontWeight="SemiBold" />
+                                </DockPanel>
+                                <Border Height="56" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" FlowDirection="LeftToRight">
+                                    <Viewbox Stretch="Fill">
+                                        <Canvas Width="300" Height="56">
+                                            <Path Data="{Binding SpeedAreaPath}" Fill="{DynamicResource AccentSoftBrush}" />
+                                            <Path Data="{Binding SpeedLinePath}" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.6" StrokeLineJoin="Round" />
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
+                            </StackPanel>
                         </StackPanel>
                         <UniformGrid Grid.Column="2" Columns="2" VerticalAlignment="Top">
                             <StackPanel Margin="0,0,12,12">
@@ -372,6 +448,12 @@
                                 <Run Text=": " />
                                 <Run Text="{Binding TotalSpeed, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
                             </TextBlock>
+                            <Viewbox Width="100" Height="18" Stretch="Fill" Margin="0,0,20,0" VerticalAlignment="Center" FlowDirection="LeftToRight"
+                                     Visibility="{Binding TotalSpeedPath, Converter={StaticResource NullToCollapsed}}">
+                                <Canvas Width="100" Height="18">
+                                    <Path Data="{Binding TotalSpeedPath}" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.4" StrokeLineJoin="Round" />
+                                </Canvas>
+                            </Viewbox>
                             <TextBlock Text="{Binding SpeedLimitText}" Style="{StaticResource Muted}" Margin="0,0,20,0" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding ScheduleText}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
                         </StackPanel>

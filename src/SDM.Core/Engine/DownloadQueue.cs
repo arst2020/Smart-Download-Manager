@@ -22,8 +22,17 @@ public sealed class DownloadJob
     /// <summary>Overrides automatic organizing for this job (e.g. the user picked a folder).</summary>
     public string? ForcedFolder { get; init; }
 
+    /// <summary>Which queue this job waits in (<see cref="DownloadQueue.MainQueueId"/> or a user queue's id).</summary>
+    public string QueueId { get; internal set; } = DownloadQueue.MainQueueId;
+
     /// <summary>Belongs to the scheduler: runs only inside the schedule's time window.</summary>
     public bool IsScheduled { get; internal set; }
+
+    /// <summary>Folder the archive was extracted to (auto-extract or "Extract here").</summary>
+    public string? ExtractedTo { get; internal set; }
+
+    /// <summary>Why extraction failed (the download itself is still complete).</summary>
+    public string? ExtractError { get; internal set; }
 
     public DateTimeOffset? Started { get; internal set; }
     public DateTimeOffset? Finished { get; internal set; }
@@ -44,6 +53,7 @@ public sealed class DownloadJob
         PageTitle = Request.PageTitle,
         ForcedFolder = ForcedFolder,
         IsScheduled = IsScheduled,
+        QueueId = QueueId == DownloadQueue.MainQueueId ? null : QueueId,
         Status = Status,
         FileName = FileName,
         FilePath = FilePath,
@@ -56,6 +66,7 @@ public sealed class DownloadJob
         MovedFrom = Move?.From,
         MovedTo = Move?.To,
         Error = Error,
+        ExtractedTo = ExtractedTo,
         Added = Added,
         Started = Started,
         Finished = Finished,
@@ -80,6 +91,7 @@ public sealed class DownloadJob
             Added = r.Added,
             ForcedFolder = r.ForcedFolder,
             IsScheduled = r.IsScheduled,
+            QueueId = string.IsNullOrEmpty(r.QueueId) ? DownloadQueue.MainQueueId : r.QueueId,
             Status = r.Status,
             FileName = r.FileName,
             FilePath = r.FilePath,
@@ -90,6 +102,7 @@ public sealed class DownloadJob
                 ? new MoveRecord(r.MovedFrom, r.MovedTo, r.Finished ?? r.Added, r.Category ?? "")
                 : null,
             Error = r.Error,
+            ExtractedTo = r.ExtractedTo,
             Started = r.Started,
             Finished = r.Finished,
         };
@@ -107,9 +120,14 @@ public sealed class DownloadJob
     internal void Raise() => Changed?.Invoke(this);
 }
 
-/// <summary>Runs at most <see cref="MaxConcurrent"/> jobs at once; pause = cancel with state saved.</summary>
+/// <summary>
+/// Runs jobs with a limit per queue: the main queue runs <see cref="MaxConcurrent"/> at once, each user queue
+/// its own number. Pause = cancel with state saved.
+/// </summary>
 public sealed class DownloadQueue
 {
+    public const string MainQueueId = "main";
+    private Dictionary<string, int> _queueLimits = new();
     private readonly object _lock = new();
     private readonly List<DownloadJob> _jobs = new();
     private readonly HashSet<DownloadJob> _running = new();
@@ -129,6 +147,44 @@ public sealed class DownloadQueue
     {
         get => _maxConcurrent;
         set { _maxConcurrent = Math.Max(1, value); Pump(); }
+    }
+
+    /// <summary>Sets the user queues and their parallel limits. Jobs of a queue that no longer exists run in the main queue.</summary>
+    public void SetQueues(IEnumerable<(string Id, int MaxConcurrent)> queues)
+    {
+        var limits = new Dictionary<string, int>();
+        foreach (var (id, max) in queues)
+            if (!string.IsNullOrWhiteSpace(id) && id != MainQueueId) limits[id] = Math.Max(1, max);
+        lock (_lock) _queueLimits = limits;
+        Pump();
+    }
+
+    /// <summary>The queue a job really runs in (its own, or main if that queue was deleted).</summary>
+    public string EffectiveQueue(DownloadJob job)
+    {
+        lock (_lock) return _queueLimits.ContainsKey(job.QueueId) ? job.QueueId : MainQueueId;
+    }
+
+    private int LimitOf(string queueId) => _queueLimits.TryGetValue(queueId, out int n) ? n : _maxConcurrent;
+
+    public void MoveToQueue(DownloadJob job, string queueId)
+    {
+        if (job.QueueId == queueId) return;
+        job.QueueId = string.IsNullOrWhiteSpace(queueId) ? MainQueueId : queueId;
+        job.Raise();
+        Pump();
+    }
+
+    /// <summary>Starts every paused / failed / stopped download of a queue.</summary>
+    public void StartQueue(string queueId)
+    {
+        foreach (var job in Jobs.Where(j => EffectiveQueue(j) == queueId)) Resume(job);
+    }
+
+    /// <summary>Pauses every running or waiting download of a queue.</summary>
+    public void PauseQueue(string queueId)
+    {
+        foreach (var job in Jobs.Where(j => EffectiveQueue(j) == queueId)) Pause(job);
     }
 
     public IReadOnlyList<DownloadJob> Jobs
@@ -267,10 +323,18 @@ public sealed class DownloadQueue
         List<DownloadJob> toStart = new();
         lock (_lock)
         {
+            var busy = new Dictionary<string, int>();
+            string QueueOf(DownloadJob j) => _queueLimits.ContainsKey(j.QueueId) ? j.QueueId : MainQueueId;
+            foreach (var job in _running)
+                busy[QueueOf(job)] = busy.GetValueOrDefault(QueueOf(job)) + 1;
             foreach (var job in _jobs)
             {
-                if (_running.Count + toStart.Count >= _maxConcurrent) break;
-                if (job.Status == DownloadStatus.Queued && !_running.Contains(job)) toStart.Add(job);
+                if (job.Status != DownloadStatus.Queued || _running.Contains(job)) continue;
+                string q = QueueOf(job);
+                int n = busy.GetValueOrDefault(q);
+                if (n >= LimitOf(q)) continue;
+                busy[q] = n + 1;
+                toStart.Add(job);
             }
             foreach (var job in toStart)
             {

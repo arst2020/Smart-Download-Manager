@@ -1,0 +1,71 @@
+name: Release
+
+# Push a tag like v0.4.0 → builds the installer, the portable zip and SHA256SUMS.txt and publishes a GitHub release.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for a test build (no release is published)'
+        required: true
+        default: '0.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Version
+        id: v
+        shell: pwsh
+        run: |
+          $v = if ('${{ github.ref_type }}' -eq 'tag') { '${{ github.ref_name }}'.TrimStart('v') } else { '${{ inputs.version }}' }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - run: dotnet test tests/SDM.Core.Tests/SDM.Core.Tests.csproj -c Release
+
+      # Self-contained: works without installing .NET.
+      - run: dotnet publish src/SDM.App/SDM.App.csproj -c Release -r win-x64 --self-contained true -p:Version=${{ steps.v.outputs.version }} -o publish
+
+      - name: Installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
+          if (-not (Test-Path $iscc)) { Write-Error "ISCC not found"; exit 1 }
+          & $iscc /DAppVersion=${{ steps.v.outputs.version }} /DSourceDir=..\publish installer\SmartDownloadManager.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Portable zip and checksums
+        shell: pwsh
+        run: |
+          $v = '${{ steps.v.outputs.version }}'
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item -Recurse publish portable
+          Set-Content portable\portable.txt "Settings and the download list are stored in the Data folder next to the program."
+          Compress-Archive -Path portable\* -DestinationPath "dist\SmartDownloadManager-$v-Portable.zip"
+          Get-ChildItem dist -File | Where-Object Name -ne 'SHA256SUMS.txt' | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content dist\SHA256SUMS.txt
+          Get-Content dist\SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.v.outputs.version }}
+          path: dist
+
+      - name: Publish GitHub release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create '${{ github.ref_name }}' (Get-ChildItem dist -File).FullName --title "Smart Download Manager ${{ steps.v.outputs.version }}" --generate-notes
