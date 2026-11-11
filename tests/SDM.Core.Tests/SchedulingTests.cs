@@ -1,3 +1,4 @@
+using SDM.Core.Media;
 using SDM.Core.Models;
 using SDM.Core.Scheduling;
 using SDM.Core.Settings;
@@ -661,5 +662,58 @@ public class UpdateAndPortableTests
             Assert.Equal(Path.Combine(dir, "downloads.json"), SDM.Core.Engine.DownloadHistory.DefaultPath);
         }
         finally { AppPaths.OverrideDataDirectory(null); }
+    }
+}
+
+public class ShowFromLinkTests
+{
+    [Theory]
+    [InlineData("S01E01.mkv", "https://dl.site.com/Series/Breaking.Bad/S01/S01E01.mkv", "Breaking Bad", 1, 1)]
+    [InlineData("E01.mkv", "https://dl.site.com/series/The-Office/Season%202/E01.mkv", "The Office", 2, 1)]
+    [InlineData("01.mp4", "https://dl.site.com/Dark/S01/720p/01.mp4", "Dark", 1, 1)]
+    [InlineData("Episode 3.mkv", "https://dl.site.com/tv/Friends%20(1994)/Season%2001/Episode%203.mkv", "Friends", 1, 3)]
+    [InlineData("Shahrzad.E05.720p.mkv", "https://dl.site.com/a/Shahrzad.E05.720p.mkv", "Shahrzad", 1, 5)]
+    [InlineData("S02E04.mkv", "https://dl.site.com/files/Succession.S02/S02E04.mkv", "Succession", 2, 4)]
+    public void Show_comes_from_the_link_folders(string file, string url, string show, int season, int episode)
+    {
+        var m = MediaNameParser.Parse(file, null, new Uri(url));
+        Assert.Equal(MediaKind.Series, m.Kind);
+        Assert.Equal(show, m.Title);
+        Assert.Equal(season, m.Season);
+        Assert.Equal(episode, m.Episode);
+    }
+
+    [Fact]
+    public async Task Two_untitled_shows_go_to_different_folders()
+    {
+        using var service = new SmartDownloadService(new AppSettings { DownloadDirectory = Path.GetTempPath() });
+        var a = await service.Advisor.SuggestAsync(new SuggestRequest("S01E01.mkv", new Uri("https://x.com/Dark/S01/S01E01.mkv"), null, 1), default);
+        var b = await service.Advisor.SuggestAsync(new SuggestRequest("S01E01.mkv", new Uri("https://x.com/Lost/S01/S01E01.mkv"), null, 1), default);
+        Assert.False(a.Folder == b.Folder);
+    }
+
+    [Fact]
+    public void No_show_without_folders_or_for_plain_files()
+    {
+        Assert.False(MediaKind.Series == MediaNameParser.Parse("01.mp4", null, new Uri("https://x.com/files/2024/01.mp4")).Kind);
+        Assert.False(MediaKind.Series == MediaNameParser.Parse("Dune.Part.Two.2024.1080p.WEB-DL.E-AC3.mkv").Kind);
+        Assert.False(MediaKind.Series == MediaNameParser.Parse("Movie.2023.1080p.HEVC.mkv").Kind);
+    }
+
+    [Fact]
+    public async Task All_time_stats_count_finished_downloads()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "sdm-stats-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var server = new TestHttpServer(TestHttpServer.RandomBytes(5000)) { FileName = "a.pdf" };
+            using var service = new SmartDownloadService(new AppSettings { DownloadDirectory = dir });
+            service.EnableStats(Path.Combine(dir, "stats.json"));
+            service.Add(server.Url);
+            await service.Queue.WhenIdleAsync();
+            Assert.Equal(5000, service.Stats.TotalBytes);
+            Assert.Equal(1, SDM.Core.Engine.DownloadStats.Load(Path.Combine(dir, "stats.json")).TotalFiles);
+        }
+        finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
     }
 }

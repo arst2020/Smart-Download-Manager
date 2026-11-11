@@ -11,6 +11,7 @@ using SDM.App.Views;
 using SDM.Core;
 using SDM.Core.Browser;
 using SDM.Core.Media.Ai;
+using SDM.Core.Models;
 using SDM.Core.Settings;
 using SDM.Core.Util;
 
@@ -47,6 +48,7 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand SettingsCommand { get; }
     public RelayCommand ScheduleCommand { get; }
     public RelayCommand ClearCompletedCommand { get; }
+    public RelayCommand StartAllCommand { get; }
     public RelayCommand InstallUpdateCommand { get; }
     public RelayCommand DismissUpdateCommand { get; }
     public RelayCommand UpdateNotesCommand { get; }
@@ -76,11 +78,18 @@ public sealed class MainViewModel : ObservableObject
             {
                 if (j.Status == lastStatus) return;
                 lastStatus = j.Status;
-                // Re-filter and recount only on status changes (refreshing on every progress tick would reset selection).
-                Application.Current?.Dispatcher.InvokeAsync(RefreshLists, DispatcherPriority.Background);
+                bool started = j.Status is DownloadStatus.Probing or DownloadStatus.Downloading;
+                Application.Current?.Dispatcher.InvokeAsync(() =>
+                {
+                    // A download that starts gets the focus, unless the user is watching another running one.
+                    if (started && (Selected is null || !Selected.IsActive)) Selected = vm;
+                    // Re-filter and recount only on status changes (refreshing on every progress tick would reset selection).
+                    RefreshLists();
+                }, DispatcherPriority.Background);
             };
             Items.Insert(0, vm);
-            Selected ??= vm;
+            // Newly added downloads are selected; ones restored from last time are not.
+            if (Selected is null || DateTimeOffset.Now - job.Added < TimeSpan.FromSeconds(30)) Selected = vm;
             RefreshLists();
         });
         service.Queue.JobRemoved += job => Application.Current.Dispatcher.InvokeAsync(() =>
@@ -96,6 +105,11 @@ public sealed class MainViewModel : ObservableObject
         {
             foreach (var i in Items.Where(i => i.CanPause).ToList()) _service.Queue.Pause(i.Job);
         });
+        // Paused, failed and stopped downloads start again (finished ones are left alone).
+        StartAllCommand = new RelayCommand(() =>
+        {
+            foreach (var i in Items.Where(i => i.CanResume).Reverse().ToList()) _service.Queue.Resume(i.Job);
+        }, () => Items.Any(i => i.CanResume));
         ItemActionCommand = new RelayCommand(p =>
         {
             if (p is not DownloadItemViewModel item) return;
@@ -379,6 +393,8 @@ public sealed class MainViewModel : ObservableObject
 
     private void UpdateStatusBar()
     {
+        OnPropertyChanged(nameof(TotalDownloadedText));
+        OnPropertyChanged(nameof(TotalDownloadedTip));
         double total = Items.Sum(i => i.BytesPerSecond);
         TotalSpeed = $"{FileNameHelper.FormatSize((long)total)}/s";
         foreach (var item in Items) item.SampleSpeed();
@@ -450,6 +466,13 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public void PauseAll() => PauseAllCommand.Execute(null);
+    public void StartAll() => StartAllCommand.Execute(null);
+
+    /// <summary>All-time total in the status bar, e.g. "152.3 GB".</summary>
+    public string TotalDownloadedText => FileNameHelper.FormatSize(_service.Stats.TotalBytes);
+
+    public string TotalDownloadedTip => string.Format(Loc.Get("TotalDownloadedTip"),
+        _service.Stats.TotalFiles, _service.Stats.Since.LocalDateTime.ToString("d", Loc.Instance.Culture));
 
     /// <summary>"2 active · 3.4 MB/s" for the tray tooltip (empty when idle).</summary>
     public string TrayStatus => CountActive == 0 ? "" : $"{string.Format(Loc.Get("TrayActive"), CountActive)} · {TotalSpeed}";

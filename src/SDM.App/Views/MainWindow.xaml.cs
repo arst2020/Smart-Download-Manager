@@ -12,6 +12,12 @@ public partial class MainWindow : Window
 
     private MainViewModel? Vm => DataContext as MainViewModel;
 
+    /// <summary>Keeps the selected card (e.g. a download that just started) visible.</summary>
+    private void OnSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.ListBox list && list.SelectedItem is { } item) list.ScrollIntoView(item);
+    }
+
     private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
     private void OnMaximize(object sender, RoutedEventArgs e) =>
