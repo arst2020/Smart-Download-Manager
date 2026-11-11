@@ -157,7 +157,10 @@ public sealed class BatchAddViewModel : ObservableObject
             try
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(45));
-                var (probe, s) = await _service.SuggestAsync(item.Url, _pageTitle, cts.Token, _headers);
+                // The page title belongs to the whole page: with several links it would push them all into one
+                // show's folder, so it is only used when there is a single link.
+                string? title = Items.Count == 1 ? _pageTitle : null;
+                var (probe, s) = await _service.SuggestAsync(item.Url, title, cts.Token, _headers);
                 Application.Current?.Dispatcher.Invoke(() => item.Fill(probe, s, _service.Settings.DownloadDirectory));
             }
             catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or InvalidOperationException)
@@ -195,6 +198,7 @@ public sealed class BatchAddViewModel : ObservableObject
     public void Commit()
     {
         _service.Queue.MaxConcurrent = Concurrent;
+        bool batch1 = Items.Count(i => i.Include) == 1;
         var batch = Items.Where(i => i.Include).Select(i =>
         {
             var s = i.Suggestion;
@@ -203,7 +207,7 @@ public sealed class BatchAddViewModel : ObservableObject
             return (i.Url, new AddOptions
             {
                 Folder = folder, FileName = name, Connections = Connections, Scheduled = Scheduled, StartPaused = AddPaused, QueueId = QueueId,
-                Headers = _headers, PageTitle = _pageTitle
+                Headers = _headers, PageTitle = batch1 ? _pageTitle : null
             });
         }).ToList();
         _service.AddMany(batch);

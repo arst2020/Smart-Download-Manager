@@ -13,13 +13,15 @@ public static partial class MediaNameParser
         ".mkv", ".mp4", ".avi", ".mov", ".wmv", ".webm", ".m4v", ".ts", ".flv", ".mpg", ".mpeg"
     };
 
-    public static MediaInfo Parse(string fileName, string? contentType = null)
+    /// <param name="url">The download link: its folders give the show name when the file name has none.</param>
+    public static MediaInfo Parse(string fileName, string? contentType = null, Uri? url = null)
     {
-        if (EpisodeParser.TryParse(fileName, out var ep, out double epConf))
+        if (EpisodeParser.TryParse(fileName, url, out var ep, out double epConf))
         {
             return new MediaInfo
             {
-                Kind = MediaKind.Series, Title = ep.Show, Year = YearBeforeEpisode(fileName),
+                Kind = MediaKind.Series, Title = ep.Show,
+                Year = YearBeforeEpisode(fileName) ?? (url is null ? null : EpisodeParser.FromUrlPath(url)?.Year),
                 Season = ep.Season, Episode = ep.Episode, Confidence = epConf, Source = "local"
             };
         }

@@ -271,4 +271,7 @@
   <data name="UpdateConfirm" xml:space="preserve"><value>نسخهٔ {0} الان نصب شود؟ برنامه بسته و دوباره باز می‌شود و دانلودهای در حال اجرا بعد از آن ادامه پیدا می‌کنند.</value></data>
   <data name="UpdateFailed" xml:space="preserve"><value>به‌روزرسانی انجام نشد: {0}</value></data>
   <data name="WhatsNew" xml:space="preserve"><value>تغییرات</value></data>
+  <data name="StartAll" xml:space="preserve"><value>شروع همه</value></data>
+  <data name="TotalDownloaded" xml:space="preserve"><value>مجموع دانلودها</value></data>
+  <data name="TotalDownloadedTip" xml:space="preserve"><value>{0} فایل از {1}</value></data>
 </root>

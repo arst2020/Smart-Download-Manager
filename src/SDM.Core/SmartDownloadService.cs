@@ -75,6 +75,7 @@ public sealed class SmartDownloadService : IDisposable
         Queue = new DownloadQueue(RunJobAsync, settings.MaxConcurrentDownloads);
         ApplyQueues();
         Queue.JobCompleted += _ => SchedulerTick(DateTime.Now);
+        Queue.JobCompleted += CountCompleted;
         _schedulerTimer = new Timer(_ => SchedulerTick(DateTime.Now), null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(20));
     }
 
@@ -85,6 +86,30 @@ public sealed class SmartDownloadService : IDisposable
 
     /// <summary>Loads the saved list (if any) and keeps saving it while the app runs.</summary>
     public bool HistoryEnabled => _historyPath is not null;
+
+    private readonly object _statsLock = new();
+    private string? _statsPath;
+
+    /// <summary>All-time totals shown in the status bar.</summary>
+    public DownloadStats Stats { get; private set; } = new();
+
+    /// <summary>Loads the all-time totals and keeps them up to date (call once at start).</summary>
+    public void EnableStats(string? path = null)
+    {
+        _statsPath = path ?? DownloadStats.DefaultPath;
+        Stats = DownloadStats.Load(_statsPath);
+    }
+
+    private void CountCompleted(DownloadJob job)
+    {
+        long size = job.Progress.Total ?? job.Progress.Downloaded;
+        lock (_statsLock)
+        {
+            Stats.TotalBytes += Math.Max(0, size);
+            Stats.TotalFiles++;
+            if (_statsPath is not null) Stats.Save(_statsPath);
+        }
+    }
 
     /// <param name="restore">False when the option is switched on while the app runs: start saving, keep the current list.</param>
     public void EnableHistory(string? path = null, bool restore = true)

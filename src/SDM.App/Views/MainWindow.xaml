@@ -238,6 +238,12 @@
                                              MinHeight="36" Padding="8,0" AutomationProperties.Name="{Binding [Search], Source={x:Static loc:Loc.Instance}}" />
                                 </DockPanel>
                             </Border>
+                            <Button Command="{Binding StartAllCommand}" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{StaticResource FillIcon}" Data="{StaticResource IconPlay}" />
+                                    <TextBlock Text="{Binding [StartAll], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
+                                </StackPanel>
+                            </Button>
                             <Button Command="{Binding PauseAllCommand}" Margin="0,0,10,0">
                                 <StackPanel Orientation="Horizontal">
                                     <Path Style="{StaticResource FillIcon}" Data="{StaticResource IconPause}" />
@@ -267,7 +273,8 @@
 
                 <!-- Download cards -->
                 <ListBox Grid.Row="1" Style="{StaticResource CardList}" Padding="24,16,24,6"
-                         ItemsSource="{Binding ItemsView}" SelectedItem="{Binding Selected}" MouseDoubleClick="OnCardDoubleClick">
+                         ItemsSource="{Binding ItemsView}" SelectedItem="{Binding Selected}" MouseDoubleClick="OnCardDoubleClick"
+                         SelectionChanged="OnSelectionChanged">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Border x:Name="Card" CornerRadius="14" Padding="16,14" BorderThickness="1"
@@ -454,6 +461,11 @@
                                     <Path Data="{Binding TotalSpeedPath}" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.4" StrokeLineJoin="Round" />
                                 </Canvas>
                             </Viewbox>
+                            <TextBlock Style="{StaticResource Muted}" Margin="0,0,20,0" VerticalAlignment="Center" ToolTip="{Binding TotalDownloadedTip}">
+                                <Run Text="{Binding [TotalDownloaded], Source={x:Static loc:Loc.Instance}, Mode=OneWay}" />
+                                <Run Text=": " />
+                                <Run Text="{Binding TotalDownloadedText, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" />
+                            </TextBlock>
                             <TextBlock Text="{Binding SpeedLimitText}" Style="{StaticResource Muted}" Margin="0,0,20,0" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding ScheduleText}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
                         </StackPanel>

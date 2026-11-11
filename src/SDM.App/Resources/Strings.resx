@@ -271,4 +271,7 @@
   <data name="UpdateConfirm" xml:space="preserve"><value>Install version {0} now? Smart Download Manager closes and opens again; running downloads continue afterwards.</value></data>
   <data name="UpdateFailed" xml:space="preserve"><value>Update failed: {0}</value></data>
   <data name="WhatsNew" xml:space="preserve"><value>What's new</value></data>
+  <data name="StartAll" xml:space="preserve"><value>Start all</value></data>
+  <data name="TotalDownloaded" xml:space="preserve"><value>Downloaded so far</value></data>
+  <data name="TotalDownloadedTip" xml:space="preserve"><value>{0} files since {1}</value></data>
 </root>

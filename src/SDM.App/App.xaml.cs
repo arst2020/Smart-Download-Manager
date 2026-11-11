@@ -53,6 +53,7 @@ public partial class App : Application
         if (!e.Args.Contains("--tray", StringComparer.OrdinalIgnoreCase)) window.Show();
 
         // Restore the list from last time (after the view model exists, so it sees every job).
+        _service.EnableStats();
         if (settings.KeepHistory) _service.EnableHistory();
 
         StartTray();
@@ -73,6 +74,7 @@ public partial class App : Application
         _tray.OpenRequested += () => _vm?.BringToFront();
         _tray.AddRequested += () => _vm?.AddFromTray();
         _tray.PauseAllRequested += () => _vm?.PauseAll();
+        _tray.StartAllRequested += () => _vm?.StartAll();
         _tray.ExitRequested += ExitApp;
 
         _trayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };

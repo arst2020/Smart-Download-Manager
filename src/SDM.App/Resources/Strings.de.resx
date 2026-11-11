@@ -271,4 +271,7 @@
   <data name="UpdateConfirm" xml:space="preserve"><value>Version {0} jetzt installieren? Das Programm schließt sich und startet neu; laufende Downloads werden danach fortgesetzt.</value></data>
   <data name="UpdateFailed" xml:space="preserve"><value>Update fehlgeschlagen: {0}</value></data>
   <data name="WhatsNew" xml:space="preserve"><value>Neuigkeiten</value></data>
+  <data name="StartAll" xml:space="preserve"><value>Alle starten</value></data>
+  <data name="TotalDownloaded" xml:space="preserve"><value>Bisher heruntergeladen</value></data>
+  <data name="TotalDownloadedTip" xml:space="preserve"><value>{0} Dateien seit {1}</value></data>
 </root>

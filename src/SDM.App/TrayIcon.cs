@@ -13,11 +13,12 @@ namespace SDM.App;
 public sealed class TrayIcon : IDisposable
 {
     private readonly Forms.NotifyIcon _icon;
-    private readonly Forms.ToolStripMenuItem _open, _add, _pauseAll, _exit;
+    private readonly Forms.ToolStripMenuItem _open, _add, _startAll, _pauseAll, _exit;
     private Action? _balloonClick;
 
     public event Action? OpenRequested;
     public event Action? AddRequested;
+    public event Action? StartAllRequested;
     public event Action? PauseAllRequested;
     public event Action? ExitRequested;
 
@@ -25,12 +26,13 @@ public sealed class TrayIcon : IDisposable
     {
         _open = new Forms.ToolStripMenuItem("", null, (_, _) => OpenRequested?.Invoke());
         _add = new Forms.ToolStripMenuItem("", null, (_, _) => AddRequested?.Invoke());
+        _startAll = new Forms.ToolStripMenuItem("", null, (_, _) => StartAllRequested?.Invoke());
         _pauseAll = new Forms.ToolStripMenuItem("", null, (_, _) => PauseAllRequested?.Invoke());
         _exit = new Forms.ToolStripMenuItem("", null, (_, _) => ExitRequested?.Invoke());
         _open.Font = new Drawing.Font(_open.Font, Drawing.FontStyle.Bold);
 
         var menu = new Forms.ContextMenuStrip();
-        menu.Items.AddRange(new Forms.ToolStripItem[] { _open, _add, _pauseAll, new Forms.ToolStripSeparator(), _exit });
+        menu.Items.AddRange(new Forms.ToolStripItem[] { _open, _add, _startAll, _pauseAll, new Forms.ToolStripSeparator(), _exit });
         menu.Opening += (_, _) => ApplyTexts();
 
         _icon = new Forms.NotifyIcon
@@ -51,6 +53,7 @@ public sealed class TrayIcon : IDisposable
         _icon.Text = Truncate(Loc.Get("AppTitle"), 63);
         _open.Text = Loc.Get("TrayOpen");
         _add.Text = Loc.Get("AddLink");
+        _startAll.Text = Loc.Get("StartAll");
         _pauseAll.Text = Loc.Get("PauseAll");
         _exit.Text = Loc.Get("TrayExit");
         var rtl = Loc.Instance.FlowDirection == FlowDirection.RightToLeft;

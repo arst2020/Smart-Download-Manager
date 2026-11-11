@@ -40,7 +40,7 @@ public sealed class MediaAdvisor
         LastWarning = null;
 
         // 1-3: identify
-        MediaInfo media = MediaNameParser.Parse(req.FileName, req.ContentType);
+        MediaInfo media = MediaNameParser.Parse(req.FileName, req.ContentType, req.Url);
         media = await AskAiIfNeededAsync(media, req, settings, ct).ConfigureAwait(false);
         media = await EnrichWithTmdbAsync(media, settings, ct).ConfigureAwait(false);
 
