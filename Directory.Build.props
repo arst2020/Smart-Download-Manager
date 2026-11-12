@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- One version for every project; release builds override it from the git tag (v0.4.0 → 0.4.0). -->
-    <Version Condition="'$(Version)' == ''">0.4.0</Version>
+    <Version Condition="'$(Version)' == ''">0.4.1</Version>
     <Authors>Smart Download Manager contributors</Authors>
     <Product>Smart Download Manager</Product>
     <Copyright>MIT License</Copyright>
