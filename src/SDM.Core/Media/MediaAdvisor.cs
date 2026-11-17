@@ -13,7 +13,7 @@ public sealed record SuggestRequest(string FileName, Uri? Url = null, string? Co
 ///   4. user rules win over everything  5. media server library for the kind  6. fallback folders.
 /// Every network step is optional and failures fall back silently, so a suggestion is always returned.
 /// </summary>
-public sealed class MediaAdvisor
+public sealed partial class MediaAdvisor
 {
     private static readonly TimeSpan LibraryCacheTime = TimeSpan.FromMinutes(5);
 
@@ -130,7 +130,7 @@ public sealed class MediaAdvisor
                 return media with
                 {
                     Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id, PosterUrl = match.PosterUrl,
-                    IsAnimation = match.IsAnimation || media.IsAnimation, EpisodeTitle = epTitle, Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
+                    IsAnimation = match.IsAnimation || media.IsAnimation, OriginalLanguage = match.OriginalLanguage ?? media.OriginalLanguage, EpisodeTitle = epTitle, Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
                 };
             }
             else
@@ -140,7 +140,7 @@ public sealed class MediaAdvisor
                 return media with
                 {
                     Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id, PosterUrl = match.PosterUrl,
-                    IsAnimation = match.IsAnimation || media.IsAnimation,
+                    IsAnimation = match.IsAnimation || media.IsAnimation, OriginalLanguage = match.OriginalLanguage ?? media.OriginalLanguage,
                     Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
                 };
             }
@@ -241,11 +241,14 @@ public sealed class MediaAdvisor
     }
 
     /// <summary>
-    /// Which library of the right kind gets the download when the server has several (e.g. "TV Shows" and
-    /// "Animation", both of type tvshows):
-    ///   1. the one that already has a folder for this show / movie;
-    ///   2. for animated titles, a library named like Animation / Anime / Cartoon / Kids;
-    ///   3. otherwise a general library; special-purpose ones (Animation, Anime, Kids, Documentary ...) only as last resort.
+    /// Which library of the right kind gets the download when the server has several (e.g. "TV Shows",
+    /// "Irani TV Shows", "Animation Series", "Award Shows" - all of type tvshows). Each library is scored:
+    ///   - it already has a folder for this show / movie: strongly preferred;
+    ///   - language / region in its name ("Irani", "Hindi", "Korean" ...) must match the title's original language;
+    ///   - animation libraries only for animated titles (and preferred for them);
+    ///   - every extra word besides the generic ones ("TV", "Shows", "Series", "Movies" ...) costs a little,
+    ///     so plain "TV Shows" beats "Award Shows" or "Alfred Hitchcock's Movies".
+    /// Ties keep the server's order.
     /// </summary>
     internal static MediaLibrary? ChooseLibrary(MediaInfo media, IReadOnlyList<MediaLibrary> libraries)
     {
@@ -253,24 +256,76 @@ public sealed class MediaAdvisor
         var candidates = libraries.Where(l => l.Kind == media.Kind && LocalRoot(l) is not null).ToList();
         if (candidates.Count <= 1) return candidates.FirstOrDefault();
 
-        if (!string.IsNullOrWhiteSpace(media.Title) && media.Kind is MediaKind.Series or MediaKind.Movie)
-        {
-            string name = media.Kind == MediaKind.Movie && media.Year is int y ? $"{media.Title} ({y})" : media.Title!;
-            var existing = candidates.FirstOrDefault(l => MediaNamer.FindShowFolder(LocalRoot(l)!, MediaNamer.Clean(name)) is not null);
-            if (existing is not null) return existing;
-        }
+        string? language = media.OriginalLanguage ?? GuessLanguage(media.Title);
+        string? showName = string.IsNullOrWhiteSpace(media.Title) || media.Kind is not (MediaKind.Series or MediaKind.Movie)
+            ? null
+            : MediaNamer.Clean(media.Kind == MediaKind.Movie && media.Year is int y ? $"{media.Title} ({y})" : media.Title!);
 
-        if (media.IsAnimation && candidates.FirstOrDefault(l => IsAnimationLibrary(l.Name)) is { } anim) return anim;
-
-        return candidates.FirstOrDefault(l => !IsSpecialLibrary(l.Name)) ?? candidates[0];
+        return candidates
+            .Select((lib, index) => (lib, index, score: Score(lib, media, language, showName)))
+            .OrderByDescending(x => x.score).ThenBy(x => x.index)
+            .First().lib;
     }
 
-    private static readonly string[] AnimationWords = { "anim", "cartoon", "kids", "kid", "child", "\u0627\u0646\u06cc\u0645\u06cc\u0634\u0646", "\u06a9\u0627\u0631\u062a\u0648\u0646", "\u06a9\u0648\u062f\u06a9" };
-    private static readonly string[] SpecialWords = AnimationWords.Concat(new[]
-        { "documentar", "docu", "concert", "fitness", "sport", "home video", "4k", "uhd", "\u0645\u0633\u062a\u0646\u062f", "\u0648\u0631\u0632\u0634" }).ToArray();
+    internal static int Score(MediaLibrary lib, MediaInfo media, string? language, string? showName)
+    {
+        int score = 0;
+        string name = lib.Name;
+        if (showName is not null && MediaNamer.FindShowFolder(LocalRoot(lib)!, showName) is not null) score += 100;
+
+        string? libLanguage = RegionWords.FirstOrDefault(r => r.Words.Any(w => ContainsWord(name, w))).Language;
+        if (libLanguage is not null)
+            score += language is null ? -30 : string.Equals(libLanguage, language, StringComparison.OrdinalIgnoreCase) ? 50 : -60;
+
+        bool animLib = AnimationWords.Any(w => name.Contains(w, StringComparison.OrdinalIgnoreCase));
+        if (animLib) score += media.IsAnimation ? 40 : -40;
+        else if (media.IsAnimation) score -= 5;
+
+        if (SpecialWords.Any(w => name.Contains(w, StringComparison.OrdinalIgnoreCase))) score -= 20;
+
+        int extra = WordRegex().Matches(name).Select(m => m.Value).Count(w => !GenericWords.Contains(w));
+        score -= 5 * extra;
+        return score;
+    }
+
+    /// <summary>Persian/Arabic script in the title means a Persian title (the common case for this app).</summary>
+    internal static string? GuessLanguage(string? title) =>
+        title is not null && title.Any(c => c is >= '\u0600' and <= '\u06FF') ? "fa" : null;
+
+    private static bool ContainsWord(string name, string word) =>
+        word.Length > 4 || word.Any(c => c > 127)
+            ? name.Contains(word, StringComparison.OrdinalIgnoreCase)
+            : WordRegex().Matches(name).Any(m => m.Value.Equals(word, StringComparison.OrdinalIgnoreCase));
+
+    private static readonly HashSet<string> GenericWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "tv", "shows", "show", "series", "serie", "serial", "serials", "movies", "movie", "films", "film", "music",
+        "my", "the", "and", "new", "media", "library",
+        "\u0633\u0631\u06cc\u0627\u0644", "\u0633\u0631\u06cc\u0627\u0644\u0647\u0627", "\u0641\u06cc\u0644\u0645", "\u0641\u06cc\u0644\u0645\u0647\u0627", "\u0645\u0648\u0633\u06cc\u0642\u06cc"
+    };
+
+    private static readonly (string Language, string[] Words)[] RegionWords =
+    {
+        ("fa", new[] { "irani", "iranian", "iran", "persian", "farsi", "\u0627\u06cc\u0631\u0627\u0646\u06cc", "\u0641\u0627\u0631\u0633\u06cc" }),
+        ("hi", new[] { "hindi", "indian", "india", "bollywood" }),
+        ("ko", new[] { "korean", "korea", "kdrama", "k-drama" }),
+        ("ja", new[] { "japanese", "japan" }),
+        ("tr", new[] { "turkish", "turkey", "turk", "\u062a\u0631\u06a9\u06cc" }),
+        ("ar", new[] { "arabic", "arab" }),
+        ("zh", new[] { "chinese", "china", "cdrama" }),
+        ("es", new[] { "spanish", "latino" }),
+        ("de", new[] { "german", "deutsch" }),
+        ("fr", new[] { "french", "francais" }),
+    };
+
+    private static readonly string[] AnimationWords = { "anim", "cartoon", "kids", "kid ", "children", "\u0627\u0646\u06cc\u0645\u06cc\u0634\u0646", "\u06a9\u0627\u0631\u062a\u0648\u0646", "\u06a9\u0648\u062f\u06a9" };
+    private static readonly string[] SpecialWords =
+        { "documentar", "docu", "concert", "fitness", "sport", "award", "home video", "4k", "uhd", "\u0645\u0633\u062a\u0646\u062f", "\u0648\u0631\u0632\u0634" };
 
     internal static bool IsAnimationLibrary(string name) => AnimationWords.Any(w => name.Contains(w, StringComparison.OrdinalIgnoreCase));
-    private static bool IsSpecialLibrary(string name) => SpecialWords.Any(w => name.Contains(w, StringComparison.OrdinalIgnoreCase));
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"[\p{L}\p{N}'\-]+")]
+    private static partial System.Text.RegularExpressions.Regex WordRegex();
 
     /// <summary>First library folder that exists on this computer.</summary>
     internal static string? LocalRoot(MediaLibrary lib) => lib.Locations.FirstOrDefault(Directory.Exists);

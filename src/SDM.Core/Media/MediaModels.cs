@@ -29,6 +29,9 @@ public sealed record MediaInfo
 
     /// <summary>Animated series/film (TMDB genre or AI): picks an "Animation" library when there is one.</summary>
     public bool IsAnimation { get; init; }
+
+    /// <summary>Original language (ISO 639-1, e.g. "en", "fa") from TMDB or AI: picks e.g. an "Irani" library only for Persian titles.</summary>
+    public string? OriginalLanguage { get; init; }
     public double Confidence { get; init; }
 
     /// <summary>Which steps produced this, e.g. "local", "local + TMDB", "Claude + TMDB".</summary>

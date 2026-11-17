@@ -11,6 +11,9 @@ public sealed record TmdbMatch(int Id, string Title, int? Year, string? EpisodeT
 
     /// <summary>TMDB genre 16 (Animation).</summary>
     public bool IsAnimation { get; init; }
+
+    /// <summary>original_language, e.g. "en", "fa".</summary>
+    public string? OriginalLanguage { get; init; }
 }
 
 /// <summary>
@@ -68,7 +71,8 @@ public sealed class TmdbClient(HttpClient http, string credential, string langua
         return new TmdbMatch((int)first["id"]!, (string?)first[nameField] ?? title, year)
         {
             PosterUrl = string.IsNullOrEmpty(poster) ? null : "https://image.tmdb.org/t/p/w185" + poster,
-            IsAnimation = animation
+            IsAnimation = animation,
+            OriginalLanguage = (string?)first["original_language"] is { Length: > 0 } lang ? lang : null
         };
     }
 
