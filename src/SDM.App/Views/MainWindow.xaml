@@ -289,6 +289,9 @@
                                                   ToolTip="{Binding [SubtitleSearchTip], Source={x:Static loc:Loc.Instance}}"
                                                   Visibility="{Binding CanSearchSubtitles, Converter={StaticResource BoolToVis}}"
                                                   Command="{Binding PlacementTarget.Tag.SubtitleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                        <MenuItem Header="{Binding [ScheduleItem], Source={x:Static loc:Loc.Instance}}"
+                                                  Visibility="{Binding CanSchedule, Converter={StaticResource BoolToVis}}"
+                                                  Command="{Binding PlacementTarget.Tag.ScheduleItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                         <MenuItem Header="{Binding [ExtractHere], Source={x:Static loc:Loc.Instance}}"
                                                   Visibility="{Binding CanExtract, Converter={StaticResource BoolToVis}}"
                                                   Command="{Binding PlacementTarget.Tag.ExtractCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />

@@ -14,6 +14,13 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button Style="{StaticResource Ghost}" Content="{Binding [Cancel], Source={x:Static loc:Loc.Instance}}" IsCancel="True" MinHeight="44" Margin="0,0,10,0" />
+                    <Button Click="OnLater" MinHeight="44" Margin="0,0,10,0"
+                            ToolTip="{Binding [DownloadLaterTip], Source={x:Static loc:Loc.Instance}}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Style="{StaticResource FillIcon}" Data="{StaticResource IconPause}" />
+                            <TextBlock Text="{Binding [DownloadLater], Source={x:Static loc:Loc.Instance}}" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
                     <Button Click="OnSchedule" MinHeight="44" Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal">
                             <Path Style="{StaticResource LineIcon}" Data="{StaticResource IconClock}" />

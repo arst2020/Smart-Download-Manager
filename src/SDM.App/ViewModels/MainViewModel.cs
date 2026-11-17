@@ -49,6 +49,7 @@ public sealed class MainViewModel : ObservableObject
     public RelayCommand ScheduleCommand { get; }
     public RelayCommand ClearCompletedCommand { get; }
     public RelayCommand StartAllCommand { get; }
+    public RelayCommand ScheduleItemCommand { get; }
     public RelayCommand InstallUpdateCommand { get; }
     public RelayCommand DismissUpdateCommand { get; }
     public RelayCommand UpdateNotesCommand { get; }
@@ -147,6 +148,17 @@ public sealed class MainViewModel : ObservableObject
         SettingsCommand = new RelayCommand(() => ShowSettings());
         ManageQueuesCommand = new RelayCommand(() => ShowSettings(SettingsViewModel.QueuesTab));
         ScheduleCommand = new RelayCommand(ShowScheduler);
+        // Card menu "Schedule": without a time window yet, the scheduler opens first.
+        ScheduleItemCommand = new RelayCommand(p =>
+        {
+            if (Item(p) is not { } item) return;
+            if (!_service.Settings.Schedule.Enabled)
+            {
+                ShowScheduler();
+                if (!_service.Settings.Schedule.Enabled) return;
+            }
+            _service.ScheduleJobs(new[] { item.Job });
+        }, p => Item(p) is { IsCompleted: false } i && i.Job.Status != SDM.Core.Models.DownloadStatus.Scheduled);
 
         RebuildQueues();
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -433,7 +445,42 @@ public sealed class MainViewModel : ObservableObject
     }
 
     /// <summary>A link (or many) arrived from the browser extension or a second app instance.</summary>
+    private readonly List<BrowserMessage> _pendingBrowser = new();
+    private DispatcherTimer? _browserTimer;
+
+    /// <summary>
+    /// A download from the browser extension. Single downloads are collected for a moment: if several arrive
+    /// together (e.g. the browser reopened many at once) they go to one batch window instead of one window each.
+    /// </summary>
     public void HandleBrowserMessage(BrowserMessage message)
+    {
+        if (message.Type != "download") { ShowBrowserMessage(message); return; }
+        _pendingBrowser.Add(message);
+        if (_browserTimer is null)
+        {
+            _browserTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
+            _browserTimer.Tick += (_, _) => FlushBrowserMessages();
+        }
+        _browserTimer.Stop();
+        _browserTimer.Start();
+    }
+
+    private void FlushBrowserMessages()
+    {
+        _browserTimer?.Stop();
+        var pending = _pendingBrowser.ToList();
+        _pendingBrowser.Clear();
+        if (pending.Count == 0) return;
+        if (pending.Count == 1) { ShowBrowserMessage(pending[0]); return; }
+
+        BringToFront();
+        var links = pending.SelectMany(m => m.ValidLinks()).Distinct().ToList();
+        // Cookies belong to one site: only pass them on when every link is from the same host.
+        bool oneHost = links.Select(l => l.Host).Distinct(StringComparer.OrdinalIgnoreCase).Count() == 1;
+        ShowBatchDialog(new LinkExtractor.Result(links, 0), oneHost ? pending[0].ToHeaders() : null, null);
+    }
+
+    private void ShowBrowserMessage(BrowserMessage message)
     {
         BringToFront();
         var links = message.ValidLinks();

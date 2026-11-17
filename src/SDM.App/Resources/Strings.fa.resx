@@ -274,4 +274,7 @@
   <data name="StartAll" xml:space="preserve"><value>شروع همه</value></data>
   <data name="TotalDownloaded" xml:space="preserve"><value>مجموع دانلودها</value></data>
   <data name="TotalDownloadedTip" xml:space="preserve"><value>{0} فایل از {1}</value></data>
+  <data name="DownloadLater" xml:space="preserve"><value>بعداً</value></data>
+  <data name="DownloadLaterTip" xml:space="preserve"><value>به لیست اضافه شود ولی شروع نشود؛ بعداً خودتان شروع یا زمان‌بندی کنید</value></data>
+  <data name="ScheduleItem" xml:space="preserve"><value>زمان‌بندی</value></data>
 </root>
