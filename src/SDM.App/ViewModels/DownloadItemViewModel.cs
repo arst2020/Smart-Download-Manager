@@ -125,6 +125,7 @@ public sealed class DownloadItemViewModel : ObservableObject
     public bool CanPause => Job.Status is DownloadStatus.Queued or DownloadStatus.Probing or DownloadStatus.Downloading;
     public bool CanResume => Job.Status is DownloadStatus.Paused or DownloadStatus.Failed or DownloadStatus.Canceled or DownloadStatus.Scheduled;
     public bool IsCompleted => Job.Status == DownloadStatus.Completed;
+    public bool CanSchedule => !IsCompleted && Job.Status != DownloadStatus.Scheduled;
 
     public double BytesPerSecond => Job.Status == DownloadStatus.Downloading ? Job.Progress.BytesPerSecond : 0;
 

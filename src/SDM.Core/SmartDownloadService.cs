@@ -277,6 +277,16 @@ public sealed class SmartDownloadService : IDisposable
         return Queue.Enqueue(job);
     }
 
+    /// <summary>
+    /// "Schedule" from the card menu: the jobs wait for the scheduler's time window (they start at once if the
+    /// window is open now).
+    /// </summary>
+    public void ScheduleJobs(IEnumerable<DownloadJob> jobs)
+    {
+        Queue.Schedule(jobs.Where(j => j.Status != DownloadStatus.Completed));
+        if (IsScheduleWindowOpen) Queue.ReleaseScheduled();
+    }
+
     /// <summary>Probes the URL and asks the advisor where it should go (used by the popup).</summary>
     /// <remarks>
     /// If the server cannot be reached or refuses the check (e.g. 503), the suggestion is still made from the

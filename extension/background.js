@@ -75,19 +75,52 @@ function flashBadge(text, color, title) {
   }, 4000);
 }
 
-// Downloads we let the browser finish on purpose (app unreachable) — never capture them twice.
+// Downloads we already handled or let the browser finish on purpose (app unreachable) — never capture them
+// twice. Kept in session storage so it survives the service worker being restarted.
 const passThrough = new Set();
+async function wasHandled(id) {
+  if (passThrough.has(id)) return true;
+  try {
+    const { handled = [] } = await chrome.storage.session.get("handled");
+    return handled.includes(id);
+  } catch {
+    return false;
+  }
+}
+async function markHandled(id) {
+  passThrough.add(id);
+  try {
+    const { handled = [] } = await chrome.storage.session.get("handled");
+    handled.push(id);
+    await chrome.storage.session.set({ handled: handled.slice(-500) });
+  } catch {
+    /* session storage unavailable */
+  }
+}
+
+// Only downloads that start right now are taken over. When the browser starts it can report old or
+// interrupted downloads from its history again; those must not all be sent to the app.
+const MAX_AGE_MS = 30 * 1000;
+function isFreshDownload(item) {
+  if (item.state && item.state !== "in_progress") return false; // complete or interrupted (restored from history)
+  const started = Date.parse(item.startTime || "");
+  if (!Number.isNaN(started) && Date.now() - started > MAX_AGE_MS) return false;
+  return true;
+}
 
 // ---------------------------------------------------------------- capture browser downloads
 chrome.downloads.onCreated.addListener(async (item) => {
   const url = item.finalUrl || item.url;
-  if (passThrough.has(item.id) || !/^https?:/i.test(url)) return; // blob:, data:, file: stay in the browser
+  if (!/^https?:/i.test(url)) return; // blob:, data:, file: stay in the browser
+  if (!isFreshDownload(item) || (await wasHandled(item.id))) return;
 
   const settings = await getSettings();
   if (!settings.enabled || isExcluded(url, settings.excludedSites)) return;
 
   const size = item.totalBytes > 0 ? item.totalBytes : item.fileSize > 0 ? item.fileSize : -1;
   if (size > 0 && size < settings.minSizeMB * 1024 * 1024) return;
+
+  await markHandled(item.id);
 
   // Pause first: if the app cannot be reached, the browser simply continues.
   try {
@@ -116,7 +149,6 @@ chrome.downloads.onCreated.addListener(async (item) => {
     }
     flashBadge("✓", "#2E7D32");
   } else {
-    passThrough.add(item.id);
     try {
       await chrome.downloads.resume(item.id);
     } catch {

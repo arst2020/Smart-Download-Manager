@@ -49,6 +49,9 @@ public sealed class AddDownloadViewModel : ObservableObject
     /// <summary>The user clicked "Schedule…" instead of "Start".</summary>
     public bool Scheduled { get; set; }
 
+    /// <summary>"Later": added to the list paused; the user starts or schedules it whenever they like.</summary>
+    public bool StartPaused { get; set; }
+
     /// <summary>Cookie / Referer / User-Agent from the browser extension, replayed on every request.</summary>
     public IReadOnlyDictionary<string, string>? Headers { get; init; }
 
@@ -206,6 +209,7 @@ public sealed class AddDownloadViewModel : ObservableObject
             FileName = name,
             Connections = Connections,
             Scheduled = Scheduled,
+            StartPaused = StartPaused,
             QueueId = QueueId,
             Headers = Headers,
             PageTitle = PageTitle,

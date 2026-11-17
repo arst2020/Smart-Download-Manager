@@ -47,8 +47,7 @@ public sealed class MediaAdvisor
         // 5: libraries (cached)
         var libraries = await GetLibrariesAsync(settings, ct).ConfigureAwait(false);
         // Only libraries whose folder exists on this PC (Emby may run on a NAS with its own paths).
-        MediaLibrary? library = libraries.FirstOrDefault(l =>
-            l.Kind == media.Kind && media.Kind != MediaKind.Unknown && LocalRoot(l) is not null);
+        MediaLibrary? library = ChooseLibrary(media, libraries);
 
         if (library is null && settings.MediaServer.IsConfigured && media.Kind is MediaKind.Series or MediaKind.Movie or MediaKind.Music
             && LastWarning is null)
@@ -131,7 +130,7 @@ public sealed class MediaAdvisor
                 return media with
                 {
                     Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id, PosterUrl = match.PosterUrl,
-                    EpisodeTitle = epTitle, Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
+                    IsAnimation = match.IsAnimation || media.IsAnimation, EpisodeTitle = epTitle, Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
                 };
             }
             else
@@ -141,6 +140,7 @@ public sealed class MediaAdvisor
                 return media with
                 {
                     Title = match.Title, Year = match.Year ?? media.Year, TmdbId = match.Id, PosterUrl = match.PosterUrl,
+                    IsAnimation = match.IsAnimation || media.IsAnimation,
                     Confidence = Math.Max(media.Confidence, 0.9), Source = media.Source + " + TMDB"
                 };
             }
@@ -239,6 +239,38 @@ public sealed class MediaAdvisor
             .Where(o => full(o.Folder) != full(chosen))
             .ToList();
     }
+
+    /// <summary>
+    /// Which library of the right kind gets the download when the server has several (e.g. "TV Shows" and
+    /// "Animation", both of type tvshows):
+    ///   1. the one that already has a folder for this show / movie;
+    ///   2. for animated titles, a library named like Animation / Anime / Cartoon / Kids;
+    ///   3. otherwise a general library; special-purpose ones (Animation, Anime, Kids, Documentary ...) only as last resort.
+    /// </summary>
+    internal static MediaLibrary? ChooseLibrary(MediaInfo media, IReadOnlyList<MediaLibrary> libraries)
+    {
+        if (media.Kind == MediaKind.Unknown) return null;
+        var candidates = libraries.Where(l => l.Kind == media.Kind && LocalRoot(l) is not null).ToList();
+        if (candidates.Count <= 1) return candidates.FirstOrDefault();
+
+        if (!string.IsNullOrWhiteSpace(media.Title) && media.Kind is MediaKind.Series or MediaKind.Movie)
+        {
+            string name = media.Kind == MediaKind.Movie && media.Year is int y ? $"{media.Title} ({y})" : media.Title!;
+            var existing = candidates.FirstOrDefault(l => MediaNamer.FindShowFolder(LocalRoot(l)!, MediaNamer.Clean(name)) is not null);
+            if (existing is not null) return existing;
+        }
+
+        if (media.IsAnimation && candidates.FirstOrDefault(l => IsAnimationLibrary(l.Name)) is { } anim) return anim;
+
+        return candidates.FirstOrDefault(l => !IsSpecialLibrary(l.Name)) ?? candidates[0];
+    }
+
+    private static readonly string[] AnimationWords = { "anim", "cartoon", "kids", "kid", "child", "\u0627\u0646\u06cc\u0645\u06cc\u0634\u0646", "\u06a9\u0627\u0631\u062a\u0648\u0646", "\u06a9\u0648\u062f\u06a9" };
+    private static readonly string[] SpecialWords = AnimationWords.Concat(new[]
+        { "documentar", "docu", "concert", "fitness", "sport", "home video", "4k", "uhd", "\u0645\u0633\u062a\u0646\u062f", "\u0648\u0631\u0632\u0634" }).ToArray();
+
+    internal static bool IsAnimationLibrary(string name) => AnimationWords.Any(w => name.Contains(w, StringComparison.OrdinalIgnoreCase));
+    private static bool IsSpecialLibrary(string name) => SpecialWords.Any(w => name.Contains(w, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>First library folder that exists on this computer.</summary>
     internal static string? LocalRoot(MediaLibrary lib) => lib.Locations.FirstOrDefault(Directory.Exists);

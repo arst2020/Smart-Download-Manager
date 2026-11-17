@@ -26,6 +26,9 @@ public sealed record MediaInfo
     public string? Album { get; init; }
     public int? TmdbId { get; init; }
     public string? PosterUrl { get; init; }
+
+    /// <summary>Animated series/film (TMDB genre or AI): picks an "Animation" library when there is one.</summary>
+    public bool IsAnimation { get; init; }
     public double Confidence { get; init; }
 
     /// <summary>Which steps produced this, e.g. "local", "local + TMDB", "Claude + TMDB".</summary>

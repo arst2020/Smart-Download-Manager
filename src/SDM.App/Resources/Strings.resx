@@ -274,4 +274,7 @@
   <data name="StartAll" xml:space="preserve"><value>Start all</value></data>
   <data name="TotalDownloaded" xml:space="preserve"><value>Downloaded so far</value></data>
   <data name="TotalDownloadedTip" xml:space="preserve"><value>{0} files since {1}</value></data>
+  <data name="DownloadLater" xml:space="preserve"><value>Later</value></data>
+  <data name="DownloadLaterTip" xml:space="preserve"><value>Add to the list without starting; start it yourself or schedule it later</value></data>
+  <data name="ScheduleItem" xml:space="preserve"><value>Schedule</value></data>
 </root>

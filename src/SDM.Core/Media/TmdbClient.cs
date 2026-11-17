@@ -8,6 +8,9 @@ public sealed record TmdbMatch(int Id, string Title, int? Year, string? EpisodeT
 {
     /// <summary>Full poster URL (w185), or null.</summary>
     public string? PosterUrl { get; init; }
+
+    /// <summary>TMDB genre 16 (Animation).</summary>
+    public bool IsAnimation { get; init; }
 }
 
 /// <summary>
@@ -61,9 +64,11 @@ public sealed class TmdbClient(HttpClient http, string credential, string langua
         string? date = (string?)first[dateField];
         int? year = date is { Length: >= 4 } && int.TryParse(date[..4], out var y) ? y : null;
         string? poster = (string?)first["poster_path"];
+        bool animation = first["genre_ids"] is JsonArray genres && genres.Any(g => g is JsonValue v && v.TryGetValue<int>(out int id) && id == 16);
         return new TmdbMatch((int)first["id"]!, (string?)first[nameField] ?? title, year)
         {
-            PosterUrl = string.IsNullOrEmpty(poster) ? null : "https://image.tmdb.org/t/p/w185" + poster
+            PosterUrl = string.IsNullOrEmpty(poster) ? null : "https://image.tmdb.org/t/p/w185" + poster,
+            IsAnimation = animation
         };
     }
 

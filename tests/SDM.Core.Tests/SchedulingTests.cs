@@ -717,3 +717,36 @@ public class ShowFromLinkTests
         finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
     }
 }
+
+public class LibraryChoiceTests : IDisposable
+{
+    private readonly string _root = Path.Combine(Path.GetTempPath(), "sdm-libs-" + Guid.NewGuid().ToString("N"));
+    private readonly MediaLibrary _anim, _tv;
+
+    public LibraryChoiceTests()
+    {
+        Directory.CreateDirectory(Path.Combine(_root, "Animation", "Avatar The Last Airbender"));
+        Directory.CreateDirectory(Path.Combine(_root, "TV"));
+        // The animation library comes first, as on the user's server.
+        _anim = new MediaLibrary("Animation", "tvshows", new[] { Path.Combine(_root, "Animation") }, "Emby");
+        _tv = new MediaLibrary("TV Shows", "tvshows", new[] { Path.Combine(_root, "TV") }, "Emby");
+    }
+
+    public void Dispose() => Directory.Delete(_root, true);
+
+    private MediaLibrary? Choose(string title, bool animation = false) =>
+        MediaAdvisor.ChooseLibrary(new MediaInfo { Kind = MediaKind.Series, Title = title, IsAnimation = animation }, new[] { _anim, _tv });
+
+    [Fact]
+    public void New_live_action_series_goes_to_tv_shows() => Assert.Equal("TV Shows", Choose("Severance")?.Name);
+
+    [Fact]
+    public void Animated_series_goes_to_animation() => Assert.Equal("Animation", Choose("Arcane", animation: true)?.Name);
+
+    [Fact]
+    public void Existing_show_folder_wins() => Assert.Equal("Animation", Choose("Avatar The Last Airbender")?.Name);
+
+    [Fact]
+    public void Single_library_is_used_as_before() =>
+        Assert.Equal("Animation", MediaAdvisor.ChooseLibrary(new MediaInfo { Kind = MediaKind.Series, Title = "X" }, new[] { _anim })?.Name);
+}

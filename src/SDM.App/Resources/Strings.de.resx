@@ -274,4 +274,7 @@
   <data name="StartAll" xml:space="preserve"><value>Alle starten</value></data>
   <data name="TotalDownloaded" xml:space="preserve"><value>Bisher heruntergeladen</value></data>
   <data name="TotalDownloadedTip" xml:space="preserve"><value>{0} Dateien seit {1}</value></data>
+  <data name="DownloadLater" xml:space="preserve"><value>Später</value></data>
+  <data name="DownloadLaterTip" xml:space="preserve"><value>Zur Liste hinzufügen, ohne zu starten; später selbst starten oder planen</value></data>
+  <data name="ScheduleItem" xml:space="preserve"><value>Planen</value></data>
 </root>

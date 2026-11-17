@@ -13,12 +13,13 @@ public sealed class LlmMediaDetector(ILlmClient client)
         Reply with ONE JSON object and nothing else:
         {"kind":"series|movie|music|software|document|archive|image|other",
          "title":string|null, "year":number|null, "season":number|null, "episode":number|null,
-         "artist":string|null, "album":string|null, "confidence":number, "reason":string}
+         "artist":string|null, "album":string|null, "animation":boolean, "confidence":number, "reason":string}
         Rules:
         - "title" is the clean official title of the show, movie, album or program, without quality,
           codec, release-group or language tags (1080p, x265, WEB-DL, [Group], Dubbed, ...).
           Keep non-Latin titles (e.g. Persian) in their original script.
         - For series give season and episode numbers; if only an episode number is known, season is 1.
+        - "animation" is true for animated series and films (cartoons, anime), otherwise false.
         - "confidence" is 0..1. Use below 0.5 when you are guessing.
         - "reason" is one short sentence in English.
         """;
@@ -77,6 +78,7 @@ public sealed class LlmMediaDetector(ILlmClient client)
             Episode = episode,
             Artist = Str(o, "artist"),
             Album = Str(o, "album"),
+            IsAnimation = o["animation"] is JsonValue av && av.TryGetValue<bool>(out bool isAnim) && isAnim,
             Confidence = Math.Clamp(Dbl(o, "confidence") ?? 0.5, 0, 1),
             Reason = Str(o, "reason"),
         };

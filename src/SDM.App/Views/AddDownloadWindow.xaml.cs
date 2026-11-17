@@ -22,7 +22,9 @@ public partial class AddDownloadWindow : Window
 
     private void OnSchedule(object sender, RoutedEventArgs e) => Finish(scheduled: true);
 
-    private void Finish(bool scheduled)
+    private void OnLater(object sender, RoutedEventArgs e) => Finish(scheduled: false, later: true);
+
+    private void Finish(bool scheduled, bool later = false)
     {
         if (Vm is not { } vm) return;
         if (!vm.IsValidUrl)
@@ -31,6 +33,7 @@ public partial class AddDownloadWindow : Window
             return;
         }
         vm.Scheduled = scheduled;
+        vm.StartPaused = later;
         DialogResult = true;
     }
 }
