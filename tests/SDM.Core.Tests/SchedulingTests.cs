@@ -750,3 +750,38 @@ public class LibraryChoiceTests : IDisposable
     public void Single_library_is_used_as_before() =>
         Assert.Equal("Animation", MediaAdvisor.ChooseLibrary(new MediaInfo { Kind = MediaKind.Series, Title = "X" }, new[] { _anim })?.Name);
 }
+
+public class UserLibrariesTests : IDisposable
+{
+    private readonly string _root = Path.Combine(Path.GetTempPath(), "sdm-ulib-" + Guid.NewGuid().ToString("N"));
+    private readonly List<MediaLibrary> _libs = new();
+
+    public UserLibrariesTests()
+    {
+        // The user's Emby: several tvshows libraries, in the server's order.
+        foreach (var name in new[] { "Animation Series", "Anime Series", "Award Shows", "Irani TV shows", "TV shows", "True Crime Documentary" })
+        {
+            string dir = Path.Combine(_root, name);
+            Directory.CreateDirectory(dir);
+            _libs.Add(new MediaLibrary(name, "tvshows", new[] { dir }, "Emby"));
+        }
+    }
+
+    public void Dispose() => Directory.Delete(_root, true);
+
+    private string? Pick(string title, string? lang = null, bool anim = false) =>
+        MediaAdvisor.ChooseLibrary(new MediaInfo { Kind = MediaKind.Series, Title = title, OriginalLanguage = lang, IsAnimation = anim }, _libs)?.Name;
+
+    [Fact] public void English_series_goes_to_tv_shows() => Assert.Equal("TV shows", Pick("Chicago Fire", "en"));
+    [Fact] public void Unknown_language_goes_to_tv_shows() => Assert.Equal("TV shows", Pick("Chicago Fire"));
+    [Fact] public void Persian_series_goes_to_irani() => Assert.Equal("Irani TV shows", Pick("Shahrzad", "fa"));
+    [Fact] public void Persian_script_title_goes_to_irani() => Assert.Equal("Irani TV shows", Pick("\u0634\u0647\u0631\u0632\u0627\u062f"));
+    [Fact] public void Animated_series_goes_to_animation() => Assert.Equal("Animation Series", Pick("Arcane", "en", anim: true));
+
+    [Fact]
+    public void Existing_folder_still_wins()
+    {
+        Directory.CreateDirectory(Path.Combine(_root, "Irani TV shows", "Chicago Fire"));
+        Assert.Equal("Irani TV shows", Pick("Chicago Fire", "en"));
+    }
+}
