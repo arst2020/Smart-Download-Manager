@@ -97,6 +97,10 @@
                             </StackPanel>
                         </Border>
 
+                        <TextBlock Text="{Binding [DupSetting], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,18,0,6" />
+                        <ComboBox Width="320" HorizontalAlignment="Left" ItemsSource="{Binding DuplicateActions}" DisplayMemberPath="Value"
+                                  SelectedValuePath="Key" SelectedValue="{Binding DuplicateAction}" />
+
                         <TextBlock Text="{Binding [ArchivesSection], Source={x:Static loc:Loc.Instance}}" Style="{StaticResource FieldLabel}" Margin="0,18,0,6" />
                         <Border Style="{StaticResource InsetCard}">
                             <StackPanel>

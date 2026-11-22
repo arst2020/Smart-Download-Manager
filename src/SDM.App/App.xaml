@@ -14,6 +14,7 @@
             <views:FractionToHeightConverter x:Key="FractionToHeight" />
             <BooleanToVisibilityConverter x:Key="BoolToVis" />
             <views:NullToCollapsedConverter x:Key="NullToCollapsed" />
+            <views:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

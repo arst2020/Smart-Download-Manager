@@ -277,4 +277,26 @@
   <data name="DownloadLater" xml:space="preserve"><value>Später</value></data>
   <data name="DownloadLaterTip" xml:space="preserve"><value>Zur Liste hinzufügen, ohne zu starten; später selbst starten oder planen</value></data>
   <data name="ScheduleItem" xml:space="preserve"><value>Planen</value></data>
+  <data name="DupHeading" xml:space="preserve"><value>Diese Datei gibt es schon</value></data>
+  <data name="DupBatchHeading" xml:space="preserve"><value>{0} der ausgewählten Links sind schon vorhanden</value></data>
+  <data name="DupInProgress" xml:space="preserve"><value>Dieser Download ist schon in der Liste und noch nicht fertig.</value></data>
+  <data name="DupSameLink" xml:space="preserve"><value>Dieser Link wurde schon heruntergeladen.</value></data>
+  <data name="DupSameEpisode" xml:space="preserve"><value>Diese Folge ist schon vorhanden (vielleicht in anderer Qualität oder mit anderem Namen).</value></data>
+  <data name="DupSameMovie" xml:space="preserve"><value>Dieser Film ist schon vorhanden (vielleicht in anderer Qualität oder mit anderem Namen).</value></data>
+  <data name="DupSameName" xml:space="preserve"><value>Eine Datei mit diesem Namen wurde schon geladen oder liegt im Zielordner.</value></data>
+  <data name="DupExisting" xml:space="preserve"><value>Vorhanden</value></data>
+  <data name="DupNew" xml:space="preserve"><value>Neu</value></data>
+  <data name="DupOthers" xml:space="preserve"><value>und {0} weitere Treffer</value></data>
+  <data name="DupOpen" xml:space="preserve"><value>Vorhandene Datei öffnen (nicht laden)</value></data>
+  <data name="DupResume" xml:space="preserve"><value>Vorhandenen Download fortsetzen</value></data>
+  <data name="DupNewName" xml:space="preserve"><value>Erneut laden mit neuem Namen — Name (2)</value></data>
+  <data name="DupReplace" xml:space="preserve"><value>Ersetzen: alte Datei in den Papierkorb, neu laden</value></data>
+  <data name="DupRemember" xml:space="preserve"><value>Immer so verfahren</value></data>
+  <data name="DupTag" xml:space="preserve"><value>Doppelt</value></data>
+  <data name="DupSetting" xml:space="preserve"><value>Wenn ein Download schon existiert</value></data>
+  <data name="DupAction_Ask" xml:space="preserve"><value>Fragen</value></data>
+  <data name="DupAction_OpenExisting" xml:space="preserve"><value>Vorhandene Datei öffnen</value></data>
+  <data name="DupAction_NewName" xml:space="preserve"><value>Mit neuem Namen laden</value></data>
+  <data name="DupAction_Replace" xml:space="preserve"><value>Ersetzen (alte Datei in den Papierkorb)</value></data>
+  <data name="DupAction_Skip" xml:space="preserve"><value>Nicht laden</value></data>
 </root>

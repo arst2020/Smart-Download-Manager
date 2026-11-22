@@ -33,6 +33,8 @@ public sealed class DownloadRecord
     public string? MovedTo { get; set; }
     public string? Error { get; set; }
     public string? ExtractedTo { get; set; }
+    public string? OriginalFileName { get; set; }
+    public string? MediaKey { get; set; }
     public DateTimeOffset Added { get; set; }
     public DateTimeOffset? Started { get; set; }
     public DateTimeOffset? Finished { get; set; }

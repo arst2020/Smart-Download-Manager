@@ -25,6 +25,9 @@ public sealed class AppSettings
     public ScheduleSettings Schedule { get; set; } = new();
 
     /// <summary>Remember the download list between runs.</summary>
+    /// <summary>What to do when a download already exists (Ask = show the duplicate window).</summary>
+    public SDM.Core.Engine.DuplicateAction DuplicateAction { get; set; } = SDM.Core.Engine.DuplicateAction.Ask;
+
     /// <summary>Extra queues besides the main one (each with its own parallel-download and speed limit).</summary>
     public List<QueueDefinition> Queues { get; set; } = new();
 

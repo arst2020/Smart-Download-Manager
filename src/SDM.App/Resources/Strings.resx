@@ -277,4 +277,26 @@
   <data name="DownloadLater" xml:space="preserve"><value>Later</value></data>
   <data name="DownloadLaterTip" xml:space="preserve"><value>Add to the list without starting; start it yourself or schedule it later</value></data>
   <data name="ScheduleItem" xml:space="preserve"><value>Schedule</value></data>
+  <data name="DupHeading" xml:space="preserve"><value>This file already exists</value></data>
+  <data name="DupBatchHeading" xml:space="preserve"><value>{0} of the selected links are already downloaded</value></data>
+  <data name="DupInProgress" xml:space="preserve"><value>This download is already in the list and not finished yet.</value></data>
+  <data name="DupSameLink" xml:space="preserve"><value>This link was downloaded before.</value></data>
+  <data name="DupSameEpisode" xml:space="preserve"><value>You already have this episode (maybe in another quality or with another name).</value></data>
+  <data name="DupSameMovie" xml:space="preserve"><value>You already have this movie (maybe in another quality or with another name).</value></data>
+  <data name="DupSameName" xml:space="preserve"><value>A file with the same name was downloaded before or is already in the destination folder.</value></data>
+  <data name="DupExisting" xml:space="preserve"><value>Existing</value></data>
+  <data name="DupNew" xml:space="preserve"><value>New</value></data>
+  <data name="DupOthers" xml:space="preserve"><value>and {0} more match(es)</value></data>
+  <data name="DupOpen" xml:space="preserve"><value>Open the existing file (don't download)</value></data>
+  <data name="DupResume" xml:space="preserve"><value>Continue the existing download</value></data>
+  <data name="DupNewName" xml:space="preserve"><value>Download again with a new name — name (2)</value></data>
+  <data name="DupReplace" xml:space="preserve"><value>Replace: old file to the Recycle Bin, download again</value></data>
+  <data name="DupRemember" xml:space="preserve"><value>Always do this</value></data>
+  <data name="DupTag" xml:space="preserve"><value>Duplicate</value></data>
+  <data name="DupSetting" xml:space="preserve"><value>When a download already exists</value></data>
+  <data name="DupAction_Ask" xml:space="preserve"><value>Ask me</value></data>
+  <data name="DupAction_OpenExisting" xml:space="preserve"><value>Open the existing file</value></data>
+  <data name="DupAction_NewName" xml:space="preserve"><value>Download with a new name</value></data>
+  <data name="DupAction_Replace" xml:space="preserve"><value>Replace (old file to Recycle Bin)</value></data>
+  <data name="DupAction_Skip" xml:space="preserve"><value>Don't download</value></data>
 </root>
