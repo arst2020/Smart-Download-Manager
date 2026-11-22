@@ -12,6 +12,7 @@ using SDM.Core;
 using SDM.Core.Browser;
 using SDM.Core.Media.Ai;
 using SDM.Core.Models;
+using SDM.Core.Engine;
 using SDM.Core.Settings;
 using SDM.Core.Util;
 
@@ -536,6 +537,12 @@ public sealed class MainViewModel : ObservableObject
             _service.Settings.Rules.Add(rule);
             SettingsStore.Save(_service.Settings);
         }
+        var duplicates = _service.FindDuplicates(vm.BuildDuplicateQuery(uri));
+        if (duplicates.Count > 0)
+        {
+            string newName = vm.BuildDuplicateQuery(uri).TargetFileName ?? vm.OriginalName;
+            if (!ResolveDuplicate(duplicates, newName, vm.ProbeLength)) return;
+        }
         _service.Add(uri, vm.BuildOptions());
         if (vm.Scheduled) EnsureScheduleEnabled();
     }
@@ -545,8 +552,106 @@ public sealed class MainViewModel : ObservableObject
         var vm = new BatchAddViewModel(_service, links, headers, pageTitle);
         var window = new BatchAddWindow { DataContext = vm, Owner = Owner };
         if (window.ShowDialog() != true) return;
-        vm.Commit();
+
+        // Rows the user ticked although they are duplicates: one question for all of them.
+        var dupRows = vm.IncludedDuplicates;
+        IReadOnlyCollection<BatchItemViewModel>? skip = null;
+        if (dupRows.Count > 0)
+        {
+            var choice = AskDuplicate(dupRows[0].Duplicates, dupRows[0].Title, dupRows[0].Bytes, dupRows.Count);
+            switch (choice)
+            {
+                case DuplicateChoice.Cancel: skip = dupRows.ToList(); break;
+                case DuplicateChoice.Replace:
+                    foreach (var row in dupRows) ReplaceAll(row.Duplicates);
+                    break;
+                // NewName: add them; they get "name (2)".
+            }
+        }
+        vm.Commit(skip);
         if (vm.Scheduled) EnsureScheduleEnabled();
+    }
+
+    // ----- Duplicates -----
+
+    /// <summary>
+    /// The download already exists (same link, same name before or after renaming, or the same episode / movie).
+    /// Applies the saved choice or asks. Returns true when the new download should be added.
+    /// </summary>
+    private bool ResolveDuplicate(IReadOnlyList<DuplicateMatch> matches, string newName, long? newSize)
+    {
+        var choice = AskDuplicate(matches, newName, newSize, 0);
+        var first = matches[0];
+        switch (choice)
+        {
+            case DuplicateChoice.OpenExisting:
+                if (first.ExistingPath is { } path && File.Exists(path)) Process.Start("explorer.exe", $"/select,\"{path}\"");
+                if (first.Job is { } shown && Items.FirstOrDefault(i => i.Job == shown) is { } item) Selected = item;
+                return false;
+            case DuplicateChoice.Resume:
+                if (first.Job is { } job)
+                {
+                    _service.Queue.Resume(job);
+                    if (Items.FirstOrDefault(i => i.Job == job) is { } resumed) Selected = resumed;
+                }
+                return false;
+            case DuplicateChoice.NewName:
+                return true; // saved as "name (2)"
+            case DuplicateChoice.Replace:
+                return ReplaceAll(matches);
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>Saved setting or the duplicate window. "Always do this" stores the choice in the settings.</summary>
+    private DuplicateChoice AskDuplicate(IReadOnlyList<DuplicateMatch> matches, string newName, long? newSize, int batchCount)
+    {
+        var saved = _service.Settings.DuplicateAction;
+        if (saved != DuplicateAction.Ask)
+        {
+            var auto = saved switch
+            {
+                DuplicateAction.OpenExisting when batchCount == 0 && matches[0].ExistingPath is not null => DuplicateChoice.OpenExisting,
+                DuplicateAction.OpenExisting => DuplicateChoice.Cancel,
+                DuplicateAction.NewName => DuplicateChoice.NewName,
+                DuplicateAction.Replace => DuplicateChoice.Replace,
+                _ => DuplicateChoice.Cancel,
+            };
+            return auto;
+        }
+
+        var vm = new DuplicateViewModel(matches, newName, newSize, batchCount);
+        var window = new DuplicateWindow { DataContext = vm, Owner = Owner };
+        vm.Closed += window.Close;
+        window.ShowDialog();
+        if (vm.Remember && vm.Choice is DuplicateChoice.OpenExisting or DuplicateChoice.NewName or DuplicateChoice.Replace or DuplicateChoice.Cancel)
+        {
+            _service.Settings.DuplicateAction = vm.Choice switch
+            {
+                DuplicateChoice.OpenExisting => DuplicateAction.OpenExisting,
+                DuplicateChoice.NewName => DuplicateAction.NewName,
+                DuplicateChoice.Replace => DuplicateAction.Replace,
+                _ => DuplicateAction.Skip,
+            };
+            SettingsStore.Save(_service.Settings);
+        }
+        return vm.Choice;
+    }
+
+    /// <summary>"Replace": existing files go to the Recycle Bin, old entries leave the list.</summary>
+    private bool ReplaceAll(IReadOnlyList<DuplicateMatch> matches)
+    {
+        try
+        {
+            foreach (var m in matches) _service.RemoveForReplace(m);
+            return true;
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(Owner!, ex.Message, Loc.Get("DupHeading"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
     }
 
     /// <summary>Scheduled downloads need a schedule: open the scheduler if it is still off.</summary>

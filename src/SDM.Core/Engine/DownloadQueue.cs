@@ -19,6 +19,12 @@ public sealed class DownloadJob
     public string? Error { get; internal set; }
     public DateTimeOffset Added { get; private init; } = DateTimeOffset.Now;
 
+    /// <summary>The file name on the server, before any renaming (used to spot duplicates).</summary>
+    public string? OriginalFileName { get; internal set; }
+
+    /// <summary>Same episode / movie key (see <see cref="Duplicates.MediaKey"/>), used to spot duplicates.</summary>
+    public string? MediaKey { get; internal set; }
+
     /// <summary>Overrides automatic organizing for this job (e.g. the user picked a folder).</summary>
     public string? ForcedFolder { get; init; }
 
@@ -67,6 +73,8 @@ public sealed class DownloadJob
         MovedTo = Move?.To,
         Error = Error,
         ExtractedTo = ExtractedTo,
+        OriginalFileName = OriginalFileName,
+        MediaKey = MediaKey,
         Added = Added,
         Started = Started,
         Finished = Finished,
@@ -103,6 +111,8 @@ public sealed class DownloadJob
                 : null,
             Error = r.Error,
             ExtractedTo = r.ExtractedTo,
+            OriginalFileName = r.OriginalFileName,
+            MediaKey = r.MediaKey,
             Started = r.Started,
             Finished = r.Finished,
         };

@@ -53,6 +53,7 @@ public partial class App : Application
         if (!e.Args.Contains("--tray", StringComparer.OrdinalIgnoreCase)) window.Show();
 
         // Restore the list from last time (after the view model exists, so it sees every job).
+        _service.RecycleFile = RecycleBin.Send; // "Replace" sends the old file to the Recycle Bin
         _service.EnableStats();
         if (settings.KeepHistory) _service.EnableHistory();
 

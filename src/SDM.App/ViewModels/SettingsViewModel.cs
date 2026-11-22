@@ -95,6 +95,7 @@ public sealed class SettingsViewModel : ObservableObject
         Theme = settings.Theme;
         ShowCompletionDialog = settings.ShowCompletionDialog;
         CloseToTray = settings.CloseToTray;
+        DuplicateAction = settings.DuplicateAction;
         AutoExtract = settings.AutoExtract;
         DeleteArchiveAfterExtract = settings.DeleteArchiveAfterExtract;
         CheckForUpdates = settings.CheckForUpdates;
@@ -192,6 +193,12 @@ public sealed class SettingsViewModel : ObservableObject
     public AppTheme Theme { get; set; }
     public bool ShowCompletionDialog { get; set; }
     public bool CloseToTray { get; set; }
+
+    public SDM.Core.Engine.DuplicateAction DuplicateAction { get; set; }
+
+    public IReadOnlyList<KeyValuePair<SDM.Core.Engine.DuplicateAction, string>> DuplicateActions { get; } =
+        Enum.GetValues<SDM.Core.Engine.DuplicateAction>()
+            .Select(a => new KeyValuePair<SDM.Core.Engine.DuplicateAction, string>(a, Loc.Get("DupAction_" + a))).ToList();
     public bool AutoExtract { get; set; }
 
     public string VersionText => $"{Loc.Get("AppTitle")} {SDM.Core.Util.UpdateChecker.CurrentVersion}" +
@@ -337,6 +344,7 @@ public sealed class SettingsViewModel : ObservableObject
         Theme = Theme,
         ShowCompletionDialog = ShowCompletionDialog,
         CloseToTray = CloseToTray,
+        DuplicateAction = DuplicateAction,
         AutoExtract = AutoExtract,
         DeleteArchiveAfterExtract = DeleteArchiveAfterExtract,
         CheckForUpdates = CheckForUpdates,

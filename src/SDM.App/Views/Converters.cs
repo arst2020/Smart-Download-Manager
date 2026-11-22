@@ -11,6 +11,16 @@ public sealed class InverseBoolConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;
 }
 
+/// <summary>true → Collapsed, false → Visible.</summary>
+public sealed class InverseBoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is true ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>
 /// Two-way "value == parameter" for radio buttons bound to one string or enum property:
 /// IsChecked="{Binding Filter, Converter={StaticResource Equals}, ConverterParameter=active}".

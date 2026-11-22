@@ -175,6 +175,7 @@ public sealed class AddDownloadViewModel : ObservableObject
 
             string size = probe.Length is long l ? FileNameHelper.FormatSize(l) : "?";
             SizeText = size;
+            ProbeLength = probe.Length;
             Details = $"{Loc.Get("Kind_" + s.Media.Kind)} · {size}";
             Source = $"{Loc.Get("DetectedBy")}: {s.Media.Source}"
                      + (s.Library is { } lib ? $" · {Loc.Get("Library")}: {lib.Server} – {lib.Name}" : "")
@@ -210,11 +211,26 @@ public sealed class AddDownloadViewModel : ObservableObject
             Connections = Connections,
             Scheduled = Scheduled,
             StartPaused = StartPaused,
+            OriginalFileName = _suggestion?.OriginalFileName,
+            MediaKey = _suggestion is null ? null : Duplicates.MediaKey(_suggestion.Media),
             QueueId = QueueId,
             Headers = Headers,
             PageTitle = PageTitle,
         };
     }
+
+    /// <summary>Size reported by the server (for the duplicate window).</summary>
+    public long? ProbeLength { get; private set; }
+
+    /// <summary>What the duplicate check needs: link, server name, name to save as, folder, episode/movie key.</summary>
+    public DuplicateQuery BuildDuplicateQuery(Uri url) => new()
+    {
+        Url = url,
+        OriginalFileName = _suggestion?.OriginalFileName,
+        TargetFileName = string.IsNullOrWhiteSpace(FileName) ? null : FileNameHelper.Sanitize(FileName.Trim()),
+        Folder = _analyzed ? Folder.Trim() : null,
+        MediaKey = _suggestion is null ? null : Duplicates.MediaKey(_suggestion.Media),
+    };
 
     /// <summary>The rule to add when "Always save this title here" is ticked.</summary>
     public UserRule? BuildRule()

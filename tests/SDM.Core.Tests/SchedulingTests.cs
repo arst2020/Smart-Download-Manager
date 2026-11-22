@@ -1,3 +1,4 @@
+using SDM.Core.Engine;
 using SDM.Core.Media;
 using SDM.Core.Models;
 using SDM.Core.Scheduling;
@@ -783,5 +784,99 @@ public class UserLibrariesTests : IDisposable
     {
         Directory.CreateDirectory(Path.Combine(_root, "Irani TV shows", "Chicago Fire"));
         Assert.Equal("Irani TV shows", Pick("Chicago Fire", "en"));
+    }
+}
+
+public class DuplicateTests : IDisposable
+{
+    private readonly string _dir = Path.Combine(Path.GetTempPath(), "sdm-dup-" + Guid.NewGuid().ToString("N"));
+    public void Dispose() { if (Directory.Exists(_dir)) Directory.Delete(_dir, true); }
+
+    [Fact]
+    public async Task Same_link_completed_and_in_progress()
+    {
+        using var server = new TestHttpServer(TestHttpServer.RandomBytes(5000)) { FileName = "doc.pdf" };
+        using var service = new SmartDownloadService(new AppSettings { DownloadDirectory = _dir });
+        Assert.Empty(service.FindDuplicates(new DuplicateQuery { Url = server.Url }));
+        service.Add(server.Url);
+        await service.Queue.WhenIdleAsync();
+
+        var m = service.FindDuplicates(new DuplicateQuery { Url = server.Url }).First();
+        Assert.Equal(DuplicateKind.Downloaded, m.Kind);
+        Assert.Equal(DuplicateReason.SameLink, m.Reason);
+        Assert.Equal(5000, m.ExistingSize);
+
+        // file deleted since → not a duplicate any more
+        File.Delete(m.ExistingPath!);
+        Assert.Empty(service.FindDuplicates(new DuplicateQuery { Url = server.Url }));
+
+        var paused = service.Add(new Uri("https://x.test/big.iso"), new AddOptions { StartPaused = true });
+        Assert.Equal(DuplicateKind.InProgress, service.FindDuplicates(new DuplicateQuery { Url = new Uri("https://x.test/big.iso#frag") }).Single().Kind);
+        Assert.True(ReferenceEquals(paused, service.FindDuplicates(new DuplicateQuery { Url = new Uri("https://x.test/big.iso") }).Single().Job));
+    }
+
+    [Fact]
+    public async Task Renamed_episode_is_found_by_original_name_and_by_episode()
+    {
+        using var server = new TestHttpServer(TestHttpServer.RandomBytes(3000)) { FileName = "Chicago.Fire.S02E02.480p.BluRay.mkv" };
+        var settings = new AppSettings { DownloadDirectory = _dir, RenameToStandard = true };
+        using var service = new SmartDownloadService(settings);
+        var job = service.Add(server.Url);
+        await service.Queue.WhenIdleAsync();
+        Assert.Equal("Chicago Fire - S02E02.mkv", job.FileName); // renamed on disk
+
+        // same server name from another link
+        var byName = service.FindDuplicates(new DuplicateQuery
+        {
+            Url = new Uri("https://other.test/x/Chicago.Fire.S02E02.480p.BluRay.mkv"),
+            OriginalFileName = "Chicago.Fire.S02E02.480p.BluRay.mkv"
+        });
+        Assert.Equal(DuplicateReason.SameName, byName.First().Reason);
+
+        // another quality: different names, same episode
+        var media = MediaNameParser.Parse("Chicago.Fire.S02E02.1080p.WEB.mkv");
+        var byEpisode = service.FindDuplicates(new DuplicateQuery
+        {
+            Url = new Uri("https://other.test/Chicago.Fire.S02E02.1080p.WEB.mkv"),
+            OriginalFileName = "Chicago.Fire.S02E02.1080p.WEB.mkv",
+            MediaKey = Duplicates.MediaKey(media)
+        });
+        Assert.Equal(DuplicateReason.SameEpisode, byEpisode.First().Reason);
+
+        // a different episode is not a duplicate
+        Assert.Empty(service.FindDuplicates(new DuplicateQuery
+        {
+            Url = new Uri("https://other.test/Chicago.Fire.S02E03.1080p.mkv"),
+            MediaKey = Duplicates.MediaKey(MediaNameParser.Parse("Chicago.Fire.S02E03.1080p.mkv"))
+        }));
+    }
+
+    [Fact]
+    public void File_already_in_destination_folder()
+    {
+        Directory.CreateDirectory(Path.Combine(_dir, "Series", "Dark", "Season 01"));
+        File.WriteAllText(Path.Combine(_dir, "Series", "Dark", "Season 01", "Dark - S01E03.mkv"), "x");
+        using var service = new SmartDownloadService(new AppSettings { DownloadDirectory = _dir });
+        var m = service.FindDuplicates(new DuplicateQuery
+        {
+            Url = new Uri("https://x.test/Dark.S01E03.720p.mkv"),
+            TargetFileName = "Dark - S01E03.mkv",
+            Folder = Path.Combine("Series", "Dark", "Season 01")
+        }).Single();
+        Assert.Equal(DuplicateKind.FileExists, m.Kind);
+    }
+
+    [Fact]
+    public void Replace_recycles_the_file_and_removes_the_entry()
+    {
+        Directory.CreateDirectory(_dir);
+        string file = Path.Combine(_dir, "a.zip");
+        File.WriteAllText(file, "x");
+        using var service = new SmartDownloadService(new AppSettings { DownloadDirectory = _dir });
+        var recycled = new List<string>();
+        service.RecycleFile = recycled.Add;
+        var m = service.FindDuplicates(new DuplicateQuery { Url = new Uri("https://x.test/a.zip") }).Single();
+        service.RemoveForReplace(m);
+        Assert.Equal(file, recycled.Single());
     }
 }

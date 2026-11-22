@@ -27,6 +27,10 @@ public sealed record AddOptions
     /// <summary>Wait for the scheduler's time window instead of starting now.</summary>
     public bool Scheduled { get; init; }
 
+    /// <summary>Server file name and episode/movie key, kept so later downloads can be recognised as duplicates.</summary>
+    public string? OriginalFileName { get; init; }
+    public string? MediaKey { get; init; }
+
     /// <summary>Queue id (<see cref="DownloadQueue.MainQueueId"/> when null).</summary>
     public string? QueueId { get; init; }
 
@@ -264,6 +268,8 @@ public sealed class SmartDownloadService : IDisposable
             PageTitle = options.PageTitle,
         };
         var job = new DownloadJob(request) { ForcedFolder = options.Folder };
+        job.OriginalFileName = options.OriginalFileName;
+        job.MediaKey = options.MediaKey;
         if (!string.IsNullOrWhiteSpace(options.QueueId)) job.QueueId = options.QueueId;
         if (options.Scheduled)
         {
@@ -276,6 +282,82 @@ public sealed class SmartDownloadService : IDisposable
         }
         return Queue.Enqueue(job);
     }
+
+    /// <summary>
+    /// Downloads we already have that look like the new one: the same link, the same file name (on the server
+    /// or after renaming, in the list or in the destination folder), or the same episode / movie in another
+    /// quality. The newest / most relevant first; empty when there is nothing.
+    /// </summary>
+    public IReadOnlyList<DuplicateMatch> FindDuplicates(DuplicateQuery query)
+    {
+        var matches = new List<DuplicateMatch>();
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var n in new[] { query.OriginalFileName, query.TargetFileName, UrlFileName(query.Url) })
+            if (!string.IsNullOrWhiteSpace(n)) names.Add(n.Trim());
+        string link = Duplicates.LinkKey(query.Url);
+        var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var job in Queue.Jobs.OrderByDescending(j => j.Added))
+        {
+            DuplicateReason? reason =
+                Duplicates.LinkKey(job.Request.Url) == link ? DuplicateReason.SameLink
+                : NameOf(job).Any(names.Contains) ? DuplicateReason.SameName
+                : query.MediaKey is { } key && job.MediaKey == key
+                    ? (key.StartsWith("series|") ? DuplicateReason.SameEpisode : DuplicateReason.SameMovie)
+                : null;
+            if (reason is null) continue;
+
+            if (job.Status == DownloadStatus.Completed)
+            {
+                if (job.FilePath is not { } path || !File.Exists(path)) continue; // deleted since: not a duplicate
+                var info = new FileInfo(path);
+                seenPaths.Add(info.FullName);
+                matches.Add(new DuplicateMatch(DuplicateKind.Downloaded, reason.Value, info.FullName, info.Length, info.LastWriteTime, job));
+            }
+            else
+            {
+                matches.Add(new DuplicateMatch(DuplicateKind.InProgress, reason.Value, job.FilePath, job.Progress.Total, null, job));
+            }
+        }
+
+        // Files on disk (also ones downloaded before the list was kept, or by another program).
+        var folders = new List<string>();
+        if (!string.IsNullOrWhiteSpace(query.Folder)) folders.Add(Path.GetFullPath(Path.Combine(Settings.DownloadDirectory, query.Folder)));
+        folders.Add(Path.GetFullPath(Settings.DownloadDirectory));
+        foreach (var folder in folders.Distinct(StringComparer.OrdinalIgnoreCase))
+            foreach (var name in names)
+            {
+                string path = Path.Combine(folder, name);
+                if (!File.Exists(path) || !seenPaths.Add(Path.GetFullPath(path))) continue;
+                var info = new FileInfo(path);
+                matches.Add(new DuplicateMatch(DuplicateKind.FileExists, DuplicateReason.SameName, info.FullName, info.Length, info.LastWriteTime, null));
+            }
+
+        return matches;
+
+        static IEnumerable<string> NameOf(DownloadJob j) =>
+            new[] { j.FileName, j.OriginalFileName, j.Request.FileName }.Where(n => !string.IsNullOrWhiteSpace(n))!;
+
+        static string? UrlFileName(Uri u)
+        {
+            string name = Path.GetFileName(Uri.UnescapeDataString(u.AbsolutePath));
+            return name.Contains('.') ? name : null; // "download.php?id=1" has no useful name
+        }
+    }
+
+    /// <summary>
+    /// "Replace": the existing file goes to the Recycle Bin (via <see cref="RecycleFile"/>), an unfinished copy
+    /// or a finished entry leaves the list.
+    /// </summary>
+    public void RemoveForReplace(DuplicateMatch match)
+    {
+        // An unfinished copy keeps its partial file: the new download checks it (same link and date) before reusing it.
+        if (match.Job is { } job) Queue.Remove(job);
+        if (match.ExistingPath is { } path && File.Exists(path)) RecycleFile(path);
+    }
+
+    /// <summary>How a replaced file is removed. The Windows app sets this to "move to Recycle Bin".</summary>
+    public Action<string> RecycleFile { get; set; } = File.Delete;
 
     /// <summary>
     /// "Schedule" from the card menu: the jobs wait for the scheduler's time window (they start at once if the
@@ -349,6 +431,7 @@ public sealed class SmartDownloadService : IDisposable
                 .DownloadAsync(job.Request, progress, ct).ConfigureAwait(false);
         job.FilePath = result.FilePath;
         job.FileName = Path.GetFileName(result.FilePath);
+        job.OriginalFileName ??= result.Probe.FileName ?? job.FileName;
 
         job.Status = DownloadStatus.Organizing;
         job.Raise();
@@ -367,6 +450,7 @@ public sealed class SmartDownloadService : IDisposable
             classification = new ClassificationResult(suggestion.RuleName ?? suggestion.Media.Kind.ToString(),
                 suggestion.Folder, suggestion.Media.Confidence, suggestion.Media.Source, null, suggestion.Describe());
             if (Settings.RenameToStandard && job.Request.FileName is null) newName = suggestion.StandardFileName;
+            job.MediaKey ??= Duplicates.MediaKey(suggestion.Media);
         }
         job.Classification = classification;
 

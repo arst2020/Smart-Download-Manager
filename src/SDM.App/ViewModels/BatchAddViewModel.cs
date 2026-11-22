@@ -43,6 +43,20 @@ public sealed class BatchItemViewModel : ObservableObject
     public string Tag { get => _tag; private set => Set(ref _tag, value); }
     public bool IsBusy { get => _isBusy; private set => Set(ref _isBusy, value); }
 
+    /// <summary>What we already have of this link (same link / name / episode); empty if nothing.</summary>
+    public IReadOnlyList<DuplicateMatch> Duplicates { get; private set; } = Array.Empty<DuplicateMatch>();
+    public bool IsDuplicate => Duplicates.Count > 0;
+
+    /// <summary>Marks the row as a duplicate and unticks it (the user can tick it again).</summary>
+    internal void MarkDuplicates(IReadOnlyList<DuplicateMatch> matches)
+    {
+        Duplicates = matches;
+        OnPropertyChanged(nameof(IsDuplicate));
+        if (matches.Count == 0) return;
+        Include = false;
+        Tag = Loc.Get("DupTag");
+    }
+
     internal void Fill(ProbeResult probe, SaveSuggestion s, string downloadDir)
     {
         Suggestion = s;
@@ -162,6 +176,15 @@ public sealed class BatchAddViewModel : ObservableObject
                 string? title = Items.Count == 1 ? _pageTitle : null;
                 var (probe, s) = await _service.SuggestAsync(item.Url, title, cts.Token, _headers);
                 Application.Current?.Dispatcher.Invoke(() => item.Fill(probe, s, _service.Settings.DownloadDirectory));
+                var duplicates = _service.FindDuplicates(new DuplicateQuery
+                {
+                    Url = item.Url,
+                    OriginalFileName = s.OriginalFileName,
+                    TargetFileName = RenameToStandard ? s.StandardFileName : null,
+                    Folder = s.Folder,
+                    MediaKey = SDM.Core.Engine.Duplicates.MediaKey(s.Media),
+                });
+                Application.Current?.Dispatcher.Invoke(() => item.MarkDuplicates(duplicates));
             }
             catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or InvalidOperationException)
             {
@@ -194,9 +217,14 @@ public sealed class BatchAddViewModel : ObservableObject
         _ = AnalyzeAllAsync(added);
     }
 
+    /// <summary>Ticked rows that are duplicates (the user ticked them again): asked once before adding.</summary>
+    public IReadOnlyList<BatchItemViewModel> IncludedDuplicates => Items.Where(i => i.Include && i.IsDuplicate).ToList();
+
     /// <summary>Adds the ticked links to the queue with the chosen options.</summary>
-    public void Commit()
+    /// <param name="skip">Rows to leave out (duplicates the user chose to skip).</param>
+    public void Commit(IReadOnlyCollection<BatchItemViewModel>? skip = null)
     {
+        if (skip is { Count: > 0 }) foreach (var i in skip) i.Include = false;
         _service.Queue.MaxConcurrent = Concurrent;
         bool batch1 = Items.Count(i => i.Include) == 1;
         var batch = Items.Where(i => i.Include).Select(i =>
@@ -207,7 +235,8 @@ public sealed class BatchAddViewModel : ObservableObject
             return (i.Url, new AddOptions
             {
                 Folder = folder, FileName = name, Connections = Connections, Scheduled = Scheduled, StartPaused = AddPaused, QueueId = QueueId,
-                Headers = _headers, PageTitle = batch1 ? _pageTitle : null
+                Headers = _headers, PageTitle = batch1 ? _pageTitle : null,
+                OriginalFileName = s?.OriginalFileName, MediaKey = s is null ? null : SDM.Core.Engine.Duplicates.MediaKey(s.Media)
             });
         }).ToList();
         _service.AddMany(batch);

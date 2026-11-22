@@ -277,4 +277,26 @@
   <data name="DownloadLater" xml:space="preserve"><value>بعداً</value></data>
   <data name="DownloadLaterTip" xml:space="preserve"><value>به لیست اضافه شود ولی شروع نشود؛ بعداً خودتان شروع یا زمان‌بندی کنید</value></data>
   <data name="ScheduleItem" xml:space="preserve"><value>زمان‌بندی</value></data>
+  <data name="DupHeading" xml:space="preserve"><value>این فایل تکراری است</value></data>
+  <data name="DupBatchHeading" xml:space="preserve"><value>{0} مورد از لینک‌های انتخاب‌شده تکراری است</value></data>
+  <data name="DupInProgress" xml:space="preserve"><value>این دانلود همین الان در لیست هست و هنوز تمام نشده.</value></data>
+  <data name="DupSameLink" xml:space="preserve"><value>این لینک قبلاً دانلود شده است.</value></data>
+  <data name="DupSameEpisode" xml:space="preserve"><value>این قسمت را قبلاً دارید (شاید با کیفیت یا اسم دیگری).</value></data>
+  <data name="DupSameMovie" xml:space="preserve"><value>این فیلم را قبلاً دارید (شاید با کیفیت یا اسم دیگری).</value></data>
+  <data name="DupSameName" xml:space="preserve"><value>فایلی با همین اسم قبلاً دانلود شده یا در پوشهٔ مقصد هست.</value></data>
+  <data name="DupExisting" xml:space="preserve"><value>فایل موجود</value></data>
+  <data name="DupNew" xml:space="preserve"><value>فایل جدید</value></data>
+  <data name="DupOthers" xml:space="preserve"><value>و {0} مورد مشابه دیگر</value></data>
+  <data name="DupOpen" xml:space="preserve"><value>باز کردن فایل موجود (دانلود نکن)</value></data>
+  <data name="DupResume" xml:space="preserve"><value>ادامهٔ همان دانلود قبلی</value></data>
+  <data name="DupNewName" xml:space="preserve"><value>دوباره دانلود با اسم جدید — name (2)</value></data>
+  <data name="DupReplace" xml:space="preserve"><value>جایگزین کن: فایل قبلی به سطل بازیافت، دانلود دوباره</value></data>
+  <data name="DupRemember" xml:space="preserve"><value>همیشه همین کار را بکن</value></data>
+  <data name="DupTag" xml:space="preserve"><value>تکراری</value></data>
+  <data name="DupSetting" xml:space="preserve"><value>وقتی فایل تکراری است</value></data>
+  <data name="DupAction_Ask" xml:space="preserve"><value>بپرس</value></data>
+  <data name="DupAction_OpenExisting" xml:space="preserve"><value>فایل موجود را باز کن</value></data>
+  <data name="DupAction_NewName" xml:space="preserve"><value>با اسم جدید دانلود کن</value></data>
+  <data name="DupAction_Replace" xml:space="preserve"><value>جایگزین کن (فایل قبلی به سطل بازیافت)</value></data>
+  <data name="DupAction_Skip" xml:space="preserve"><value>دانلود نکن</value></data>
 </root>
