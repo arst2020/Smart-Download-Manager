@@ -431,7 +431,10 @@ public class QueueTests
         var nightJobs = Enumerable.Range(0, 3).Select(i => NewJob("n" + i)).ToList();
         foreach (var j in nightJobs) queue.MoveToQueue(j, "night");
         foreach (var j in jobs.Concat(nightJobs)) queue.Enqueue(j);
-        await Task.Delay(200);
+        // Wait until the queue has started what it may start (a busy CI machine can be slow).
+        var until = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < until && queue.Jobs.Count(j => j.Status == DownloadStatus.Probing) < 3) await Task.Delay(20);
+        await Task.Delay(100); // and give it the chance to (wrongly) start more
         Assert.Equal(2, queue.Jobs.Count(j => j.Status == DownloadStatus.Probing && queue.EffectiveQueue(j) == "main"));
         Assert.Equal(1, queue.Jobs.Count(j => j.Status == DownloadStatus.Probing && queue.EffectiveQueue(j) == "night"));
         gate.SetResult();
