@@ -20,6 +20,11 @@ public sealed class TestHttpServer : IDisposable
     /// <summary>Server-side throttle (bytes per write + delay) so a test can cancel mid-download.</summary>
     public int ChunkDelayMs { get; set; }
 
+    /// <summary>Requests whose range starts at one of these offsets are throttled (a server slowing single connections).</summary>
+    public HashSet<long> SlowStarts { get; } = new();
+    public int SlowDelayMs { get; set; } = 400;
+    public int SlowRequests;
+
     public string FileName { get; init; } = "file.bin";
 
     /// <summary>Requests that carry a Range header get 503 (a picky CDN).</summary>
@@ -121,6 +126,9 @@ public sealed class TestHttpServer : IDisposable
 
             long count = end - start + 1;
             res.ContentLength64 = count;
+            bool slow;
+            lock (SlowStarts) slow = SlowStarts.Contains(start);
+            if (slow) Interlocked.Increment(ref SlowRequests);
             int limit = DropAfterBytes ?? int.MaxValue;
             int sent = 0;
             const int chunk = 16 * 1024;
@@ -132,6 +140,7 @@ public sealed class TestHttpServer : IDisposable
                 await res.OutputStream.WriteAsync(Content.AsMemory((int)(start + sent), n));
                 sent += n;
                 if (ChunkDelayMs > 0) await Task.Delay(ChunkDelayMs);
+                if (slow) await Task.Delay(SlowDelayMs);
             }
             res.Close();
         }

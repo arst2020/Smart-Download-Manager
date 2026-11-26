@@ -880,3 +880,47 @@ public class DuplicateTests : IDisposable
         Assert.Equal(file, recycled.Single());
     }
 }
+
+public class TailSpeedTests : IDisposable
+{
+    private readonly string _dir = Path.Combine(Path.GetTempPath(), "sdm-tail-" + Guid.NewGuid().ToString("N"));
+    public void Dispose() { if (Directory.Exists(_dir)) Directory.Delete(_dir, true); }
+
+    [Fact]
+    public async Task Throttled_last_part_does_not_stall_the_end()
+    {
+        var data = TestHttpServer.RandomBytes(8 * 1024 * 1024);
+        using var server = new TestHttpServer(data) { SlowDelayMs = 400 }; // ~40 KB/s: 2 MB would take ~50 s
+        server.SlowStarts.Add(6 * 1024 * 1024);                            // the 4th of 4 parts starts here
+        using var http = new HttpClient();
+        var downloader = new SegmentedDownloader(http) { SlowCheckWindow = TimeSpan.FromMilliseconds(300) };
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var result = await downloader.DownloadAsync(new DownloadRequest
+        {
+            Url = server.Url, Directory = _dir, MaxSegments = 4, MinSegmentSize = 1024 * 1024
+        });
+        sw.Stop();
+        Assert.Equal(data, await File.ReadAllBytesAsync(result.FilePath));
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(10), $"took {sw.Elapsed}");
+        Assert.Equal(1, server.SlowRequests);
+    }
+
+    [Fact]
+    public void Split_takes_the_second_half_of_the_biggest_part()
+    {
+        var state = new DownloadState { TotalSize = 10_000_000, SupportsRange = true };
+        state.Segments.Add(new Segment { Index = 0, Start = 0, End = 4_999_999, Downloaded = 4_999_999 });
+        state.Segments.Add(new Segment { Index = 1, Start = 5_000_000, End = 9_999_999, Downloaded = 1_000_000 });
+        var run = new SegmentedDownloader.RunContext(state);
+        var stolen = run.TrySplit()!;
+        Assert.Equal(8_000_000, stolen.Start);
+        Assert.Equal(9_999_999, stolen.End);
+        Assert.Equal(7_999_999, state.Segments[1].End);
+        Assert.Equal(2, stolen.Index);
+
+        // nothing worth splitting
+        var small = new DownloadState { TotalSize = 100, SupportsRange = true };
+        small.Segments.Add(new Segment { Index = 0, Start = 0, End = 99 });
+        Assert.Null(new SegmentedDownloader.RunContext(small).TrySplit());
+    }
+}
