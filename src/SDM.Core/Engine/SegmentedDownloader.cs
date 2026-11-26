@@ -13,15 +13,39 @@ namespace SDM.Core.Engine;
 /// and written straight to its offset in a single ".sdmpart" file, so no merge step is needed.
 /// Progress per segment is saved to ".sdmstate" every two seconds, which makes resume possible
 /// after a crash, a pause (cancellation) or a dropped connection.
+///
+/// The end of a download stays fast:
+///   - a connection that finishes its part takes over half of the biggest part still left (work stealing),
+///     so the last megabytes are not left to one slow connection;
+///   - a connection that slows to a trickle (servers often throttle single connections) is dropped and
+///     reopened from where it stopped.
 /// </summary>
 public sealed class SegmentedDownloader
 {
     private const int BufferSize = 64 * 1024;
+
+    /// <summary>A part is only split when at least twice this much is left of it.</summary>
+    internal const long MinSplitSize = 512 * 1024;
+
+
+    /// <summary>This many slow windows in a row and the connection is reopened.</summary>
+    internal const int SlowWindowsBeforeReconnect = 3;
+
+    /// <summary>Slow = below this fraction of the best speed one connection reached in this download.</summary>
+    internal const double SlowFraction = 0.05;
+
+    /// <summary>Slow-connection detection starts once one connection has reached this speed (bytes/s).</summary>
+    internal const double SlowDetectionMinPeak = 100 * 1024;
+
+    private const int MaxSlowReconnects = 30;
     private static readonly TimeSpan SaveInterval = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan ProgressInterval = TimeSpan.FromMilliseconds(500);
 
     private readonly HttpClient _http;
     private readonly IReadOnlyList<RateLimiter> _limiters;
+
+    /// <summary>Each connection's speed is checked over windows of this length (slow-connection detection).</summary>
+    public TimeSpan SlowCheckWindow { get; init; } = TimeSpan.FromSeconds(5);
 
     public SegmentedDownloader(HttpClient http, IEnumerable<RateLimiter>? limiters = null)
     {
@@ -64,17 +88,31 @@ public sealed class SegmentedDownloader
         int active = 0;
         var gate = new ConnectionGate(request.MaxSegments);
         void ActiveDelta(int d) => Interlocked.Add(ref active, d);
-        var segmentTasks = state.Segments
-            .Where(s => !s.IsComplete)
-            .Select(async s =>
+        var run = new RunContext(state);
+
+        // One worker per connection. Each starts with an unfinished part (or, when resuming with fewer parts
+        // left than connections, by splitting one) and keeps taking over halves of the biggest part left.
+        var pending = new Queue<Segment>(state.Segments.Where(s => !s.IsComplete));
+        int workers = state.SupportsRange ? Math.Max(pending.Count, Math.Max(1, request.MaxSegments)) : pending.Count;
+        var segmentTasks = Enumerable.Range(0, workers)
+            .Select(_ => pending.Count > 0 ? pending.Dequeue() : null)
+            .Select(async first =>
             {
-                try { await RunSegmentAsync(request, probe, state, s, handle, gate, ActiveDelta, linked.Token).ConfigureAwait(false); }
+                try
+                {
+                    var segment = first ?? (state.SupportsRange ? run.TrySplit() : null);
+                    while (segment is not null)
+                    {
+                        await RunSegmentAsync(request, probe, run, segment, handle, gate, ActiveDelta, linked.Token).ConfigureAwait(false);
+                        segment = state.SupportsRange ? run.TrySplit() : null;
+                    }
+                }
                 catch { linked.Cancel(); throw; } // one segment failing for good stops the others
             })
             .ToList();
 
         using var monitorStop = new CancellationTokenSource();
-        Task monitor = MonitorAsync(state, statePath, progress, () => Volatile.Read(ref active), monitorStop.Token);
+        Task monitor = MonitorAsync(run, statePath, progress, () => Volatile.Read(ref active), monitorStop.Token);
 
         try
         {
@@ -84,7 +122,7 @@ public sealed class SegmentedDownloader
         {
             monitorStop.Cancel();
             await monitor.ConfigureAwait(false);
-            DownloadStateStore.Save(statePath, state);
+            run.Save(statePath);
             ct.ThrowIfCancellationRequested();
             // Surface the first real error rather than the cancellations it caused.
             var real = segmentTasks.Where(t => t.IsFaulted).Select(t => t.Exception!.InnerException!)
@@ -172,10 +210,10 @@ public sealed class SegmentedDownloader
         }
     }
 
-    private async Task RunSegmentAsync(DownloadRequest request, ProbeResult probe, DownloadState state,
+    private async Task RunSegmentAsync(DownloadRequest request, ProbeResult probe, RunContext run,
         Segment segment, SafeFileHandle handle, ConnectionGate gate, Action<int> activeDelta, CancellationToken ct)
     {
-        int attempt = 0;
+        int attempt = 0, slowReconnects = 0;
         while (!segment.IsComplete)
         {
             Exception? failure = null;
@@ -183,8 +221,13 @@ public sealed class SegmentedDownloader
             activeDelta(+1);
             try
             {
-                await DownloadSegmentOnceAsync(request, probe, state, segment, handle, ct).ConfigureAwait(false);
+                await DownloadSegmentOnceAsync(request, probe, run, segment, handle, ct).ConfigureAwait(false);
                 attempt = 0;
+            }
+            catch (SlowConnectionException) when (!ct.IsCancellationRequested && ++slowReconnects <= MaxSlowReconnects)
+            {
+                // Trickling connection: open a fresh one right away from the same position (no back-off).
+                continue;
             }
             catch (Exception ex) when (IsTransient(ex) && !ct.IsCancellationRequested)
             {
@@ -215,9 +258,10 @@ public sealed class SegmentedDownloader
         _ => false
     };
 
-    private async Task DownloadSegmentOnceAsync(DownloadRequest request, ProbeResult probe, DownloadState state,
+    private async Task DownloadSegmentOnceAsync(DownloadRequest request, ProbeResult probe, RunContext run,
         Segment segment, SafeFileHandle handle, CancellationToken ct)
     {
+        var state = run.State;
         bool ranged = state.SupportsRange;
         using var message = new HttpRequestMessage(HttpMethod.Get, probe.FinalUri);
         HttpHeaderHelper.Apply(message, request.Headers);
@@ -239,10 +283,15 @@ public sealed class SegmentedDownloader
 
         await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
         byte[] buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
+        var window = Stopwatch.StartNew();
+        var connection = Stopwatch.StartNew();
+        long windowBytes = 0, connectionBytes = 0;
+        int slowWindows = 0;
         try
         {
             while (true)
             {
+                // End can move: another connection may have taken over the second half of this part.
                 long remaining = ranged ? segment.Length - segment.Downloaded : long.MaxValue;
                 if (remaining <= 0) break;
                 int toRead = (int)Math.Min(buffer.Length, remaining);
@@ -261,12 +310,30 @@ public sealed class SegmentedDownloader
                 await RandomAccess.WriteAsync(handle, buffer.AsMemory(0, read), segment.Start + segment.Downloaded, ct)
                     .ConfigureAwait(false);
                 segment.Advance(read);
+
+                windowBytes += read;
+                connectionBytes += read;
+                if (window.Elapsed >= SlowCheckWindow)
+                {
+                    double rate = windowBytes / window.Elapsed.TotalSeconds;
+                    double peak = run.ReportRate(rate);
+                    bool slow = ranged && peak >= SlowDetectionMinPeak && rate < peak * SlowFraction
+                                && segment.Length - segment.Downloaded > 64 * 1024; // even the last bytes: a trickle is the tail problem
+                    slowWindows = slow ? slowWindows + 1 : 0;
+                    if (slowWindows >= SlowWindowsBeforeReconnect) throw new SlowConnectionException(rate);
+                    windowBytes = 0;
+                    window.Restart();
+                }
             }
         }
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
         }
+
+        // A fast connection may finish before a full window: still count its speed for the comparison.
+        if (connectionBytes >= MinSplitSize && connection.Elapsed > TimeSpan.Zero)
+            run.ReportRate(connectionBytes / Math.Max(connection.Elapsed.TotalSeconds, 0.01));
 
         if (ranged)
         {
@@ -281,12 +348,13 @@ public sealed class SegmentedDownloader
         }
     }
 
-    private static async Task MonitorAsync(DownloadState state, string statePath,
+    private static async Task MonitorAsync(RunContext run, string statePath,
         IProgress<DownloadProgress>? progress, Func<int> active, CancellationToken stop)
     {
+        var state = run.State;
         var sw = Stopwatch.StartNew();
         TimeSpan lastSave = TimeSpan.Zero, lastSample = TimeSpan.Zero;
-        long lastBytes = state.Segments.Sum(s => s.Downloaded);
+        long lastBytes = run.DownloadedBytes();
         double speed = 0;
 
         while (!stop.IsCancellationRequested)
@@ -294,7 +362,7 @@ public sealed class SegmentedDownloader
             try { await Task.Delay(ProgressInterval, stop).ConfigureAwait(false); }
             catch (OperationCanceledException) { break; }
 
-            long bytes = state.Segments.Sum(s => s.Downloaded);
+            long bytes = run.DownloadedBytes();
             TimeSpan now = sw.Elapsed;
             double dt = (now - lastSample).TotalSeconds;
             if (dt > 0)
@@ -306,16 +374,91 @@ public sealed class SegmentedDownloader
             lastSample = now;
             progress?.Report(new DownloadProgress(bytes, state.TotalSize, speed, active())
             {
-                SegmentFractions = state.Segments
+                SegmentFractions = run.Snapshot()
                     .Select(s => s.IsComplete ? 1.0 : s.Length > 0 ? Math.Min(1.0, (double)s.Downloaded / s.Length) : 0.0)
                     .ToArray()
             });
 
             if (now - lastSave >= SaveInterval)
             {
-                try { DownloadStateStore.Save(statePath, state); } catch (IOException) { /* next tick */ }
+                try { run.Save(statePath); } catch (IOException) { /* next tick */ }
                 lastSave = now;
             }
         }
     }
+
+    /// <summary>
+    /// Shared state of one download run: the part list (which grows when parts are split), guarded by a lock,
+    /// and the best per-connection speed seen (for spotting trickling connections).
+    /// </summary>
+    internal sealed class RunContext
+    {
+        private readonly object _lock = new();
+        private double _peakRate;
+
+        public RunContext(DownloadState state) => State = state;
+
+        public DownloadState State { get; }
+
+        public Segment[] Snapshot()
+        {
+            lock (_lock) return State.Segments.ToArray();
+        }
+
+        /// <summary>Bytes really downloaded (a part whose end moved may have read a little past it).</summary>
+        public long DownloadedBytes() =>
+            Snapshot().Sum(s => s.Length >= 0 ? Math.Min(s.Downloaded, s.Length) : s.Downloaded);
+
+        public void Save(string statePath)
+        {
+            lock (_lock) DownloadStateStore.Save(statePath, State);
+        }
+
+        /// <summary>Records one connection's speed; returns the best seen so far.</summary>
+        public double ReportRate(double rate)
+        {
+            lock (_lock)
+            {
+                if (rate > _peakRate) _peakRate = rate;
+                return _peakRate;
+            }
+        }
+
+        /// <summary>
+        /// Work stealing: takes the second half of the part with the most bytes left and returns it as a new part
+        /// (the original part now ends where the new one starts). Null when no part is big enough to split.
+        /// </summary>
+        public Segment? TrySplit()
+        {
+            lock (_lock)
+            {
+                Segment? victim = null;
+                long best = 0;
+                foreach (var seg in State.Segments)
+                {
+                    if (seg.IsComplete || seg.Length <= 0) continue;
+                    long left = seg.Length - seg.Downloaded;
+                    if (left > best) { best = left; victim = seg; }
+                }
+                if (victim is null || best < 2 * MinSplitSize) return null;
+
+                long mid = victim.Start + victim.Downloaded + best / 2;
+                var stolen = new Segment
+                {
+                    Index = State.Segments.Max(x => x.Index) + 1,
+                    Start = mid,
+                    End = victim.End,
+                };
+                victim.End = mid - 1;
+                State.Segments.Add(stolen);
+                return stolen;
+            }
+        }
+    }
+}
+
+/// <summary>A connection that slowed to a trickle; it is reopened from where it stopped.</summary>
+internal sealed class SlowConnectionException : IOException
+{
+    public SlowConnectionException(double rate) : base($"Connection too slow ({rate:0} B/s), reconnecting.") { }
 }
